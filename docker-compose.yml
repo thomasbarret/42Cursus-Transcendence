@@ -1,0 +1,16 @@
+services:
+  nginx:
+    networks:
+      - tsd-network
+    build:
+      context: srcs/frontend
+      dockerfile: "Dockerfile"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./srcs/frontend/srcs:/usr/share/nginx/html
+    restart: unless-stopped
+
+networks:
+  tsd-network:
+    driver: bridge
