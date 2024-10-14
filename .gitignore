@@ -28,5 +28,5 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
-*.ts
-**/tsconfig.json
+# *.ts
+# **/tsconfig.json
