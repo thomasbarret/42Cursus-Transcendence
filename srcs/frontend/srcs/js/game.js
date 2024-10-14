@@ -1,4 +1,4 @@
-import { tag } from "./handler.js";
+import { tag } from "./framework.js";
 let animFrame;
 const PADDLE_VELOCITY = 8;
 const BALL_VELOCITY = 3;
