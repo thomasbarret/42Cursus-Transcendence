@@ -30,6 +30,7 @@ const ball = {
             this.vx *= -1;
             return this;
         }
+        // if (this.)
         // if it touches up and down border:
         if (this.x + this.radius >= canvas.width || this.x - this.radius <= 0) {
             // speed incrementation, no need to bother with this for now
@@ -37,14 +38,11 @@ const ball = {
             // else if (this.vx < 0 && this.vx > -this.maxvX) this.vx -= 1;
             if (this.x + this.radius >= canvas.width) {
                 paddleLeft.points += 1;
-                return false;
             }
             else if (this.x - this.radius <= 0) {
                 paddleRight.points += 1;
-                return false;
             }
-            else
-                this.vx *= -1;
+            return false;
         }
         if (this.y + this.radius >= canvas.height ||
             this.y - this.radius <= 0) {
@@ -54,8 +52,6 @@ const ball = {
                 this.vy -= 1;
             this.vy *= -1;
         }
-        // console.log("Ball X: ", this.x, ", velocity X: ", this.vx);
-        // console.log("Ball Y: ", this.y, ", velocity Y: ", this.vy);
         return this;
     },
     init(canvas, scale) {
@@ -206,12 +202,12 @@ export const gameHandler = (route) => {
         ctx.fillRect(0, 0, gameBoard.width, gameBoard.height);
     };
     const reset = () => {
-        ball.reset(gameBoard);
         paddleLeft.reset(gameBoard);
         paddleRight.reset(gameBoard);
         if (scoreText)
             scoreText.textContent =
                 paddleLeft.points + " : " + paddleRight.points;
+        ball.reset(gameBoard);
     };
     const draw = () => {
         clear();
