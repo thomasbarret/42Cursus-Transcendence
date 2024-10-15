@@ -153,10 +153,10 @@ const paddleRight: Paddle = {
 	},
 	points: 0,
 	init(canvas, scale) {
-		this.x = canvas.width - this.width;
-		this.y = canvas.height / 2;
 		this.width *= scale.x;
 		this.height *= scale.y;
+		this.x = canvas.width - this.width;
+		this.y = canvas.height / 2;
 		this.vy *= scale.y;
 		return this;
 	},
