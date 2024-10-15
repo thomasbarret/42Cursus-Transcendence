@@ -24,7 +24,7 @@ export const gameHandler = (route) => {
         maxvX: MAX_BALL_VELOCITY,
         maxvY: MAX_BALL_VELOCITY / 2.5,
         radius: 15,
-        color: "red",
+        color: "white",
         move(canvas, paddleLeft, paddleRight) {
             this.x += this.vx;
             this.y += this.vy;
@@ -92,9 +92,9 @@ export const gameHandler = (route) => {
         x: 0,
         y: 0,
         vy: PADDLE_VELOCITY,
-        width: 25,
-        height: 100,
-        color: "blue",
+        width: 15,
+        height: 150,
+        color: "white",
         keys: {
             up: false,
             down: false,
@@ -143,9 +143,9 @@ export const gameHandler = (route) => {
         x: 0,
         y: 0,
         vy: PADDLE_VELOCITY,
-        width: 25,
-        height: 100,
-        color: "green",
+        width: 15,
+        height: 150,
+        color: "white",
         keys: {
             up: false,
             down: false,
