@@ -1,3 +1,4 @@
+import { isDarkMode } from "./storage.js";
 import { Ball, Paddle, Routes, Scale } from "./types.js";
 
 let animFrame: number;
@@ -39,8 +40,6 @@ const ball: Ball = {
 			this.vx *= -1;
 			return this;
 		}
-
-		// if (this.)
 
 		// if it touches up and down border:
 		if (this.x + this.radius >= canvas.width || this.x - this.radius <= 0) {
@@ -205,9 +204,13 @@ export const gameHandler = (route: Routes) => {
 		y: gameBoard.height / referenceHeight,
 	};
 
-	const clear = () => {
+	const clear = (transparent?: boolean) => {
 		// ctx.clearRect(0, 0, gameBoard.width, gameBoard.height);
-		ctx.fillStyle = "rgb(0 0 0 / 10%)";
+
+		const color = isDarkMode() ? "rgb(0 0 0)" : "rgb(255 255 255)";
+		const tr = isDarkMode() ? "rgb(0 0 0 / 10%)" : "rgb(255 255 255 / 10%)";
+		if (transparent === false) ctx.fillStyle = color;
+		else ctx.fillStyle = tr;
 		ctx.fillRect(0, 0, gameBoard.width, gameBoard.height);
 	};
 
@@ -248,8 +251,7 @@ export const gameHandler = (route: Routes) => {
 		paddleRight.keyHandler(e, false);
 	});
 
-	ctx.fillStyle = "rgb(0 0 0)";
-	ctx.fillRect(0, 0, gameBoard.width, gameBoard.height);
+	clear(false);
 	ball.init(gameBoard, scale).draw(ctx);
 	paddleLeft.init(gameBoard, scale).draw(ctx);
 	paddleRight.init(gameBoard, scale).draw(ctx);
