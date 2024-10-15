@@ -6,7 +6,7 @@ export const activateDarkMode = (toggle) => {
 };
 export const isDarkMode = () => {
     const mode = localStorage.getItem("theme");
-    return mode === "dark" ? true : false;
+    return mode === "dark";
 };
 export const toggleDarkMode = (toggle) => {
     localStorage.setItem("theme", isDarkMode() ? "light" : "dark");

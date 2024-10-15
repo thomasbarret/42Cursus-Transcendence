@@ -13,13 +13,18 @@ export type TagElement<K extends keyof HTMLElementTagNameMap> =
 		onclick$: (callback: (event: MouseEvent) => void) => TagElement<K>;
 	};
 
+export interface Scale {
+	x: number;
+	y: number;
+}
+
 export interface GameObject {
 	x: number;
 	y: number;
 	color: string;
 	draw(ctx: CanvasRenderingContext2D): this;
 	reset(canvas: HTMLCanvasElement): this;
-	init(canvas: HTMLCanvasElement): this;
+	init(canvas: HTMLCanvasElement, scale: Scale): this;
 }
 
 export interface Ball extends GameObject {

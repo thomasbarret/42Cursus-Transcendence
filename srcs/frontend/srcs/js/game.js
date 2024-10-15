@@ -2,6 +2,8 @@ let animFrame;
 const PADDLE_VELOCITY = 8;
 const BALL_VELOCITY = 3;
 const MAX_BALL_VELOCITY = BALL_VELOCITY * 2.5;
+const referenceWidth = 840;
+const referenceHeight = 500;
 const ball = {
     x: 75,
     y: 150,
@@ -56,9 +58,12 @@ const ball = {
         // console.log("Ball Y: ", this.y, ", velocity Y: ", this.vy);
         return this;
     },
-    init(canvas) {
+    init(canvas, scale) {
         this.x = canvas.width / 2;
         this.y = canvas.height / 2;
+        this.radius *= scale.x;
+        this.vx *= scale.x;
+        this.vy *= scale.y;
         return this;
     },
     draw(ctx) {
@@ -70,15 +75,16 @@ const ball = {
         return this;
     },
     reset(canvas) {
-        this.init(canvas);
-        this.vx = 5;
-        this.vy = 2;
+        this.x = canvas.width / 2;
+        this.y = canvas.height / 2;
+        // this.vx = 5;
+        // this.vy = 2;
         return this;
     },
 };
 const paddleLeft = {
     x: 0,
-    y: 50,
+    y: 0,
     vy: PADDLE_VELOCITY,
     width: 25,
     height: 100,
@@ -90,9 +96,12 @@ const paddleLeft = {
         downKey: "s",
     },
     points: 0,
-    init(canvas) {
+    init(canvas, scale) {
         this.x = 0;
         this.y = canvas.height / 2;
+        this.width *= scale.x;
+        this.height *= scale.y;
+        this.vy *= scale.y;
         return this;
     },
     draw(ctx) {
@@ -120,13 +129,13 @@ const paddleLeft = {
     },
     reset(canvas) {
         this.x = 0;
-        this.y = 50;
+        this.y = canvas.height / 2;
         return this;
     },
 };
 const paddleRight = {
     x: 0,
-    y: 50,
+    y: 0,
     vy: PADDLE_VELOCITY,
     width: 25,
     height: 100,
@@ -138,9 +147,12 @@ const paddleRight = {
         downKey: "ArrowDown",
     },
     points: 0,
-    init(canvas) {
+    init(canvas, scale) {
         this.x = canvas.width - this.width;
         this.y = canvas.height / 2;
+        this.width *= scale.x;
+        this.height *= scale.y;
+        this.vy *= scale.y;
         return this;
     },
     draw(ctx) {
@@ -171,7 +183,8 @@ const paddleRight = {
         return this;
     },
     reset(canvas) {
-        this.init(canvas);
+        this.x = canvas.width - this.width;
+        this.y = canvas.height / 2;
         return this;
     },
 };
@@ -183,6 +196,10 @@ export const gameHandler = (route) => {
     if (!ctx)
         return false;
     const scoreText = document.getElementById("score-text");
+    const scale = {
+        x: gameBoard.width / referenceWidth,
+        y: gameBoard.height / referenceHeight,
+    };
     const clear = () => {
         // ctx.clearRect(0, 0, gameBoard.width, gameBoard.height);
         ctx.fillStyle = "rgb(0 0 0 / 10%)";
@@ -218,7 +235,9 @@ export const gameHandler = (route) => {
         paddleLeft.keyHandler(e, false);
         paddleRight.keyHandler(e, false);
     });
-    ball.init(gameBoard).draw(ctx);
-    paddleLeft.draw(ctx);
-    paddleRight.init(gameBoard).draw(ctx);
+    ctx.fillStyle = "rgb(0 0 0)";
+    ctx.fillRect(0, 0, gameBoard.width, gameBoard.height);
+    ball.init(gameBoard, scale).draw(ctx);
+    paddleLeft.init(gameBoard, scale).draw(ctx);
+    paddleRight.init(gameBoard, scale).draw(ctx);
 };
