@@ -209,12 +209,29 @@ export const gameHandler = (route: Routes) => {
 	};
 
 	let ballActive = true;
+	let color;
+	let tr;
+	const setColor = () => {
+		color = isDarkMode() ? "rgb(0 0 0)" : "rgb(255 255 255)";
+		tr = isDarkMode() ? "rgb(0 0 0 / 10%)" : "rgb(255 255 255 / 10%)";
+
+		const elColor = isDarkMode() ? "white" : "black";
+		paddleLeft.color = elColor;
+		paddleRight.color = elColor;
+		ball.color = elColor;
+	};
+
+	setColor();
+	document.addEventListener("theme", () => {
+		color = isDarkMode() ? "rgb(0 0 0)" : "rgb(255 255 255)";
+		tr = isDarkMode() ? "rgb(0 0 0 / 10%)" : "rgb(255 255 255 / 10%)";
+
+		setColor();
+	});
 
 	const clear = (transparent?: boolean) => {
 		// ctx.clearRect(0, 0, gameBoard.width, gameBoard.height);
 
-		const color = isDarkMode() ? "rgb(0 0 0)" : "rgb(255 255 255)";
-		const tr = isDarkMode() ? "rgb(0 0 0 / 10%)" : "rgb(255 255 255 / 10%)";
 		if (transparent === false) ctx.fillStyle = color;
 		else ctx.fillStyle = tr;
 		ctx.fillRect(0, 0, gameBoard.width, gameBoard.height);
@@ -233,7 +250,6 @@ export const gameHandler = (route: Routes) => {
 			ballActive = true;
 		}, 500);
 	};
-
 	const draw = () => {
 		clear();
 		if (ballActive) {
