@@ -104,8 +104,6 @@ export const gameHandler = (route: Routes) => {
 		reset(canvas: HTMLCanvasElement) {
 			this.x = canvas.width / 2;
 			this.y = canvas.height / 2;
-			// this.vx = 5;
-			// this.vy = 2;
 			return this;
 		},
 	};
@@ -210,6 +208,8 @@ export const gameHandler = (route: Routes) => {
 		},
 	};
 
+	let ballActive = true;
+
 	const clear = (transparent?: boolean) => {
 		// ctx.clearRect(0, 0, gameBoard.width, gameBoard.height);
 
@@ -227,12 +227,19 @@ export const gameHandler = (route: Routes) => {
 			scoreText.textContent =
 				paddleLeft.points + " : " + paddleRight.points;
 
+		ballActive = false;
 		ball.reset(gameBoard);
+		setTimeout(() => {
+			ballActive = true;
+		}, 500);
 	};
 
 	const draw = () => {
 		clear();
-		if (!ball.draw(ctx).move(gameBoard, paddleLeft, paddleRight)) reset();
+		if (ballActive) {
+			if (!ball.draw(ctx).move(gameBoard, paddleLeft, paddleRight))
+				reset();
+		} else ball.draw(ctx);
 
 		paddleLeft.draw(ctx).move(gameBoard);
 		paddleRight.draw(ctx).move(gameBoard);

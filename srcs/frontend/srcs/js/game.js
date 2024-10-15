@@ -85,8 +85,6 @@ export const gameHandler = (route) => {
         reset(canvas) {
             this.x = canvas.width / 2;
             this.y = canvas.height / 2;
-            // this.vx = 5;
-            // this.vy = 2;
             return this;
         },
     };
@@ -196,6 +194,7 @@ export const gameHandler = (route) => {
             return this;
         },
     };
+    let ballActive = true;
     const clear = (transparent) => {
         // ctx.clearRect(0, 0, gameBoard.width, gameBoard.height);
         const color = isDarkMode() ? "rgb(0 0 0)" : "rgb(255 255 255)";
@@ -212,12 +211,20 @@ export const gameHandler = (route) => {
         if (scoreText)
             scoreText.textContent =
                 paddleLeft.points + " : " + paddleRight.points;
+        ballActive = false;
         ball.reset(gameBoard);
+        setTimeout(() => {
+            ballActive = true;
+        }, 500);
     };
     const draw = () => {
         clear();
-        if (!ball.draw(ctx).move(gameBoard, paddleLeft, paddleRight))
-            reset();
+        if (ballActive) {
+            if (!ball.draw(ctx).move(gameBoard, paddleLeft, paddleRight))
+                reset();
+        }
+        else
+            ball.draw(ctx);
         paddleLeft.draw(ctx).move(gameBoard);
         paddleRight.draw(ctx).move(gameBoard);
         animFrame = window.requestAnimationFrame(draw);
