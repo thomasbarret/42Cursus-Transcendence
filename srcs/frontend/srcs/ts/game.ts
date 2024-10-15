@@ -3,8 +3,8 @@ import { Ball, Paddle, Routes, Scale } from "./types.js";
 
 let animFrame: number;
 
-const PADDLE_VELOCITY = 8;
-const BALL_VELOCITY = 3;
+const PADDLE_VELOCITY = 8 * 150;
+const BALL_VELOCITY = 3 * 150;
 const MAX_BALL_VELOCITY = BALL_VELOCITY * 2.5;
 
 const referenceWidth = 840;
@@ -23,6 +23,8 @@ export const gameHandler = (route: Routes) => {
 		y: gameBoard.height / referenceHeight,
 	};
 
+	let deltaTime;
+
 	const ball: Ball = {
 		x: 75,
 		y: 150,
@@ -37,8 +39,8 @@ export const gameHandler = (route: Routes) => {
 			paddleLeft: Paddle,
 			paddleRight: Paddle
 		) {
-			this.x += this.vx;
-			this.y += this.vy;
+			this.x += this.vx * deltaTime;
+			this.y += this.vy * deltaTime;
 
 			// if (this.x + this.radius >= canvas.width || this.x - this.radius <= 0) {
 			// 	if (this.vx > 0 && this.vx < this.maxvX) this.vx += 1;
@@ -138,8 +140,8 @@ export const gameHandler = (route: Routes) => {
 		move(canvas: HTMLCanvasElement) {
 			if (this.y + this.height >= canvas.height) this.keys.down = false;
 			else if (this.y <= 0) this.keys.up = false;
-			if (this.keys.up) this.y -= this.vy;
-			if (this.keys.down) this.y += this.vy;
+			if (this.keys.up) this.y -= this.vy * deltaTime;
+			if (this.keys.down) this.y += this.vy * deltaTime;
 			return this;
 		},
 		keyHandler(event: KeyboardEvent, value: boolean) {
@@ -184,8 +186,8 @@ export const gameHandler = (route: Routes) => {
 		move(canvas: HTMLCanvasElement) {
 			if (this.y + this.height >= canvas.height) this.keys.down = false;
 			else if (this.y <= 0) this.keys.up = false;
-			if (this.keys.up) this.y -= this.vy;
-			if (this.keys.down) this.y += this.vy;
+			if (this.keys.up) this.y -= this.vy * deltaTime;
+			if (this.keys.down) this.y += this.vy * deltaTime;
 			return this;
 		},
 		keyHandler(event: KeyboardEvent, value: boolean) {
@@ -209,8 +211,8 @@ export const gameHandler = (route: Routes) => {
 	};
 
 	let ballActive = true;
-	let color;
-	let tr;
+	let color: string;
+	let tr: string;
 	const setColor = () => {
 		color = isDarkMode() ? "rgb(0 0 0)" : "rgb(255 255 255)";
 		tr = isDarkMode() ? "rgb(0 0 0 / 10%)" : "rgb(255 255 255 / 10%)";
@@ -250,7 +252,13 @@ export const gameHandler = (route: Routes) => {
 			ballActive = true;
 		}, 500);
 	};
-	const draw = () => {
+
+	let lastTime: DOMHighResTimeStamp = 0;
+	const draw = (timestamp: DOMHighResTimeStamp) => {
+		if (!lastTime) lastTime = timestamp;
+		deltaTime = (timestamp - lastTime) / 1000;
+		lastTime = timestamp;
+
 		clear();
 		if (ballActive) {
 			if (!ball.draw(ctx).move(gameBoard, paddleLeft, paddleRight))

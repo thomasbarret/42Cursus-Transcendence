@@ -1,7 +1,7 @@
 import { isDarkMode } from "./storage.js";
 let animFrame;
-const PADDLE_VELOCITY = 8;
-const BALL_VELOCITY = 3;
+const PADDLE_VELOCITY = 8 * 150;
+const BALL_VELOCITY = 3 * 150;
 const MAX_BALL_VELOCITY = BALL_VELOCITY * 2.5;
 const referenceWidth = 840;
 const referenceHeight = 500;
@@ -16,6 +16,7 @@ export const gameHandler = (route) => {
         x: gameBoard.width / referenceWidth,
         y: gameBoard.height / referenceHeight,
     };
+    let deltaTime;
     const ball = {
         x: 75,
         y: 150,
@@ -26,8 +27,8 @@ export const gameHandler = (route) => {
         radius: 15,
         color: "white",
         move(canvas, paddleLeft, paddleRight) {
-            this.x += this.vx;
-            this.y += this.vy;
+            this.x += this.vx * deltaTime;
+            this.y += this.vy * deltaTime;
             // if (this.x + this.radius >= canvas.width || this.x - this.radius <= 0) {
             // 	if (this.vx > 0 && this.vx < this.maxvX) this.vx += 1;
             // 	else if (this.vx < 0 && this.vx > -this.maxvX) this.vx -= 1;
@@ -121,9 +122,9 @@ export const gameHandler = (route) => {
             else if (this.y <= 0)
                 this.keys.up = false;
             if (this.keys.up)
-                this.y -= this.vy;
+                this.y -= this.vy * deltaTime;
             if (this.keys.down)
-                this.y += this.vy;
+                this.y += this.vy * deltaTime;
             return this;
         },
         keyHandler(event, value) {
@@ -172,9 +173,9 @@ export const gameHandler = (route) => {
             else if (this.y <= 0)
                 this.keys.up = false;
             if (this.keys.up)
-                this.y -= this.vy;
+                this.y -= this.vy * deltaTime;
             if (this.keys.down)
-                this.y += this.vy;
+                this.y += this.vy * deltaTime;
             return this;
         },
         keyHandler(event, value) {
@@ -231,7 +232,12 @@ export const gameHandler = (route) => {
             ballActive = true;
         }, 500);
     };
-    const draw = () => {
+    let lastTime = 0;
+    const draw = (timestamp) => {
+        if (!lastTime)
+            lastTime = timestamp;
+        deltaTime = (timestamp - lastTime) / 1000;
+        lastTime = timestamp;
         clear();
         if (ballActive) {
             if (!ball.draw(ctx).move(gameBoard, paddleLeft, paddleRight))
