@@ -1,4 +1,3 @@
-import { tag } from "./framework.js";
 import { Ball, Paddle, Routes } from "./types.js";
 
 let animFrame: number;
@@ -233,7 +232,4 @@ export const gameHandler = (route: Routes) => {
 	ball.init(gameBoard).draw(ctx);
 	paddleLeft.draw(ctx);
 	paddleRight.init(gameBoard).draw(ctx);
-
-	const elements = tag("div", "hello world!");
-	if (entry) entry.appendChild(elements);
 };

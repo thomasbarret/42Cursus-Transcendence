@@ -1,6 +1,6 @@
 import { TagElement } from "./types";
 
-export const tag = <K extends keyof HTMLElementTagNameMap>(
+export const t = <K extends keyof HTMLElementTagNameMap>(
 	name: keyof HTMLElementTagNameMap,
 	...child: (
 		| TagElement<K>
@@ -38,7 +38,7 @@ export const h1 = (
 		| TagElement<keyof HTMLElementTagNameMap>
 		| string
 	)[]
-): TagElement<keyof HTMLElementTagNameMap> => tag("h1", ...children);
+): TagElement<keyof HTMLElementTagNameMap> => t("h1", ...children);
 
 export const p = (
 	...children: (
@@ -46,7 +46,7 @@ export const p = (
 		| TagElement<keyof HTMLElementTagNameMap>
 		| string
 	)[]
-): TagElement<keyof HTMLElementTagNameMap> => tag("p", ...children);
+): TagElement<keyof HTMLElementTagNameMap> => t("p", ...children);
 
 export const a = (
 	...children: (
@@ -54,7 +54,7 @@ export const a = (
 		| TagElement<keyof HTMLElementTagNameMap>
 		| string
 	)[]
-): TagElement<keyof HTMLElementTagNameMap> => tag("a", ...children);
+): TagElement<keyof HTMLElementTagNameMap> => t("a", ...children);
 
 export const div = (
 	...children: (
@@ -62,7 +62,7 @@ export const div = (
 		| TagElement<keyof HTMLElementTagNameMap>
 		| string
 	)[]
-): TagElement<keyof HTMLElementTagNameMap> => tag("div", ...children);
+): TagElement<keyof HTMLElementTagNameMap> => t("div", ...children);
 
 export const span = (
 	...children: (
@@ -70,4 +70,4 @@ export const span = (
 		| TagElement<keyof HTMLElementTagNameMap>
 		| string
 	)[]
-): TagElement<keyof HTMLElementTagNameMap> => tag("span", ...children);
+): TagElement<keyof HTMLElementTagNameMap> => t("span", ...children);

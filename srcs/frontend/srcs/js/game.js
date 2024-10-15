@@ -1,4 +1,3 @@
-import { tag } from "./framework.js";
 let animFrame;
 const PADDLE_VELOCITY = 8;
 const BALL_VELOCITY = 3;
@@ -222,7 +221,4 @@ export const gameHandler = (route) => {
     ball.init(gameBoard).draw(ctx);
     paddleLeft.draw(ctx);
     paddleRight.init(gameBoard).draw(ctx);
-    const elements = tag("div", "hello world!");
-    if (entry)
-        entry.appendChild(elements);
 };
