@@ -12,6 +12,7 @@ export const gameHandler = (route) => {
     if (!ctx)
         return false;
     const scoreText = document.getElementById("score-text");
+    const resetButton = document.getElementById("reset-btn");
     const scale = {
         x: gameBoard.width / referenceWidth,
         y: gameBoard.height / referenceHeight,
@@ -206,12 +207,6 @@ export const gameHandler = (route) => {
         paddleRight.color = elColor;
         ball.color = elColor;
     };
-    setColor();
-    document.addEventListener("theme", () => {
-        color = isDarkMode() ? "rgb(0 0 0)" : "rgb(255 255 255)";
-        tr = isDarkMode() ? "rgb(0 0 0 / 10%)" : "rgb(255 255 255 / 10%)";
-        setColor();
-    });
     const clear = (transparent) => {
         // ctx.clearRect(0, 0, gameBoard.width, gameBoard.height);
         if (transparent === false)
@@ -249,11 +244,18 @@ export const gameHandler = (route) => {
         paddleRight.draw(ctx).move(gameBoard);
         animFrame = window.requestAnimationFrame(draw);
     };
+    resetButton.addEventListener("click", () => {
+        paddleLeft.points = 0;
+        paddleRight.points = 0;
+        reset();
+    });
     gameBoard.addEventListener("mouseover", (e) => {
         animFrame = window.requestAnimationFrame(draw);
     });
     gameBoard.addEventListener("mouseout", (e) => {
         window.cancelAnimationFrame(animFrame);
+        // important: fixes issue that if mouse is out, it doesnt launch the ball at mach 10
+        lastTime = 0;
     });
     document.addEventListener("keydown", (e) => {
         paddleLeft.keyHandler(e, true);
@@ -263,6 +265,12 @@ export const gameHandler = (route) => {
         paddleLeft.keyHandler(e, false);
         paddleRight.keyHandler(e, false);
     });
+    document.addEventListener("theme", () => {
+        color = isDarkMode() ? "rgb(0 0 0)" : "rgb(255 255 255)";
+        tr = isDarkMode() ? "rgb(0 0 0 / 10%)" : "rgb(255 255 255 / 10%)";
+        setColor();
+    });
+    setColor();
     clear(false);
     ball.init(gameBoard, scale).draw(ctx);
     paddleLeft.init(gameBoard, scale).draw(ctx);

@@ -17,6 +17,7 @@ export const gameHandler = (route: Routes) => {
 	const ctx = gameBoard.getContext("2d") as CanvasRenderingContext2D;
 	if (!ctx) return false;
 	const scoreText = document.getElementById("score-text");
+	const resetButton = document.getElementById("reset-btn");
 
 	const scale: Scale = {
 		x: gameBoard.width / referenceWidth,
@@ -223,14 +224,6 @@ export const gameHandler = (route: Routes) => {
 		ball.color = elColor;
 	};
 
-	setColor();
-	document.addEventListener("theme", () => {
-		color = isDarkMode() ? "rgb(0 0 0)" : "rgb(255 255 255)";
-		tr = isDarkMode() ? "rgb(0 0 0 / 10%)" : "rgb(255 255 255 / 10%)";
-
-		setColor();
-	});
-
 	const clear = (transparent?: boolean) => {
 		// ctx.clearRect(0, 0, gameBoard.width, gameBoard.height);
 
@@ -270,12 +263,20 @@ export const gameHandler = (route: Routes) => {
 		animFrame = window.requestAnimationFrame(draw);
 	};
 
+	resetButton.addEventListener("click", () => {
+		paddleLeft.points = 0;
+		paddleRight.points = 0;
+		reset();
+	});
+
 	gameBoard.addEventListener("mouseover", (e: MouseEvent) => {
 		animFrame = window.requestAnimationFrame(draw);
 	});
 
 	gameBoard.addEventListener("mouseout", (e: MouseEvent) => {
 		window.cancelAnimationFrame(animFrame);
+		// important: fixes issue that if mouse is out, it doesnt launch the ball at mach 10
+		lastTime = 0;
 	});
 
 	document.addEventListener("keydown", (e) => {
@@ -288,6 +289,14 @@ export const gameHandler = (route: Routes) => {
 		paddleRight.keyHandler(e, false);
 	});
 
+	document.addEventListener("theme", () => {
+		color = isDarkMode() ? "rgb(0 0 0)" : "rgb(255 255 255)";
+		tr = isDarkMode() ? "rgb(0 0 0 / 10%)" : "rgb(255 255 255 / 10%)";
+
+		setColor();
+	});
+
+	setColor();
 	clear(false);
 	ball.init(gameBoard, scale).draw(ctx);
 	paddleLeft.init(gameBoard, scale).draw(ctx);
