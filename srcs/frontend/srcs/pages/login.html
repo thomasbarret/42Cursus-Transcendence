@@ -1,6 +1,8 @@
 <div id="entry" class="container mt-5">
 	<div class="row justify-content-center">
-		<div class="col-12 col-md-4 col-lg-5">
+		<div
+			class="p-4 col-11 col-sm-8 col-md-6 col-lg-3 bg-body-tertiary rounded-3"
+		>
 			<form id="login-form">
 				<div class="mb-3">
 					<label for="email" class="form-label">Email address</label>
@@ -21,19 +23,11 @@
 						name="password"
 						required
 					/>
+					<div class="invalid-feedback">
+						Email or password is invalid.
+					</div>
 				</div>
-				<!-- <div class="mb-3 form-check">
-			<input
-				type="checkbox"
-				class="form-check-input"
-				id="check-input"
-				name="check"
-			/>
-			<label class="form-check-label" for="check-input"
-				>Check me out</label
-			>
-		</div> -->
-				<button type="submit" class="btn btn-primary">Submit</button>
+				<button type="submit" class="btn btn-primary">Login</button>
 			</form>
 		</div>
 	</div>
