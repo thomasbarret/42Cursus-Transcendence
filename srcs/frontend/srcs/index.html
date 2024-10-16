@@ -15,7 +15,12 @@
 		<div class="wrapper d-flex flex-column min-vh-100">
 			<nav class="navbar navbar-expand-lg bg-body-tertiary">
 				<div class="container-fluid">
-					<a class="navbar-brand" id="navigation" href="/">nascent</a>
+					<a
+						class="navbar-brand"
+						data-router-navigation="true"
+						href="/"
+						>nascent</a
+					>
 					<button
 						class="navbar-toggler"
 						type="button"
@@ -37,12 +42,15 @@
 									class="nav-link active"
 									aria-current="page"
 									href="/"
-									id="navigation"
+									data-router-navigation="true"
 									>Home</a
 								>
 							</li>
 							<li class="nav-item">
-								<a class="nav-link" href="/play" id="navigation"
+								<a
+									class="nav-link"
+									href="/play"
+									data-router-navigation="true"
 									>Play Now!</a
 								>
 							</li>
@@ -50,7 +58,7 @@
 								<a
 									class="nav-link"
 									href="/about"
-									id="navigation"
+									data-router-navigation="true"
 									>About</a
 								>
 							</li>
@@ -58,7 +66,7 @@
 								<a
 									class="nav-link"
 									href="/contact"
-									id="navigation"
+									data-router-navigation="true"
 									>Contact Us</a
 								>
 							</li>
@@ -66,7 +74,7 @@
 								<a
 									class="nav-link"
 									href="/messages"
-									id="navigation"
+									data-router-navigation="true"
 									>Messages</a
 								>
 							</li>
@@ -74,9 +82,21 @@
 						<button class="btn btn-primary me-2" id="theme-toggle">
 							☀
 						</button>
-						<a href="/login" class="btn btn-primary" id="navigation"
-							>Login</a
-						>
+						<div id="nav-right">
+							<!-- id="navigation" -->
+							<a
+								href="/login"
+								class="btn btn-primary"
+								data-router-navigation="true"
+								>Login</a
+							>
+							<a
+								href="/signup"
+								class="btn"
+								data-router-navigation="true"
+								>Sign Up</a
+							>
+						</div>
 					</div>
 				</div>
 			</nav>

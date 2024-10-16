@@ -1,7 +1,6 @@
 import { div, h1, p, t } from "./framework.js";
-import { urlRoute } from "./main.js";
 import { activateDarkMode, toggleDarkMode } from "./storage.js";
-export const BACKEND_URL = "http://localhost:3000";
+export const BASE_URL = "/api";
 export const mainHandler = () => {
     const toggle = document.getElementById("theme-toggle");
     toggle.addEventListener("click", () => {
@@ -14,7 +13,7 @@ export const indexHandler = (route) => {
     let entry = document.getElementById("entry");
     let elements = t("div", t("h1", "this is the content of the h1").attr("id", "wow"), t("a", "this is the content of the ahref")
         .attr("href", "/asdf")
-        .attr("id", "navigation"), [...Array(10)].map((_, i) => h1("this is text number: ", i.toString()).onclick$(() => console.log(i))));
+        .attr("data-router-navigation", "true"), [...Array(10)].map((_, i) => h1("this is text number: ", i.toString()).onclick$(() => console.log(i))));
     if (entry)
         entry.appendChild(elements);
 };
@@ -23,28 +22,6 @@ export const contactHandler = (route) => {
 };
 export const aboutHandler = (route) => {
     console.log("current route: ", route.description);
-};
-export const loginHandler = (route) => {
-    console.log("login handler wow: ", route.description);
-    const loginForm = document.getElementById("login-form");
-    loginForm.addEventListener("submit", async (event) => {
-        event.preventDefault();
-        const data = Object.fromEntries(new FormData(loginForm));
-        const email = "?email=" + data.email;
-        const password = "&password=" + data.password;
-        const result = await fetch(BACKEND_URL + "/users" + email + password, {
-            method: "GET",
-        });
-        const json = await result.json();
-        if (json.length === 0) {
-            console.log("USER NOT FOUND!!!");
-            return;
-        }
-        console.log("SUCCESS!", json);
-        setTimeout(() => {
-            urlRoute(window.location.origin);
-        }, 500);
-    });
 };
 export const messageBoxRight = (text, time) => {
     const img = t("img")
@@ -62,7 +39,7 @@ export const messageBoxLeft = (text, time) => {
         .attr("alt", "avatar 1")
         .attr("style", "width: 30px; height: 30px")
         .attr("class", "rounded-circle");
-    const content = div(p(text).attr("class", "small p-2 ms-3 mb-1 rounded-3 bg-light text-dark"), p(time).attr("class", "small ms-3 mb-3 rounded-3 text-muted"));
+    const content = div(p(text).attr("class", "small p-2 ms-3 mb-1 rounded-3  bg-body-secondary text-body-primary"), p(time).attr("class", "small ms-3 mb-3 rounded-3 text-muted"));
     const message = div(img, content).attr("class", "d-flex flex-row justify-content-start mb-3");
     return message;
 };

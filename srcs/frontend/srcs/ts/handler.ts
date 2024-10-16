@@ -3,7 +3,7 @@ import { urlRoute } from "./main.js";
 import { activateDarkMode, toggleDarkMode } from "./storage.js";
 import { Routes } from "./types";
 
-export const BACKEND_URL = "http://localhost:3000";
+export const BASE_URL = "/api";
 
 export const mainHandler = () => {
 	const toggle = document.getElementById("theme-toggle");
@@ -23,7 +23,7 @@ export const indexHandler = (route: Routes) => {
 		t("h1", "this is the content of the h1").attr("id", "wow"),
 		t("a", "this is the content of the ahref")
 			.attr("href", "/asdf")
-			.attr("id", "navigation"),
+			.attr("data-router-navigation", "true"),
 		[...Array(10)].map((_, i) =>
 			h1("this is text number: ", i.toString()).onclick$(() =>
 				console.log(i)
@@ -39,33 +39,6 @@ export const contactHandler = (route: Routes) => {
 
 export const aboutHandler = (route: Routes) => {
 	console.log("current route: ", route.description);
-};
-
-export const loginHandler = (route: Routes) => {
-	console.log("login handler wow: ", route.description);
-	const loginForm = document.getElementById("login-form") as HTMLFormElement;
-
-	loginForm.addEventListener("submit", async (event) => {
-		event.preventDefault();
-		const data = Object.fromEntries(new FormData(loginForm));
-
-		const email = "?email=" + data.email;
-		const password = "&password=" + data.password;
-		const result = await fetch(BACKEND_URL + "/users" + email + password, {
-			method: "GET",
-		});
-
-		const json: Array<any> = await result.json();
-
-		if (json.length === 0) {
-			console.log("USER NOT FOUND!!!");
-			return;
-		}
-		console.log("SUCCESS!", json);
-		setTimeout(() => {
-			urlRoute(window.location.origin);
-		}, 500);
-	});
 };
 
 export const messageBoxRight = (text: string, time: string) => {
@@ -104,7 +77,7 @@ export const messageBoxLeft = (text: string, time: string) => {
 	const content = div(
 		p(text).attr(
 			"class",
-			"small p-2 ms-3 mb-1 rounded-3 bg-light text-dark"
+			"small p-2 ms-3 mb-1 rounded-3  bg-body-secondary text-body-primary"
 		),
 		p(time).attr("class", "small ms-3 mb-3 rounded-3 text-muted")
 	);

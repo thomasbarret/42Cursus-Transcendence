@@ -3,7 +3,10 @@ import { routes } from "./route.js";
 
 document.addEventListener("click", (e) => {
 	const { target } = e;
-	if (!(target instanceof HTMLElement) || target.id !== "navigation") {
+	if (
+		!(target instanceof HTMLElement) ||
+		target.getAttribute("data-router-navigation") !== "true"
+	) {
 		return;
 	}
 	e.preventDefault();

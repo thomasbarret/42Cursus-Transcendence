@@ -1,9 +1,9 @@
+import { loginHandler } from "./auth.js";
 import { gameHandler } from "./game.js";
 import {
 	aboutHandler,
 	contactHandler,
 	indexHandler,
-	loginHandler,
 	messageHandler,
 } from "./handler.js";
 import { Routes } from "./types.js";
