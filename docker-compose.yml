@@ -7,10 +7,20 @@ services:
       dockerfile: "Dockerfile"
     ports:
       - "8080:8080"
+    depends_on:
+      - django
     volumes:
       - ./srcs/frontend/srcs:/usr/share/nginx/html
+    restart: unless-stopped
+  django:
+    networks:
+      - tsd-network
+    build:
+      context: srcs/backend
+      dockerfile: "Dockerfile"
     restart: unless-stopped
 
 networks:
   tsd-network:
     driver: bridge
+
