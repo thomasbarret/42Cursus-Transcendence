@@ -1,6 +1,9 @@
 import { h1, t } from "./framework.js";
+import { urlRoute } from "./main.js";
 import { activateDarkMode, toggleDarkMode } from "./storage.js";
 import { Routes } from "./types";
+
+export const BACKEND_URL = "http://localhost:3000";
 
 export const mainHandler = () => {
 	const toggle = document.getElementById("theme-toggle");
@@ -36,4 +39,31 @@ export const contactHandler = (route: Routes) => {
 
 export const aboutHandler = (route: Routes) => {
 	console.log("current route: ", route.description);
+};
+
+export const loginHandler = (route: Routes) => {
+	console.log("login handler wow: ", route.description);
+	const loginForm = document.getElementById("login-form") as HTMLFormElement;
+
+	loginForm.addEventListener("submit", async (event) => {
+		event.preventDefault();
+		const data = Object.fromEntries(new FormData(loginForm));
+
+		const email = "?email=" + data.email;
+		const password = "&password=" + data.password;
+		const result = await fetch(BACKEND_URL + "/users" + email + password, {
+			method: "GET",
+		});
+
+		const json: Array<any> = await result.json();
+
+		if (json.length === 0) {
+			console.log("USER NOT FOUND!!!");
+			return;
+		}
+		console.log("SUCCESS!", json);
+		setTimeout(() => {
+			urlRoute(window.location.origin);
+		}, 500);
+	});
 };

@@ -8,10 +8,18 @@ document.addEventListener("click", (e) => {
     e.preventDefault();
     urlRoute(e);
 });
-const urlRoute = (event) => {
-    if (event.target instanceof HTMLAnchorElement) {
-        window.history.pushState({}, "", event.target.href);
+export const urlRoute = (event) => {
+    let newLocation = undefined;
+    if (typeof event === "string") {
+        newLocation = event;
+    }
+    else if (event.target instanceof HTMLAnchorElement) {
         event.preventDefault();
+        newLocation = event.target.href;
+    }
+    if (newLocation) {
+        console.log(newLocation);
+        window.history.pushState({}, "", newLocation);
         locationHandler();
     }
 };
