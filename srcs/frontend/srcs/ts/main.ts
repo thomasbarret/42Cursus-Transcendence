@@ -1,3 +1,4 @@
+import { mainHandler } from "./handler.js";
 import { routes } from "./route.js";
 
 document.addEventListener("click", (e) => {
@@ -33,3 +34,7 @@ const locationHandler = async () => {
 
 window.onpopstate = locationHandler;
 locationHandler();
+
+document.addEventListener("DOMContentLoaded", () => {
+	mainHandler();
+});

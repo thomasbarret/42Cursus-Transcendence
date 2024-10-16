@@ -1,4 +1,4 @@
-export const tag = (name, ...child) => {
+export const t = (name, ...child) => {
     const result = document.createElement(name);
     const appendChildTag = (el) => {
         if (typeof el === "string")
@@ -17,8 +17,8 @@ export const tag = (name, ...child) => {
     };
     return result;
 };
-export const h1 = (...children) => tag("h1", ...children);
-export const p = (...children) => tag("p", ...children);
-export const a = (...children) => tag("a", ...children);
-export const div = (...children) => tag("div", ...children);
-export const span = (...children) => tag("span", ...children);
+export const h1 = (...children) => t("h1", ...children);
+export const p = (...children) => t("p", ...children);
+export const a = (...children) => t("a", ...children);
+export const div = (...children) => t("div", ...children);
+export const span = (...children) => t("span", ...children);
