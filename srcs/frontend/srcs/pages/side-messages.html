@@ -1,0 +1,102 @@
+<section style="height: 100vh">
+	<div class="container-fluid h-100">
+		<div class="row d-flex justify-content-center align-items-center h-100">
+			<div class="col-12">
+				<div class="card h-100" id="chat2">
+					<div
+						class="card-header d-flex justify-content-between align-items-center p-3"
+					>
+						<h5 class="mb-0">Chat</h5>
+						<button type="button" class="btn btn-primary btn-sm">
+							refresh chats
+						</button>
+					</div>
+					<div
+						class="card-body"
+						style="
+							overflow-y: auto;
+							height: calc(100vh - 150px);
+							position: relative;
+						"
+					>
+						<!-- User 1 message -->
+						<div class="d-flex flex-row justify-content-start mb-4">
+							<img
+								src="https://picsum.photos/45"
+								alt="avatar 1"
+								class="rounded-circle"
+								style="width: 45px; height: 45px"
+							/>
+							<div>
+								<p
+									class="small p-2 ms-3 mb-1 rounded-3 bg-light"
+								>
+									Hi, How are you?
+								</p>
+								<p class="small ms-3 mb-3 rounded-3 text-muted">
+									23:58
+								</p>
+							</div>
+						</div>
+
+						<!-- User 2 response -->
+						<div
+							class="d-flex flex-row justify-content-end mb-4 pt-1"
+						>
+							<div>
+								<p
+									class="small p-2 me-3 mb-1 text-white rounded-3 bg-primary"
+								>
+									I'm good, how about you?
+								</p>
+								<p
+									class="small me-3 mb-3 rounded-3 text-muted d-flex justify-content-end"
+								>
+									00:06
+								</p>
+							</div>
+							<img
+								src="https://picsum.photos/45"
+								alt="avatar 2"
+								class="rounded-circle"
+								style="width: 45px; height: 45px"
+							/>
+						</div>
+					</div>
+
+					<div
+						class="card-footer text-muted d-flex justify-content-start align-items-center p-3"
+					>
+						<img
+							src="https://picsum.photos/35"
+							alt="avatar 3"
+							class="rounded-circle"
+							style="width: 35px; height: 35px"
+						/>
+						<input
+							type="text"
+							class="form-control form-control-sm mx-2"
+							placeholder="Type a message"
+							style="flex-grow: 1"
+						/>
+						<a class="text-muted" href="#!" style="font-size: 1.2em"
+							><i class="fas fa-paperclip"></i
+						></a>
+						<a
+							class="ms-3 text-muted"
+							href="#!"
+							style="font-size: 1.2em"
+							><i class="fas fa-smile"></i
+						></a>
+						<a
+							class="ms-3 text-muted"
+							href="#!"
+							style="font-size: 1.2em"
+							><i class="fas fa-paper-plane"></i
+						></a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>

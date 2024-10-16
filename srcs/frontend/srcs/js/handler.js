@@ -46,3 +46,6 @@ export const loginHandler = (route) => {
         }, 500);
     });
 };
+export const messageHandler = (route) => {
+    console.log("message handler: ", route.description);
+};
