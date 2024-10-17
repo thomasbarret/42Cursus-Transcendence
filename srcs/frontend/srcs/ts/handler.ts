@@ -74,25 +74,42 @@ export const profileHandler = (route: Routes, slug?: string) => {
 	console.log("current path slug: ", slug);
 
 	const usernameField = document.getElementById("username-field");
+	const uuidField = document.getElementById("uuid-field");
 	const winField = document.getElementById("win-field");
 	const loseField = document.getElementById("lose-field");
 	const playedField = document.getElementById("played-field");
 	const addFriend = document.getElementById("add-friend");
 
 	if (!slug) {
-		usernameField.textContent = "current user";
+		try {
+			const getProfile = async () => {
+				const req = await fetch(BASE_URL + "/user/@me/", {
+					method: "GET",
+				});
+
+				if (req.ok) {
+					const data = await req.json();
+
+					usernameField.textContent = data.display_name;
+					uuidField.textContent = data.uuid;
+					const winTotal = Math.floor(Math.random() * 20);
+					const loseTotal = Math.floor(Math.random() * 20);
+					const playedTotal = winTotal + loseTotal;
+
+					winField.textContent = "Wins: " + winTotal.toString();
+					loseField.textContent = "Losses: " + loseTotal.toString();
+					playedField.textContent =
+						"Games Played: " + playedTotal.toString();
+				}
+			};
+			getProfile();
+		} catch (error) {
+			Toast("Network error", "danger");
+		}
 		addFriend.remove();
 	} else {
 		usernameField.textContent = slug;
 	}
-
-	const winTotal = Math.floor(Math.random() * 20);
-	const loseTotal = Math.floor(Math.random() * 20);
-	const playedTotal = winTotal + loseTotal;
-
-	winField.textContent = "Wins: " + winTotal.toString();
-	loseField.textContent = "Losses: " + loseTotal.toString();
-	playedField.textContent = "Games Played: " + playedTotal.toString();
 
 	// const entry = document.getElementById("entry");
 	// if (!slug) entry.appendChild(div("this is my own profile page"));
