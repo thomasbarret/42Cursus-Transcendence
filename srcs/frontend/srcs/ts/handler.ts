@@ -1,5 +1,5 @@
-import { messageBoxLeft, messageBoxRight } from "./components.js";
-import { h1, t } from "./framework.js";
+import { messageBoxLeft, messageBoxRight, Toast } from "./components.js";
+import { div, h1, t } from "./framework.js";
 import { urlRoute } from "./main.js";
 import { activateDarkMode, toggleDarkMode } from "./storage.js";
 import { Routes } from "./types";
@@ -72,4 +72,29 @@ export const messageHandler = (route: Routes) => {
 export const profileHandler = (route: Routes, slug?: string) => {
 	console.log("current route: ", route.description);
 	console.log("current path slug: ", slug);
+
+	const usernameField = document.getElementById("username-field");
+	const winField = document.getElementById("win-field");
+	const loseField = document.getElementById("lose-field");
+	const playedField = document.getElementById("played-field");
+	const addFriend = document.getElementById("add-friend");
+
+	if (!slug) {
+		usernameField.textContent = "current user";
+		addFriend.remove();
+	} else {
+		usernameField.textContent = slug;
+	}
+
+	const winTotal = Math.floor(Math.random() * 20);
+	const loseTotal = Math.floor(Math.random() * 20);
+	const playedTotal = winTotal + loseTotal;
+
+	winField.textContent = "Wins: " + winTotal.toString();
+	loseField.textContent = "Losses: " + loseTotal.toString();
+	playedField.textContent = "Games Played: " + playedTotal.toString();
+
+	// const entry = document.getElementById("entry");
+	// if (!slug) entry.appendChild(div("this is my own profile page"));
+	// else entry.appendChild(div("seeing profile for user: " + slug));
 };
