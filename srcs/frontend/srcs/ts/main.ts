@@ -3,17 +3,27 @@ import { routes } from "./route.js";
 
 document.addEventListener("click", (e) => {
 	const { target } = e;
-	if (!(target instanceof HTMLElement) || target.id !== "navigation") {
+	if (
+		!(target instanceof HTMLElement) ||
+		target.getAttribute("data-router-navigation") !== "true"
+	) {
 		return;
 	}
 	e.preventDefault();
 	urlRoute(e);
 });
 
-const urlRoute = (event: Event) => {
-	if (event.target instanceof HTMLAnchorElement) {
-		window.history.pushState({}, "", event.target.href);
+export const urlRoute = (event: Event | string) => {
+	let newLocation = undefined;
+	if (typeof event === "string") {
+		newLocation = event;
+	} else if (event.target instanceof HTMLAnchorElement) {
 		event.preventDefault();
+		newLocation = event.target.href;
+	}
+	if (newLocation) {
+		console.log(newLocation);
+		window.history.pushState({}, "", newLocation);
 		locationHandler();
 	}
 };
