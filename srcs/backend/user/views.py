@@ -29,6 +29,7 @@ class ProfilView(APIView):
         if public_user is None:
             return Response({"error": "Authentication required for '@me'"}, status=status.HTTP_401_UNAUTHORIZED)
         return JsonResponse({
+            'uuid': public_user.user.uuid,
             'display_name': public_user.display_name,
             'avatar': public_user.avatar.url if public_user.avatar else None,
         })
