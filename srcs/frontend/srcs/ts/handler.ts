@@ -1,6 +1,6 @@
 import { messageBoxLeft, messageBoxRight, Toast } from "./components.js";
 import { div, h1, t } from "./framework.js";
-import { urlRoute } from "./main.js";
+import { navigate, urlRoute } from "./main.js";
 import { activateDarkMode, toggleDarkMode } from "./storage.js";
 import { Routes } from "./types";
 
@@ -78,7 +78,10 @@ export const profileHandler = (route: Routes, slug?: string) => {
 	const winField = document.getElementById("win-field");
 	const loseField = document.getElementById("lose-field");
 	const playedField = document.getElementById("played-field");
-	const addFriend = document.getElementById("add-friend");
+	const addFriendField = document.getElementById("add-friend");
+	const avatarField = document.getElementById(
+		"avatar-field"
+	) as HTMLImageElement;
 
 	if (!slug) {
 		try {
@@ -100,13 +103,15 @@ export const profileHandler = (route: Routes, slug?: string) => {
 					loseField.textContent = "Losses: " + loseTotal.toString();
 					playedField.textContent =
 						"Games Played: " + playedTotal.toString();
+				} else {
+					navigate("/login");
 				}
 			};
 			getProfile();
 		} catch (error) {
 			Toast("Network error", "danger");
 		}
-		addFriend.remove();
+		addFriendField.remove();
 	} else {
 		usernameField.textContent = slug;
 	}

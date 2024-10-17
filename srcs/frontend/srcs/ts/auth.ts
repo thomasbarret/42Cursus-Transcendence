@@ -1,6 +1,6 @@
 import { Toast, ToastComponent } from "./components.js";
 import { BASE_URL } from "./handler.js";
-import { urlRoute } from "./main.js";
+import { navigate } from "./main.js";
 import { Routes } from "./types.js";
 
 const auth = (url: string, body: Object) => {
@@ -52,9 +52,7 @@ export const loginHandler = (route: Routes) => {
 
 			if (req.ok) {
 				Toast("Successfully logged in!", "success");
-				setTimeout(() => {
-					urlRoute(window.location.origin);
-				}, 500);
+				navigate("/profile", 500);
 			} else {
 				emailElement.classList.add("is-invalid");
 				passwordElement.classList.add("is-invalid");
@@ -134,9 +132,7 @@ export const signUpHandler = (route: Routes) => {
 					"Successfully created account, you can Login now!",
 					"success"
 				);
-				setTimeout(() => {
-					urlRoute(window.location.origin + "/login");
-				}, 500);
+				navigate("/login", 500);
 			} else {
 				if (json.error === "Username already exists")
 					usernameElement.classList.add("is-invalid");

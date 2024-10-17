@@ -58,3 +58,17 @@ locationHandler();
 document.addEventListener("DOMContentLoaded", () => {
 	mainHandler();
 });
+
+export const navigate = (path: string, delay?: number) => {
+	let url = window.location.origin;
+
+	if (path.length !== 0) url += path;
+
+	if (delay) {
+		setTimeout(() => {
+			urlRoute(url);
+		}, delay);
+	} else {
+		urlRoute(url);
+	}
+};

@@ -1,6 +1,6 @@
 import { Toast } from "./components.js";
 import { BASE_URL } from "./handler.js";
-import { urlRoute } from "./main.js";
+import { navigate } from "./main.js";
 const auth = (url, body) => {
     return fetch(url, {
         method: "POST",
@@ -38,9 +38,7 @@ export const loginHandler = (route) => {
             submitButton.innerHTML = cpyButton;
             if (req.ok) {
                 Toast("Successfully logged in!", "success");
-                setTimeout(() => {
-                    urlRoute(window.location.origin);
-                }, 500);
+                navigate("/profile", 500);
             }
             else {
                 emailElement.classList.add("is-invalid");
@@ -97,9 +95,7 @@ export const signUpHandler = (route) => {
             if (res.ok) {
                 console.log(res.status);
                 Toast("Successfully created account, you can Login now!", "success");
-                setTimeout(() => {
-                    urlRoute(window.location.origin + "/login");
-                }, 500);
+                navigate("/login", 500);
             }
             else {
                 if (json.error === "Username already exists")

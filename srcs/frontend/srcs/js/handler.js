@@ -1,5 +1,6 @@
 import { messageBoxLeft, messageBoxRight, Toast } from "./components.js";
 import { h1, t } from "./framework.js";
+import { navigate } from "./main.js";
 import { activateDarkMode, toggleDarkMode } from "./storage.js";
 export const BASE_URL = "/api";
 export const mainHandler = () => {
@@ -49,7 +50,8 @@ export const profileHandler = (route, slug) => {
     const winField = document.getElementById("win-field");
     const loseField = document.getElementById("lose-field");
     const playedField = document.getElementById("played-field");
-    const addFriend = document.getElementById("add-friend");
+    const addFriendField = document.getElementById("add-friend");
+    const avatarField = document.getElementById("avatar-field");
     if (!slug) {
         try {
             const getProfile = async () => {
@@ -68,13 +70,16 @@ export const profileHandler = (route, slug) => {
                     playedField.textContent =
                         "Games Played: " + playedTotal.toString();
                 }
+                else {
+                    navigate("/login");
+                }
             };
             getProfile();
         }
         catch (error) {
             Toast("Network error", "danger");
         }
-        addFriend.remove();
+        addFriendField.remove();
     }
     else {
         usernameField.textContent = slug;
