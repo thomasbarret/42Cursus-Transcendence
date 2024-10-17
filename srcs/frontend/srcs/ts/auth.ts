@@ -23,7 +23,18 @@ export const loginHandler = (route: Routes) => {
 		"password-input"
 	) as HTMLInputElement;
 
+	const submitButton = document.getElementById("submit-button");
+
 	loginForm.addEventListener("submit", async (event) => {
+		emailElement.classList.remove("is-invalid");
+		passwordElement.classList.remove("is-invalid");
+		const cpyButton = submitButton.innerHTML;
+		submitButton.setAttribute("disabled", "");
+		submitButton.innerHTML = `
+			<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+			<span role="status">Loading...</span>
+		`;
+
 		event.preventDefault();
 		const data = Object.fromEntries(new FormData(loginForm));
 
@@ -36,7 +47,12 @@ export const loginHandler = (route: Routes) => {
 		try {
 			const req = await auth(url, body);
 			console.log(req.status);
+
+			submitButton.removeAttribute("disabled");
+			submitButton.innerHTML = cpyButton;
+
 			if (req.ok) {
+				Toast("Successfully logged in!", "success");
 				setTimeout(() => {
 					urlRoute(window.location.origin);
 				}, 500);
