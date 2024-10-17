@@ -1,6 +1,38 @@
-import { div, h1, p, t } from "./framework.js";
+import { messageBoxLeft, messageBoxRight, Toast } from "./components.js";
+import { a, h1, t } from "./framework.js";
+import { checkLoggedIn, navigate } from "./main.js";
 import { activateDarkMode, toggleDarkMode } from "./storage.js";
 export const BASE_URL = "/api";
+export const navHandler = () => {
+    const navAuth = document.getElementById("nav-auth");
+    navAuth.innerHTML = "";
+    checkLoggedIn().then((loggedIn) => {
+        if (loggedIn) {
+            const logoutButon = t("button", "Logout")
+                .cl("btn btn-primary")
+                .onclick$(async (event) => {
+                await fetch(BASE_URL + "/auth/logout/", {
+                    method: "POST",
+                });
+                navigate("/");
+                // navHandler();
+            });
+            navAuth.appendChild(logoutButon);
+        }
+        else {
+            const loginButton = a("Login")
+                .attr("data-router-navigation", "true")
+                .cl("btn btn-primary col me-1")
+                .attr("href", "/login");
+            const signUpButton = a("Sign Up")
+                .attr("data-router-navigation", "true")
+                .cl("btn col")
+                .attr("href", "/signup");
+            navAuth.appendChild(loginButton);
+            navAuth.appendChild(signUpButton);
+        }
+    });
+};
 export const mainHandler = () => {
     const toggle = document.getElementById("theme-toggle");
     toggle.addEventListener("click", () => {
@@ -23,26 +55,6 @@ export const contactHandler = (route) => {
 export const aboutHandler = (route) => {
     console.log("current route: ", route.description);
 };
-export const messageBoxRight = (text, time) => {
-    const img = t("img")
-        .attr("src", "https://picsum.photos/45")
-        .attr("alt", "avatar 1")
-        .attr("style", "width: 30px; height: 30px")
-        .attr("class", "rounded-circle");
-    const content = div(p(text).attr("class", "small p-2 me-3 mb-1 rounded-3 bg-primary text-white"), p(time).attr("class", "small me-3 mb-3 rounded-3 text-muted d-flex justify-content-end"));
-    const message = div(content, img).attr("class", "d-flex flex-row justify-content-end mb-3 pt-1");
-    return message;
-};
-export const messageBoxLeft = (text, time) => {
-    const img = t("img")
-        .attr("src", "https://picsum.photos/45")
-        .attr("alt", "avatar 1")
-        .attr("style", "width: 30px; height: 30px")
-        .attr("class", "rounded-circle");
-    const content = div(p(text).attr("class", "small p-2 ms-3 mb-1 rounded-3  bg-body-secondary text-body-primary"), p(time).attr("class", "small ms-3 mb-3 rounded-3 text-muted"));
-    const message = div(img, content).attr("class", "d-flex flex-row justify-content-start mb-3");
-    return message;
-};
 export const messageHandler = (route) => {
     console.log("message handler: ", route.description);
     const chatBody = document.getElementById("chat-body");
@@ -56,4 +68,53 @@ export const messageHandler = (route) => {
     chatBody.appendChild(messageBoxLeft("so good omg", "00:44"));
     chatBody.appendChild(messageBoxRight("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer pulvinar justo non nibh aliquam, et sollicitudin leo suscipit. Curabitur volutpat molestie magna sit amet laoreet. Nulla venenatis sem sit amet ultrices semper. Curabitur ultricies interdum ex, vel accumsan ex tincidunt ut. Duis varius ultricies vestibulum. In faucibus fringilla ipsum, gravida commodo ligula efficitur id. Donec tincidunt congue velit, nec iaculis diam ultrices non.", "00:46"));
     chatBody.appendChild(messageBoxLeft("so good omg4", "00:44"));
+    setTimeout(() => {
+        chatBody.appendChild(messageBoxLeft("wesh wesh k", "00:44"));
+    }, 3000);
+};
+export const profileHandler = (route, slug) => {
+    console.log("current route: ", route.description);
+    console.log("current path slug: ", slug);
+    const usernameField = document.getElementById("username-field");
+    const uuidField = document.getElementById("uuid-field");
+    const winField = document.getElementById("win-field");
+    const loseField = document.getElementById("lose-field");
+    const playedField = document.getElementById("played-field");
+    const addFriendField = document.getElementById("add-friend");
+    const avatarField = document.getElementById("avatar-field");
+    if (!slug) {
+        try {
+            const getProfile = async () => {
+                const req = await fetch(BASE_URL + "/user/@me/", {
+                    method: "GET",
+                });
+                if (req.ok) {
+                    const data = await req.json();
+                    usernameField.textContent = data.display_name;
+                    uuidField.textContent = data.uuid;
+                    const winTotal = Math.floor(Math.random() * 20);
+                    const loseTotal = Math.floor(Math.random() * 20);
+                    const playedTotal = winTotal + loseTotal;
+                    winField.textContent = "Wins: " + winTotal.toString();
+                    loseField.textContent = "Losses: " + loseTotal.toString();
+                    playedField.textContent =
+                        "Games Played: " + playedTotal.toString();
+                }
+                else {
+                    navigate("/login");
+                }
+            };
+            getProfile();
+        }
+        catch (error) {
+            Toast("Network error", "danger");
+        }
+        addFriendField.remove();
+    }
+    else {
+        usernameField.textContent = slug;
+    }
+    // const entry = document.getElementById("entry");
+    // if (!slug) entry.appendChild(div("this is my own profile page"));
+    // else entry.appendChild(div("seeing profile for user: " + slug));
 };

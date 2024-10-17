@@ -1,4 +1,4 @@
-import { mainHandler } from "./handler.js";
+import { BASE_URL, mainHandler, navHandler } from "./handler.js";
 import { routes } from "./route.js";
 
 document.addEventListener("click", (e) => {
@@ -22,23 +22,48 @@ export const urlRoute = (event: Event | string) => {
 		newLocation = event.target.href;
 	}
 	if (newLocation) {
-		console.log(newLocation);
+		// console.log(newLocation);
 		window.history.pushState({}, "", newLocation);
 		locationHandler();
 	}
 };
 
+export const checkLoggedIn = async () => {
+	const req = await fetch(BASE_URL + "/user/@me/", {
+		method: "GET",
+	});
+	return req.ok;
+};
+
 // create a function that handles the url location
 const locationHandler = async () => {
+	navHandler();
 	let currentLocation = window.location.pathname;
 	if (currentLocation.length == 0) {
 		currentLocation = "/";
 	}
-	const route = routes[currentLocation] || routes["404"];
+	const paths = currentLocation.split("/").filter((el) => el != "");
+
+	if (paths.length > 1) {
+		currentLocation = "/" + paths[0];
+	}
+
+	let route = routes[currentLocation] || routes["404"];
+	if (!route.slug && paths.length > 1) route = routes["404"];
+
+	if (route.auth) {
+		if (!(await checkLoggedIn())) {
+			navigate("/login");
+			return;
+		}
+	}
 	const html = await fetch(route.page).then((response) => response.text());
 	const content = document.getElementById("content");
 	if (content) content.innerHTML = html;
-	if (route.handler) route.handler(route);
+	if (route.handler) {
+		if (paths.length > 1) route.handler(route, paths[1]);
+		else route.handler(route);
+	}
 	document.title = route.title;
 };
 
@@ -48,3 +73,17 @@ locationHandler();
 document.addEventListener("DOMContentLoaded", () => {
 	mainHandler();
 });
+
+export const navigate = (path: string, delay?: number) => {
+	let url = window.location.origin;
+
+	if (path.length !== 0) url += path;
+
+	if (delay) {
+		setTimeout(() => {
+			urlRoute(url);
+		}, delay);
+	} else {
+		urlRoute(url);
+	}
+};

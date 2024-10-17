@@ -57,56 +57,49 @@
 							<li class="nav-item">
 								<a
 									class="nav-link"
-									href="/about"
-									data-router-navigation="true"
-									>About</a
-								>
-							</li>
-							<li class="nav-item">
-								<a
-									class="nav-link"
-									href="/contact"
-									data-router-navigation="true"
-									>Contact Us</a
-								>
-							</li>
-							<li class="nav-item">
-								<a
-									class="nav-link"
 									href="/messages"
 									data-router-navigation="true"
 									>Messages</a
+								>
+							</li>
+							<li class="nav-item">
+								<a
+									class="nav-link"
+									href="/profile"
+									data-router-navigation="true"
+									>Profile</a
 								>
 							</li>
 						</ul>
 						<button class="btn btn-primary me-2" id="theme-toggle">
 							☀
 						</button>
-						<div id="nav-right">
+						<div id="nav-auth" class="grid gap-3">
 							<!-- id="navigation" -->
-							<a
-								href="/login"
-								class="btn btn-primary"
-								data-router-navigation="true"
-								>Login</a
-							>
-							<a
-								href="/signup"
-								class="btn"
-								data-router-navigation="true"
-								>Sign Up</a
-							>
 						</div>
 					</div>
 				</div>
 			</nav>
 			<div id="content" class="d-flex flex-grow-1 overflow-hidden"></div>
 		</div>
-		<script src="/js/main.js" type="module"></script>
 		<script
+			async
+			src="https://cdn.jsdelivr.net/npm/es-module-shims@1/dist/es-module-shims.min.js"
+			crossorigin="anonymous"
+		></script>
+		<script type="importmap">
+			{
+				"imports": {
+					"@popperjs/core": "https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/esm/popper.min.js",
+					"bootstrap": "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.esm.min.js"
+				}
+			}
+		</script>
+		<script src="/js/main.js" type="module"></script>
+		<!-- <script
 			src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
 			integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
 			crossorigin="anonymous"
-		></script>
+		></script> -->
 	</body>
 </html>

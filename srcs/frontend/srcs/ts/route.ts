@@ -1,10 +1,11 @@
-import { loginHandler } from "./auth.js";
+import { loginHandler, signUpHandler } from "./auth.js";
 import { gameHandler } from "./game.js";
 import {
 	aboutHandler,
 	contactHandler,
 	indexHandler,
 	messageHandler,
+	profileHandler,
 } from "./handler.js";
 import { Routes } from "./types.js";
 
@@ -46,10 +47,25 @@ export const routes: Record<string, Routes> = {
 		description: "This is the login page!",
 		handler: loginHandler,
 	},
+	"/signup": {
+		page: "/pages/signup.html",
+		title: "Signup | " + urlPageTitle,
+		description: "Signup Page",
+		handler: signUpHandler,
+	},
 	"/messages": {
 		page: "/pages/messages.html",
 		title: "Messages | " + urlPageTitle,
 		description: "This is the login page!",
 		handler: messageHandler,
+		auth: true,
+	},
+	"/profile": {
+		page: "/pages/profile.html",
+		title: "Profile | " + urlPageTitle,
+		description: "This is the profile page",
+		handler: profileHandler,
+		slug: true,
+		auth: true,
 	},
 };
