@@ -11,6 +11,7 @@ export type TagElement<K extends keyof HTMLElementTagNameMap> =
 	HTMLElementTagNameMap[K] & {
 		attr: (name: string, value: string) => TagElement<K>;
 		onclick$: (callback: (event: MouseEvent) => void) => TagElement<K>;
+		cl: (value: string) => TagElement<K>;
 	};
 
 export interface Scale {

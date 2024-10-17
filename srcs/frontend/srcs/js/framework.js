@@ -11,6 +11,11 @@ export const t = (name, ...child) => {
         result.setAttribute(name, value);
         return result;
     };
+    result.cl = (value) => {
+        const vals = value.split(" ");
+        result.classList.add(...vals);
+        return result;
+    };
     result.onclick$ = (callback) => {
         result.onclick = callback;
         return result;

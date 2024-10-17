@@ -1,4 +1,5 @@
-import { div, h1, p, t } from "./framework.js";
+import { messageBoxLeft, messageBoxRight } from "./components.js";
+import { h1, t } from "./framework.js";
 import { urlRoute } from "./main.js";
 import { activateDarkMode, toggleDarkMode } from "./storage.js";
 import { Routes } from "./types";
@@ -39,55 +40,6 @@ export const contactHandler = (route: Routes) => {
 
 export const aboutHandler = (route: Routes) => {
 	console.log("current route: ", route.description);
-};
-
-export const messageBoxRight = (text: string, time: string) => {
-	const img = t("img")
-		.attr("src", "https://picsum.photos/45")
-		.attr("alt", "avatar 1")
-		.attr("style", "width: 30px; height: 30px")
-		.attr("class", "rounded-circle");
-
-	const content = div(
-		p(text).attr(
-			"class",
-			"small p-2 me-3 mb-1 rounded-3 bg-primary text-white"
-		),
-		p(time).attr(
-			"class",
-			"small me-3 mb-3 rounded-3 text-muted d-flex justify-content-end"
-		)
-	);
-
-	const message = div(content, img).attr(
-		"class",
-		"d-flex flex-row justify-content-end mb-3 pt-1"
-	);
-
-	return message;
-};
-
-export const messageBoxLeft = (text: string, time: string) => {
-	const img = t("img")
-		.attr("src", "https://picsum.photos/45")
-		.attr("alt", "avatar 1")
-		.attr("style", "width: 30px; height: 30px")
-		.attr("class", "rounded-circle");
-
-	const content = div(
-		p(text).attr(
-			"class",
-			"small p-2 ms-3 mb-1 rounded-3  bg-body-secondary text-body-primary"
-		),
-		p(time).attr("class", "small ms-3 mb-3 rounded-3 text-muted")
-	);
-
-	const message = div(img, content).attr(
-		"class",
-		"d-flex flex-row justify-content-start mb-3"
-	);
-
-	return message;
 };
 
 export const messageHandler = (route: Routes) => {

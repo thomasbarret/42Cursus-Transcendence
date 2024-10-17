@@ -24,6 +24,12 @@ export const t = <K extends keyof HTMLElementTagNameMap>(
 		return result;
 	};
 
+	result.cl = (value: string) => {
+		const vals = value.split(" ");
+		result.classList.add(...vals);
+		return result;
+	};
+
 	result.onclick$ = (callback) => {
 		result.onclick = callback;
 		return result;
