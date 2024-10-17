@@ -4,7 +4,8 @@ export interface Routes {
 	page: string;
 	title: string;
 	description: string;
-	handler?: (route: Routes) => void;
+	handler?: (route: Routes, slug?: string) => void;
+	slug?: boolean;
 }
 
 export type TagElement<K extends keyof HTMLElementTagNameMap> =

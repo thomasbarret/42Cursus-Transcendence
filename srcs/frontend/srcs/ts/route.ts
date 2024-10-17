@@ -5,6 +5,7 @@ import {
 	contactHandler,
 	indexHandler,
 	messageHandler,
+	profileHandler,
 } from "./handler.js";
 import { Routes } from "./types.js";
 
@@ -57,5 +58,12 @@ export const routes: Record<string, Routes> = {
 		title: "Messages | " + urlPageTitle,
 		description: "This is the login page!",
 		handler: messageHandler,
+	},
+	"/profile": {
+		page: "/pages/profile.html",
+		title: "Profile | " + urlPageTitle,
+		description: "This is the profile page",
+		handler: profileHandler,
+		slug: true,
 	},
 };

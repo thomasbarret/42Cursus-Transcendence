@@ -64,4 +64,12 @@ export const messageHandler = (route: Routes) => {
 		)
 	);
 	chatBody.appendChild(messageBoxLeft("so good omg4", "00:44"));
+	setTimeout(() => {
+		chatBody.appendChild(messageBoxLeft("wesh wesh k", "00:44"));
+	}, 3000);
+};
+
+export const profileHandler = (route: Routes, slug?: string) => {
+	console.log("current route: ", route.description);
+	console.log("current path slug: ", slug);
 };

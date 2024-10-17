@@ -27,13 +27,14 @@ export const ToastComponent = (value: string, level?: string) => {
 	).cl("toast-container position-fixed bottom-0 end-0 p-3");
 };
 
-export const Toast = (value: string, level?: string) => {
+export const Toast = (value: string, level?: string, delay?: number) => {
+	if (level === "") level = "primary";
 	const toast = ToastComponent(value, level);
 
 	document.body.appendChild(toast);
 	const el = document.getElementById("toast-component");
 	const toastBootstrap = bootstrap.Toast.getOrCreateInstance(el, {
-		delay: 3000,
+		delay: delay ? delay : 3000,
 	});
 
 	toastBootstrap.show();

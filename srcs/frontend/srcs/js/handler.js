@@ -37,4 +37,11 @@ export const messageHandler = (route) => {
     chatBody.appendChild(messageBoxLeft("so good omg", "00:44"));
     chatBody.appendChild(messageBoxRight("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer pulvinar justo non nibh aliquam, et sollicitudin leo suscipit. Curabitur volutpat molestie magna sit amet laoreet. Nulla venenatis sem sit amet ultrices semper. Curabitur ultricies interdum ex, vel accumsan ex tincidunt ut. Duis varius ultricies vestibulum. In faucibus fringilla ipsum, gravida commodo ligula efficitur id. Donec tincidunt congue velit, nec iaculis diam ultrices non.", "00:46"));
     chatBody.appendChild(messageBoxLeft("so good omg4", "00:44"));
+    setTimeout(() => {
+        chatBody.appendChild(messageBoxLeft("wesh wesh k", "00:44"));
+    }, 3000);
+};
+export const profileHandler = (route, slug) => {
+    console.log("current route: ", route.description);
+    console.log("current path slug: ", slug);
 };

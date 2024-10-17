@@ -46,7 +46,6 @@ export const loginHandler = (route: Routes) => {
 		const url = BASE_URL + "/auth/login/";
 		try {
 			const req = await auth(url, body);
-			console.log(req.status);
 
 			submitButton.removeAttribute("disabled");
 			submitButton.innerHTML = cpyButton;
@@ -61,7 +60,7 @@ export const loginHandler = (route: Routes) => {
 				passwordElement.classList.add("is-invalid");
 			}
 		} catch (error) {
-			alert("Network Error " + error.message);
+			Toast("Network error occurred.", "danger");
 			console.log("NETWORK ERROR: ", error);
 		}
 	});
@@ -131,17 +130,22 @@ export const signUpHandler = (route: Routes) => {
 			console.log(json);
 			if (res.ok) {
 				console.log(res.status);
+				Toast(
+					"Successfully created account, you can Login now!",
+					"success"
+				);
+				setTimeout(() => {
+					urlRoute(window.location.origin + "/login");
+				}, 500);
 			} else {
-				if (json.error === "Username already exists") {
-					console.log("username");
+				if (json.error === "Username already exists")
 					usernameElement.classList.add("is-invalid");
-				} else if (json.error === "Email already exists") {
-					console.log("email");
+				else if (json.error === "Email already exists")
 					emailElement.classList.add("is-invalid");
-				}
+				Toast("Failed to create account", "danger", 1000);
 			}
 		} catch (error) {
-			alert("Network Error" + error.message);
+			Toast("Network error occurred.", "danger");
 			console.log("NETWORK ERROR: ", error);
 		}
 	});

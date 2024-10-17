@@ -13,12 +13,14 @@ export const ToastComponent = (value, level) => {
         .attr("aria-atomic", "true")
         .attr("id", "toast-component")).cl("toast-container position-fixed bottom-0 end-0 p-3");
 };
-export const Toast = (value, level) => {
+export const Toast = (value, level, delay) => {
+    if (level === "")
+        level = "primary";
     const toast = ToastComponent(value, level);
     document.body.appendChild(toast);
     const el = document.getElementById("toast-component");
     const toastBootstrap = bootstrap.Toast.getOrCreateInstance(el, {
-        delay: 3000,
+        delay: delay ? delay : 3000,
     });
     toastBootstrap.show();
     el.addEventListener("hidden.bs.toast", () => el.remove());

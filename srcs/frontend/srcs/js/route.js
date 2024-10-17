@@ -1,6 +1,6 @@
 import { loginHandler, signUpHandler } from "./auth.js";
 import { gameHandler } from "./game.js";
-import { aboutHandler, contactHandler, indexHandler, messageHandler, } from "./handler.js";
+import { aboutHandler, contactHandler, indexHandler, messageHandler, profileHandler, } from "./handler.js";
 const urlPageTitle = "nascent";
 export const routes = {
     404: {
@@ -49,5 +49,12 @@ export const routes = {
         title: "Messages | " + urlPageTitle,
         description: "This is the login page!",
         handler: messageHandler,
+    },
+    "/profile": {
+        page: "/pages/profile.html",
+        title: "Profile | " + urlPageTitle,
+        description: "This is the profile page",
+        handler: profileHandler,
+        slug: true,
     },
 };
