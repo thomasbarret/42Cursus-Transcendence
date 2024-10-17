@@ -49,6 +49,10 @@ INSTALLED_APPS = [
     "oauth2_provider",
     "authentication",
     "user",
+
+    # Socket
+
+    'channels',
     "chat",
 ]
 
