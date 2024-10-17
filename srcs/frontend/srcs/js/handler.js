@@ -1,8 +1,38 @@
 import { messageBoxLeft, messageBoxRight, Toast } from "./components.js";
-import { h1, t } from "./framework.js";
-import { navigate } from "./main.js";
+import { a, h1, t } from "./framework.js";
+import { checkLoggedIn, navigate } from "./main.js";
 import { activateDarkMode, toggleDarkMode } from "./storage.js";
 export const BASE_URL = "/api";
+export const navHandler = () => {
+    const navAuth = document.getElementById("nav-auth");
+    navAuth.innerHTML = "";
+    checkLoggedIn().then((loggedIn) => {
+        if (loggedIn) {
+            const logoutButon = t("button", "Logout")
+                .cl("btn btn-primary")
+                .onclick$(async (event) => {
+                await fetch(BASE_URL + "/auth/logout/", {
+                    method: "POST",
+                });
+                navigate("/");
+                // navHandler();
+            });
+            navAuth.appendChild(logoutButon);
+        }
+        else {
+            const loginButton = a("Login")
+                .attr("data-router-navigation", "true")
+                .cl("btn btn-primary col me-1")
+                .attr("href", "/login");
+            const signUpButton = a("Sign Up")
+                .attr("data-router-navigation", "true")
+                .cl("btn col")
+                .attr("href", "/signup");
+            navAuth.appendChild(loginButton);
+            navAuth.appendChild(signUpButton);
+        }
+    });
+};
 export const mainHandler = () => {
     const toggle = document.getElementById("theme-toggle");
     toggle.addEventListener("click", () => {

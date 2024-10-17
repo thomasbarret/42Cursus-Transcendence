@@ -1,4 +1,4 @@
-import { BASE_URL, mainHandler } from "./handler.js";
+import { BASE_URL, mainHandler, navHandler } from "./handler.js";
 import { routes } from "./route.js";
 
 document.addEventListener("click", (e) => {
@@ -28,8 +28,16 @@ export const urlRoute = (event: Event | string) => {
 	}
 };
 
+export const checkLoggedIn = async () => {
+	const req = await fetch(BASE_URL + "/user/@me/", {
+		method: "GET",
+	});
+	return req.ok;
+};
+
 // create a function that handles the url location
 const locationHandler = async () => {
+	navHandler();
 	let currentLocation = window.location.pathname;
 	if (currentLocation.length == 0) {
 		currentLocation = "/";
@@ -44,10 +52,7 @@ const locationHandler = async () => {
 	if (!route.slug && paths.length > 1) route = routes["404"];
 
 	if (route.auth) {
-		const req = await fetch(BASE_URL + "/user/@me/", {
-			method: "GET",
-		});
-		if (!req.ok) {
+		if (!(await checkLoggedIn())) {
 			navigate("/login");
 			return;
 		}
