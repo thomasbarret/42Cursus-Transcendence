@@ -1,4 +1,4 @@
-import { loginHandler } from "./auth.js";
+import { loginHandler, signUpHandler } from "./auth.js";
 import { gameHandler } from "./game.js";
 import {
 	aboutHandler,
@@ -45,6 +45,12 @@ export const routes: Record<string, Routes> = {
 		title: "Login | " + urlPageTitle,
 		description: "This is the login page!",
 		handler: loginHandler,
+	},
+	"/signup": {
+		page: "/pages/signup.html",
+		title: "Signup | " + urlPageTitle,
+		description: "Signup Page",
+		handler: signUpHandler,
 	},
 	"/messages": {
 		page: "/pages/messages.html",

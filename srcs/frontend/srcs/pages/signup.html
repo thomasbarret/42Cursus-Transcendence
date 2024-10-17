@@ -1,0 +1,59 @@
+<div id="entry" class="container mt-5">
+	<div class="row justify-content-center">
+		<div
+			class="p-4 col-11 col-sm-8 col-md-6 col-lg-5 bg-body-tertiary rounded-3"
+		>
+			<form id="signup-form">
+				<div class="mb-3">
+					<label for="username" class="form-label">Username</label>
+					<input
+						type="text"
+						class="form-control"
+						id="username-input"
+						name="username"
+						required
+					/>
+					<div class="invalid-feedback">Username already exists.</div>
+				</div>
+				<div class="mb-3">
+					<label for="email" class="form-label">Email address</label>
+					<input
+						type="email"
+						class="form-control"
+						id="email-input"
+						name="email"
+						required
+					/>
+					<div class="invalid-feedback">Email already exists.</div>
+				</div>
+				<div class="mb-3">
+					<label for="password" class="form-label">Password</label>
+					<input
+						type="password"
+						class="form-control"
+						id="password-input"
+						name="password"
+						required
+					/>
+				</div>
+				<div class="mb-3">
+					<label for="confirm-password" class="form-label"
+						>Confirm Password</label
+					>
+					<input
+						type="password"
+						class="form-control"
+						id="confirm-password-input"
+						name="confirm-password"
+						required
+					/>
+					<div class="invalid-feedback">Passwords do not match.</div>
+				</div>
+				<button type="submit" class="btn btn-primary">Sign Up</button>
+			</form>
+		</div>
+	</div>
+	<!-- data-bs-autohide="false" -->
+
+	<button class="btn btn-primary" id="show-toast">click on me</button>
+</div>
