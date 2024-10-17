@@ -1,4 +1,4 @@
-import { mainHandler } from "./handler.js";
+import { BASE_URL, mainHandler } from "./handler.js";
 import { routes } from "./route.js";
 document.addEventListener("click", (e) => {
     const { target } = e;
@@ -37,6 +37,15 @@ const locationHandler = async () => {
     let route = routes[currentLocation] || routes["404"];
     if (!route.slug && paths.length > 1)
         route = routes["404"];
+    if (route.auth) {
+        const req = await fetch(BASE_URL + "/user/@me/", {
+            method: "GET",
+        });
+        if (!req.ok) {
+            navigate("/login");
+            return;
+        }
+    }
     const html = await fetch(route.page).then((response) => response.text());
     const content = document.getElementById("content");
     if (content)

@@ -92,7 +92,6 @@ export const profileHandler = (route: Routes, slug?: string) => {
 
 				if (req.ok) {
 					const data = await req.json();
-
 					usernameField.textContent = data.display_name;
 					uuidField.textContent = data.uuid;
 					const winTotal = Math.floor(Math.random() * 20);

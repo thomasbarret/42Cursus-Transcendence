@@ -58,6 +58,7 @@ export const routes: Record<string, Routes> = {
 		title: "Messages | " + urlPageTitle,
 		description: "This is the login page!",
 		handler: messageHandler,
+		auth: true,
 	},
 	"/profile": {
 		page: "/pages/profile.html",
@@ -65,5 +66,6 @@ export const routes: Record<string, Routes> = {
 		description: "This is the profile page",
 		handler: profileHandler,
 		slug: true,
+		auth: true,
 	},
 };

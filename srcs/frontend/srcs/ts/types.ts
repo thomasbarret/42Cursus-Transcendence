@@ -6,6 +6,7 @@ export interface Routes {
 	description: string;
 	handler?: (route: Routes, slug?: string) => void;
 	slug?: boolean;
+	auth?: boolean;
 }
 
 export type TagElement<K extends keyof HTMLElementTagNameMap> =
