@@ -19,6 +19,17 @@ services:
       context: srcs/backend
       dockerfile: "Dockerfile"
     restart: unless-stopped
+  redis:
+    networks:
+      - tsd-network
+    image: redis:7.4.1
+    #can keep ports open for now, but need to close them later on
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./srcs/services/redis:/data
+    restart: unless-stopped
+    command: ["redis-server", "--save", "60", "1"]
 
 networks:
   tsd-network:

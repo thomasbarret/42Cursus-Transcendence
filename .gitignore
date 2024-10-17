@@ -8,6 +8,8 @@
 .vscode
 .idea
 
+dump.rdb
+
 # testing
 /coverage
 
