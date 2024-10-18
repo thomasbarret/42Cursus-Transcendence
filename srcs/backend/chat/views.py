@@ -59,6 +59,7 @@ class UserDirectChannelView(APIView):
                 'users': [{
                     'uuid': user.uuid,
                     'display_name': user.publicuser.display_name,
+                    'username': user.username,
                     'avatar': user.publicuser.avatar.url if user.publicuser.avatar else None,
                 } for user in channel.users.all()],
                 'created_at': channel.created_at,
@@ -111,6 +112,7 @@ class UserDirectChannelView(APIView):
                     "user": {
                         "uuid": str(message.user.uuid),
                         "display_name": message.user.publicuser.display_name,
+                        "username": message.user.username,
                         "avatar": message.user.publicuser.avatar.url if message.user.publicuser.avatar else None,
                     }
                 }
@@ -126,6 +128,7 @@ class UserDirectChannelView(APIView):
             'user': {
                 'uuid': message.user.uuid,
                 'display_name': message.user.publicuser.display_name,
+                'username': message.user.username,
                 'avatar': message.user.publicuser.avatar.url if message.user.publicuser.avatar else None,
             }
         })
