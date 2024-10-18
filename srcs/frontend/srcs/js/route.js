@@ -1,6 +1,7 @@
 import { loginHandler, signUpHandler } from "./auth.js";
 import { gameHandler } from "./game.js";
-import { aboutHandler, contactHandler, indexHandler, messageHandler, profileHandler, } from "./handler.js";
+import { aboutHandler, contactHandler, indexHandler, profileHandler, } from "./handler.js";
+import { messageHandler } from "./messages.js";
 const urlPageTitle = "nascent";
 export const routes = {
     404: {

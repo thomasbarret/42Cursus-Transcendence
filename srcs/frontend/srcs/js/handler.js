@@ -1,7 +1,7 @@
-import { messageBox, Toast, userListBox, } from "./components.js";
+import { Toast, } from "./components.js";
 import { a, h1, t } from "./framework.js";
 import { checkLoggedIn, navigate } from "./main.js";
-import { activateDarkMode, getCurrentUser, toggleDarkMode } from "./storage.js";
+import { activateDarkMode, toggleDarkMode } from "./storage.js";
 export const BASE_URL = "/api";
 export const navHandler = () => {
     const navAuth = document.getElementById("nav-auth");
@@ -54,58 +54,6 @@ export const contactHandler = (route) => {
 };
 export const aboutHandler = (route) => {
     console.log("current route: ", route.description);
-};
-export const messageHandler = (route) => {
-    console.log("message handler: ", route.description);
-    const chatBody = document.getElementById("chat-body");
-    const chatTitle = document.getElementById("chat-title");
-    const userList = document.getElementById("user-list");
-    const currentUser = getCurrentUser();
-    let currentChat = "";
-    const renderBody = async (channel, title) => {
-        if (currentChat === channel.uuid)
-            return;
-        currentChat = channel.uuid;
-        console.log(channel);
-        chatTitle.textContent = title;
-        chatBody.innerHTML = "";
-        const res = await fetch(BASE_URL + "/chat/" + channel.uuid);
-        const data = await res.json();
-        console.log("messages: ", data);
-        data.messages.forEach((message) => {
-            chatBody.appendChild(messageBox(message.content, message.created_at, message.user.uuid === currentUser.uuid));
-            // console.log(message);
-        });
-    };
-    try {
-        const getMessages = async () => {
-            const res = await fetch(BASE_URL + "/chat/@me/");
-            if (res.ok) {
-                const data = await res.json();
-                data.channels.forEach((channel) => {
-                    const getUser = (users) => {
-                        const arr = [];
-                        const not = users.filter((u) => u.uuid != currentUser.uuid);
-                        not.forEach((el) => arr.push(el.display_name));
-                        return arr;
-                    };
-                    const notCurrent = getUser(channel.users);
-                    const title = notCurrent.join(", ");
-                    userList.appendChild(userListBox(title).onclick$(() => renderBody(channel, title)));
-                });
-                console.log("data.channels: ", data.channels);
-                console.log("current user: ", currentUser);
-            }
-            else {
-                console.log("error occured", res);
-                Toast("Error occured during message fetch", "danger");
-            }
-        };
-        getMessages();
-    }
-    catch (error) {
-        Toast("Network error " + error, "danger");
-    }
 };
 export const profileHandler = (route, slug) => {
     console.log("current route: ", route.description);

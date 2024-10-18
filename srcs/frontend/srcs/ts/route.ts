@@ -4,9 +4,9 @@ import {
 	aboutHandler,
 	contactHandler,
 	indexHandler,
-	messageHandler,
 	profileHandler,
 } from "./handler.js";
+import { messageHandler } from "./messages.js";
 import { Routes } from "./types.js";
 
 const urlPageTitle = "nascent";

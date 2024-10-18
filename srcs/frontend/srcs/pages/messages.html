@@ -1,7 +1,5 @@
-<!-- Chat Section -->
 <section class="w-100 p-3">
 	<div class="d-flex h-100">
-		<!-- Sidebar -->
 		<div
 			class="card flex-shrink-0 h-100 me-3"
 			style="width: 260px; max-height: calc(100vh - 140px)"
@@ -16,7 +14,6 @@
 			</div>
 		</div>
 
-		<!-- Chat Area -->
 		<div class="d-flex flex-column h-100 flex-grow-1">
 			<div
 				class="card flex-grow-1 h-100"
@@ -35,35 +32,47 @@
 					class="card-body"
 					style="overflow-y: auto; flex-grow: 1"
 					id="chat-body"
-				>
-					<!-- User 1 message -->
-				</div>
+				></div>
 
 				<div
-					class="card-footer text-muted d-flex justify-content-start align-items-center p-3"
+					class="card-footer text-muted d-flex justify-content-start align-items-center w-100"
 					style="flex-shrink: 0"
 				>
 					<img
 						src="https://picsum.photos/35"
 						alt="avatar 3"
-						class="rounded-circle"
-						style="width: 30px; height: 30px"
+						class="rounded-circle me-3"
+						style="width: 35px; height: 35px"
 					/>
-					<input
-						type="text"
-						class="form-control form-control-lg mx-2"
-						placeholder="Type a message"
-						style="flex-grow: 1"
-					/>
-					<a class="text-muted" href="#!" style="font-size: 1em"
-						><i class="fas fa-paperclip"></i
-					></a>
-					<a class="ms-2 text-muted" href="#!" style="font-size: 1em"
-						><i class="fas fa-smile"></i
-					></a>
-					<a class="ms-2 text-muted" href="#!" style="font-size: 1em"
-						><i class="fas fa-paper-plane"></i
-					></a>
+					<form
+						class="d-flex align-items-center w-100"
+						id="message-input"
+					>
+						<input
+							type="text"
+							class="form-control form-control-lg me-2"
+							placeholder="Type a message"
+							name="input"
+							id="message-input-field"
+						/>
+						<a
+							class="text-muted me-2"
+							href="#"
+							style="font-size: 1.25em"
+						>
+							<i class="fas fa-paperclip"></i>
+						</a>
+						<a
+							class="text-muted me-2"
+							href="#"
+							style="font-size: 1.25em"
+						>
+							<i class="fas fa-smile"></i>
+						</a>
+						<button type="submit" class="btn btn-primary btn">
+							Send
+						</button>
+					</form>
 				</div>
 			</div>
 		</div>
