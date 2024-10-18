@@ -33,7 +33,7 @@ export const setCurrentUser = (data: {
 };
 
 export const getCurrentUser = () => {
-	return localStorage.getItem("user");
+	return JSON.parse(localStorage.getItem("user"));
 };
 
 export const removeCurrentUser = () => {

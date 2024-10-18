@@ -1,7 +1,7 @@
-import { messageBoxLeft, messageBoxRight, Toast } from "./components.js";
+import { messageBoxLeft, messageBoxRight, Toast, userListBox, } from "./components.js";
 import { a, h1, t } from "./framework.js";
 import { checkLoggedIn, navigate } from "./main.js";
-import { activateDarkMode, toggleDarkMode } from "./storage.js";
+import { activateDarkMode, getCurrentUser, toggleDarkMode } from "./storage.js";
 export const BASE_URL = "/api";
 export const navHandler = () => {
     const navAuth = document.getElementById("nav-auth");
@@ -58,7 +58,39 @@ export const aboutHandler = (route) => {
 export const messageHandler = (route) => {
     console.log("message handler: ", route.description);
     const chatBody = document.getElementById("chat-body");
-    chatBody.appendChild(messageBoxLeft("so good omg1", "00:44"));
+    const userList = document.getElementById("user-list");
+    //FOR SINGLE CHANNEL
+    // {{base_url}}/api/chat/4352d75c-0001-4161-8d80-e11bad449425/
+    try {
+        const getMessages = async () => {
+            const res = await fetch(BASE_URL + "/chat/@me/");
+            if (res.ok) {
+                const data = await res.json();
+                data.channels.forEach((channel) => {
+                    const getUser = (users) => {
+                        const arr = [];
+                        const not = users.filter((u) => u.uuid != getCurrentUser().uuid);
+                        not.forEach((el) => arr.push(el.display_name));
+                        return arr;
+                    };
+                    const notCurrent = getUser(channel.users);
+                    console.log(notCurrent);
+                    userList.appendChild(userListBox(notCurrent.join(", ")));
+                });
+                console.log(data.channels);
+                console.log(getCurrentUser());
+            }
+            else {
+                console.log("error occured", res);
+                Toast("Error occured during message fetch", "danger");
+            }
+        };
+        getMessages();
+    }
+    catch (error) {
+        Toast("Network error " + error, "danger");
+    }
+    chatBody.appendChild(messageBoxLeft("so WOWWOWOWWO omg1", "00:44"));
     chatBody.appendChild(messageBoxRight("asldkfjsadlkfjsdalkjf", "00:43"));
     chatBody.appendChild(messageBoxLeft("so good omg2", "00:44"));
     chatBody.appendChild(messageBoxRight("another of my message", "00:44"));

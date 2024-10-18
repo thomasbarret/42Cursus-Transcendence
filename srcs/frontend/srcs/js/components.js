@@ -1,4 +1,4 @@
-import { div, p, t } from "./framework.js";
+import { div, p, span, t } from "./framework.js";
 // @ts-ignore
 import * as bootstrap from "bootstrap";
 export const ToastComponent = (value, level) => {
@@ -24,6 +24,16 @@ export const Toast = (value, level, delay) => {
     });
     toastBootstrap.show();
     el.addEventListener("hidden.bs.toast", () => el.remove());
+};
+export const userListBox = (text) => {
+    const img = t("img")
+        .attr("src", "https://picsum.photos/50?random=1")
+        .attr("alt", "user avatar")
+        .cl("rounded-circle me-2")
+        .attr("style", "width: 35px; height: 35px");
+    const user = span(text).cl("small fw-semibold");
+    const li = t("li", img, user).cl("d-flex align-items-center mb-3");
+    return li;
 };
 export const messageBoxRight = (text, time) => {
     const img = t("img")
