@@ -84,10 +84,41 @@ export const messageHandler = (route: Routes) => {
 	console.log("message handler: ", route.description);
 
 	const chatBody = document.getElementById("chat-body");
+	const chatTitle = document.getElementById("chat-title");
 	const userList = document.getElementById("user-list");
+	const currentUser = getCurrentUser();
+
+	let currentChat: string = "";
 
 	//FOR SINGLE CHANNEL
 	// {{base_url}}/api/chat/4352d75c-0001-4161-8d80-e11bad449425/
+
+	const renderBody = async (channel, title) => {
+		if (currentChat === channel.uuid) return;
+		currentChat = channel.uuid;
+		console.log(channel);
+		chatTitle.textContent = title;
+		chatBody.innerHTML = "";
+
+		const res = await fetch(BASE_URL + "/chat/" + channel.uuid);
+		const data = await res.json();
+
+		console.log(data);
+
+		data.messages.forEach((message) => {
+			if (message.user.uuid === currentUser.uuid) {
+				chatBody.appendChild(
+					messageBoxRight(message.content, message.created_at)
+				);
+			} else {
+				chatBody.appendChild(
+					messageBoxLeft(message.content, message.created_at)
+				);
+			}
+			console.log(message);
+		});
+	};
+
 	try {
 		const getMessages = async () => {
 			const res = await fetch(BASE_URL + "/chat/@me/");
@@ -99,7 +130,7 @@ export const messageHandler = (route: Routes) => {
 					const getUser = (users) => {
 						const arr = [];
 						const not = users.filter(
-							(u) => u.uuid != getCurrentUser().uuid
+							(u) => u.uuid != currentUser.uuid
 						);
 
 						not.forEach((el) => arr.push(el.display_name));
@@ -107,12 +138,17 @@ export const messageHandler = (route: Routes) => {
 					};
 
 					const notCurrent = getUser(channel.users);
-					console.log(notCurrent);
 
-					userList.appendChild(userListBox(notCurrent.join(", ")));
+					const title = notCurrent.join(", ");
+
+					userList.appendChild(
+						userListBox(title).onclick$(() =>
+							renderBody(channel, title)
+						)
+					);
 				});
-				console.log(data.channels);
-				console.log(getCurrentUser());
+				console.log("data.channels: ", data.channels);
+				console.log("current user: ", currentUser);
 			} else {
 				console.log("error occured", res);
 				Toast("Error occured during message fetch", "danger");
@@ -123,27 +159,6 @@ export const messageHandler = (route: Routes) => {
 	} catch (error) {
 		Toast("Network error " + error, "danger");
 	}
-
-	chatBody.appendChild(messageBoxLeft("so WOWWOWOWWO omg1", "00:44"));
-	chatBody.appendChild(messageBoxRight("asldkfjsadlkfjsdalkjf", "00:43"));
-	chatBody.appendChild(messageBoxLeft("so good omg2", "00:44"));
-	chatBody.appendChild(messageBoxRight("another of my message", "00:44"));
-	chatBody.appendChild(messageBoxRight("ttttest", "00:44"));
-	chatBody.appendChild(messageBoxRight("", "00:44"));
-	chatBody.appendChild(
-		messageBoxLeft("wow this is an interactive chat", "00:44")
-	);
-	chatBody.appendChild(messageBoxLeft("so good omg", "00:44"));
-	chatBody.appendChild(
-		messageBoxRight(
-			"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer pulvinar justo non nibh aliquam, et sollicitudin leo suscipit. Curabitur volutpat molestie magna sit amet laoreet. Nulla venenatis sem sit amet ultrices semper. Curabitur ultricies interdum ex, vel accumsan ex tincidunt ut. Duis varius ultricies vestibulum. In faucibus fringilla ipsum, gravida commodo ligula efficitur id. Donec tincidunt congue velit, nec iaculis diam ultrices non.",
-			"00:46"
-		)
-	);
-	chatBody.appendChild(messageBoxLeft("so good omg4", "00:44"));
-	setTimeout(() => {
-		chatBody.appendChild(messageBoxLeft("wesh wesh k", "00:44"));
-	}, 3000);
 };
 
 export const profileHandler = (route: Routes, slug?: string) => {

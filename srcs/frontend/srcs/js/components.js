@@ -32,7 +32,7 @@ export const userListBox = (text) => {
         .cl("rounded-circle me-2")
         .attr("style", "width: 35px; height: 35px");
     const user = span(text).cl("small fw-semibold");
-    const li = t("li", img, user).cl("d-flex align-items-center mb-3");
+    const li = t("li", img, user).cl("d-flex align-items-center mb-3 btn btn-primary");
     return li;
 };
 export const messageBoxRight = (text, time) => {
