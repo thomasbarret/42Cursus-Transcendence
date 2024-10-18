@@ -29,10 +29,15 @@ export const urlRoute = (event: Event | string) => {
 };
 
 export const checkLoggedIn = async () => {
-	const req = await fetch(BASE_URL + "/user/@me/", {
-		method: "GET",
-	});
-	return req.ok;
+	try {
+		const req = await fetch(BASE_URL + "/user/@me/", {
+			method: "GET",
+		});
+
+		return req.ok;
+	} catch (error) {
+		return false;
+	}
 };
 
 // create a function that handles the url location
