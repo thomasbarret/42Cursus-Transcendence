@@ -1,5 +1,6 @@
 import { BASE_URL, mainHandler, navHandler } from "./handler.js";
 import { routes } from "./route.js";
+import { removeCurrentUser, setCurrentUser } from "./storage.js";
 document.addEventListener("click", (e) => {
     const { target } = e;
     if (!(target instanceof HTMLElement) ||
@@ -25,10 +26,22 @@ export const urlRoute = (event) => {
     }
 };
 export const checkLoggedIn = async () => {
-    const req = await fetch(BASE_URL + "/user/@me/", {
-        method: "GET",
-    });
-    return req.ok;
+    try {
+        const req = await fetch(BASE_URL + "/user/@me/", {
+            method: "GET",
+        });
+        if (req.ok) {
+            const json = await req.json();
+            setCurrentUser(json);
+        }
+        else {
+            removeCurrentUser();
+        }
+        return req.ok;
+    }
+    catch (error) {
+        return false;
+    }
 };
 // create a function that handles the url location
 const locationHandler = async () => {

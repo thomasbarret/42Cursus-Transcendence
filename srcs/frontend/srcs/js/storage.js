@@ -14,3 +14,15 @@ export const toggleDarkMode = (toggle) => {
     localStorage.setItem("theme", isDarkMode() ? "light" : "dark");
     activateDarkMode(toggle);
 };
+export const setCurrentUser = (data) => {
+    localStorage.setItem("user", JSON.stringify({
+        user: data.display_name,
+        uuid: data.uuid,
+    }));
+};
+export const getCurrentUser = () => {
+    return localStorage.getItem("user");
+};
+export const removeCurrentUser = () => {
+    localStorage.removeItem("user");
+};

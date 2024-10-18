@@ -1,5 +1,6 @@
 import { BASE_URL, mainHandler, navHandler } from "./handler.js";
 import { routes } from "./route.js";
+import { removeCurrentUser, setCurrentUser } from "./storage.js";
 
 document.addEventListener("click", (e) => {
 	const { target } = e;
@@ -33,6 +34,13 @@ export const checkLoggedIn = async () => {
 		const req = await fetch(BASE_URL + "/user/@me/", {
 			method: "GET",
 		});
+
+		if (req.ok) {
+			const json = await req.json();
+			setCurrentUser(json);
+		} else {
+			removeCurrentUser();
+		}
 
 		return req.ok;
 	} catch (error) {
