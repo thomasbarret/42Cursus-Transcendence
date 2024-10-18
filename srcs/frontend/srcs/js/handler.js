@@ -1,4 +1,4 @@
-import { messageBoxLeft, messageBoxRight, Toast, userListBox, } from "./components.js";
+import { messageBox, Toast, userListBox, } from "./components.js";
 import { a, h1, t } from "./framework.js";
 import { checkLoggedIn, navigate } from "./main.js";
 import { activateDarkMode, getCurrentUser, toggleDarkMode } from "./storage.js";
@@ -62,8 +62,6 @@ export const messageHandler = (route) => {
     const userList = document.getElementById("user-list");
     const currentUser = getCurrentUser();
     let currentChat = "";
-    //FOR SINGLE CHANNEL
-    // {{base_url}}/api/chat/4352d75c-0001-4161-8d80-e11bad449425/
     const renderBody = async (channel, title) => {
         if (currentChat === channel.uuid)
             return;
@@ -73,15 +71,10 @@ export const messageHandler = (route) => {
         chatBody.innerHTML = "";
         const res = await fetch(BASE_URL + "/chat/" + channel.uuid);
         const data = await res.json();
-        console.log(data);
+        console.log("messages: ", data);
         data.messages.forEach((message) => {
-            if (message.user.uuid === currentUser.uuid) {
-                chatBody.appendChild(messageBoxRight(message.content, message.created_at));
-            }
-            else {
-                chatBody.appendChild(messageBoxLeft(message.content, message.created_at));
-            }
-            console.log(message);
+            chatBody.appendChild(messageBox(message.content, message.created_at, message.user.uuid === currentUser.uuid));
+            // console.log(message);
         });
     };
     try {

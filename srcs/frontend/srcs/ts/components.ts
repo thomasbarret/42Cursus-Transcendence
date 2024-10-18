@@ -105,3 +105,7 @@ export const messageBoxLeft = (text: string, time: string) => {
 
 	return message;
 };
+
+export const messageBox = (text: string, time: string, current: boolean) => {
+	return current ? messageBoxRight(text, time) : messageBoxLeft(text, time);
+};

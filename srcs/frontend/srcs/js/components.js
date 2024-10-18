@@ -55,3 +55,6 @@ export const messageBoxLeft = (text, time) => {
     const message = div(img, content).attr("class", "d-flex flex-row justify-content-start mb-3");
     return message;
 };
+export const messageBox = (text, time, current) => {
+    return current ? messageBoxRight(text, time) : messageBoxLeft(text, time);
+};
