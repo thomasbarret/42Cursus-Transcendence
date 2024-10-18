@@ -33,6 +33,7 @@ ALLOWED_HOSTS = []
 
 # ------------------------ Thomas
 INSTALLED_APPS = [
+    ''
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -52,8 +53,11 @@ INSTALLED_APPS = [
 
     # Socket
 
-    'channels',
+    "channels",
+    "corsheaders",
     "chat",
+
+    "websocket",
 ]
 
 AUTH_USER_MODEL = "authentication.User"
@@ -86,7 +90,7 @@ REST_FRAMEWORK = {
 from datetime import timedelta
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=6000),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "ROTATE_REFRESH_TOKENS": False,
     "BLACKLIST_AFTER_ROTATION": True,
@@ -109,12 +113,32 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
 }
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/1',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
+}
+
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+#         'LOCATION': 'unique-snowflake',
+#     }
+# }
+#
+
 # ------------------------ Thomas
 
 MIDDLEWARE = [
+    # Socket
+    'corsheaders.middleware.CorsMiddleware',
+
     # 2FA
     "django_otp.middleware.OTPMiddleware",
-
 
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -123,7 +147,10 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True
 
 ROOT_URLCONF = "transcendence.urls"
 
@@ -144,6 +171,22 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "transcendence.wsgi.application"
+
+
+# Socket ------------------------ Thomas
+
+ASGI_APPLICATION = "transcendence.asgi.application"
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [('127.0.0.1', 6379)],
+        },
+    },
+}
+
+
 
 
 # Database

@@ -7,6 +7,8 @@ from authentication.views import TokenFromCookieAuthentication
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 
 class ProfilView(APIView):
     authentication_classes = [TokenFromCookieAuthentication]
@@ -28,10 +30,12 @@ class ProfilView(APIView):
         public_user = self.get_public_user(user_uuid)
         if public_user is None:
             return Response({"error": "Authentication required for '@me'"}, status=status.HTTP_401_UNAUTHORIZED)
+
         return JsonResponse({
             'uuid': public_user.user.uuid,
             'display_name': public_user.display_name,
             'avatar': public_user.avatar.url if public_user.avatar else None,
+            'status': public_user.status,
         })
 
     def post(self, request, user_uuid=None):

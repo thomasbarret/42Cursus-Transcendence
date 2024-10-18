@@ -1,14 +1,15 @@
 from django.http import JsonResponse
-from authentication.models import PublicUser
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from authentication.views import TokenFromCookieAuthentication
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import AllowAny
 
 from .models import Channel, Message
 from authentication.models import User
+
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 class ChannelView(APIView):
     authentication_classes = [TokenFromCookieAuthentication]
@@ -94,6 +95,27 @@ class UserDirectChannelView(APIView):
 
         message = Message.objects.create(type=1, channel=channel, user=sender_user, content=content)
         message.save()
+
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"user_{str(receiver_user.uuid)}",
+            {
+                "type": "send_event",
+                "event_name": "DIRECT_MESSAGE_CREATE",
+                "data": {
+                    "uuid": str(message.uuid),
+                    "channel_uuid": str(channel.uuid),
+                    "type": message.type,
+                    "content": message.content,
+                    "created_at": str(message.created_at),
+                    "user": {
+                        "uuid": str(message.user.uuid),
+                        "display_name": message.user.publicuser.display_name,
+                        "avatar": message.user.publicuser.avatar.url if message.user.publicuser.avatar else None,
+                    }
+                }
+            }
+        )
 
         return JsonResponse({
             'uuid': message.uuid,

@@ -5,6 +5,8 @@ from django.dispatch import receiver
 from django.db.models.signals import post_save
 import uuid
 from django_otp.plugins.otp_totp.models import TOTPDevice
+from django.core.cache import cache
+
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, username, password=None, **extra_fields):
@@ -48,6 +50,15 @@ class PublicUser(models.Model):
 
     def __str__(self):
         return self.display_name
+
+    @property
+    def status(self):
+        # Récupère le statut du cache ou retourne 'offline' par défaut
+        return cache.get(f"user_status_{self.user.id}", 'offline')
+
+    def set_status(self, status):
+        # Définit le statut dans le cache
+        cache.set(f"user_status_{self.user.id}", status, timeout=None)
 
 class RefreshToken(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
