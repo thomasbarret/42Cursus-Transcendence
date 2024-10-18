@@ -1,4 +1,5 @@
 services:
+
   nginx:
     networks:
       - tsd-network
@@ -12,15 +13,46 @@ services:
     volumes:
       - ./srcs/frontend/srcs:/usr/share/nginx/html
     restart: unless-stopped
+
   django:
     networks:
       - tsd-network
+    depends_on:
+      - redis
+      - postgres
     build:
       context: srcs/backend
       dockerfile: "Dockerfile"
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  redis:
+    networks:
+      - tsd-network
+    image: redis:7.4.1
+    volumes:
+      - ./srcs/services/redis:/data
+    restart: unless-stopped
+    command: ["redis-server", "--save", "60", "1"]
+
+  postgres:
+    networks:
+      - tsd-network
+    image: postgres:17
+    #can keep ports open for now, but need to close them later on
+    ports:
+      - "5432:5432"
+    volumes:
+      - db:/var/lib/postgresql/data
+    env_file:
+      - .env
+    shm_size: 128mb
     restart: unless-stopped
 
 networks:
   tsd-network:
     driver: bridge
 
+volumes:
+  db:

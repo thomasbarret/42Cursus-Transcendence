@@ -13,5 +13,7 @@ ENV PYTHONUNBUFFERED 1
 
 EXPOSE 8000
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "transcendence.wsgi:application"]
+
+CMD ["uvicorn", "transcendence.asgi:application", "--host", "0.0.0.0", "--port", "8000", "--log-level", "debug"]
+# CMD ["gunicorn", "--bind", "0.0.0.0:8000", "transcendence.wsgi:application"]
 # CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

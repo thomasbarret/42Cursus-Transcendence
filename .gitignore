@@ -8,6 +8,8 @@
 .vscode
 .idea
 
+dump.rdb
+
 # testing
 /coverage
 
@@ -154,7 +156,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
+# .env
 .venv
 env/
 venv/
