@@ -50,6 +50,38 @@ class TokenFromCookieAuthentication(JWTAuthentication):
 
         return None
 
+
+class SocketTokenFromCookieAuthentication(JWTAuthentication):
+    def authenticate(self, scope):
+        # Récupérer les cookies des tokens
+        access_token = scope['cookies'].get('access_token')
+        if not access_token:
+            return None
+
+        try:
+            validated_token = self.get_validated_token(access_token)
+            user = self.get_user(validated_token)
+            return (user, validated_token)
+        except InvalidToken:
+            refresh_token = scope['cookies'].get('refresh_token')
+            if not refresh_token:
+                return None
+
+            try:
+                refresh = RefreshToken(refresh_token)
+                access_token = str(refresh.access_token)
+
+                # Mettre à jour le cookie avec le nouveau token
+                scope['cookies']['access_token'] = access_token
+
+                validated_token = self.get_validated_token(access_token)
+                user = self.get_user(validated_token)
+                return (user, validated_token)
+            except TokenError:
+                return None
+
+        return None
+
 class RegisterView(APIView):
     permission_classes = [AllowAny]
 
@@ -153,7 +185,7 @@ class LoginView(APIView):
             refresh = RefreshToken.for_user(user)
             response = Response({'message': 'Login successful'})
 
-            access_token_lifetime = getattr(settings, 'SIMPLE_JWT', {}).get('ACCESS_TOKEN_LIFETIME', timedelta(minutes=5))
+            access_token_lifetime = getattr(settings, 'SIMPLE_JWT', {}).get('ACCESS_TOKEN_LIFETIME', timedelta(minutes=6000))
             refresh_token_lifetime = getattr(settings, 'SIMPLE_JWT', {}).get('REFRESH_TOKEN_LIFETIME', timedelta(days=1))
 
             response.set_cookie(
