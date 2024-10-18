@@ -11,7 +11,7 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
         self.user = await self.get_user_from_cookie(self.scope)
 
         if self.user and self.user.is_authenticated:
-            print(f"User {self.user.uuid} connected.")
+            print(f"User {self.user.uuid} {self.user.username} connected.")
             self.user_id = self.user.uuid
             self.group_name = f"user_{self.user_id}"
             await self.channel_layer.group_add(self.group_name, self.channel_name)
