@@ -109,3 +109,20 @@ export const messageBoxLeft = (text: string, time: string) => {
 export const messageBox = (text: string, time: string, current: boolean) => {
 	return current ? messageBoxRight(text, time) : messageBoxLeft(text, time);
 };
+
+export const userProfileCard = (user) => {
+	const avatar = t("img")
+		.attr("src", "https://picsum.photos/80")
+		.attr("alt", "Avatar")
+		.cl("rounded-circle me-3")
+		.attr("style", "width: 80px; height:80px");
+
+	const content = div(
+		t("h5", user.display_name).cl("mb-1"),
+		p(user.uuid).cl("mb-0 small text-muted")
+	);
+
+	return div(avatar, content).cl(
+		"card mb-2 d-flex align-items-center p-3 flex-row w-100"
+	);
+};

@@ -1,4 +1,4 @@
-import { messageBox, Toast, userListBox } from "./components.js";
+import { messageBox, Toast, userListBox, userProfileCard, } from "./components.js";
 import { BASE_URL } from "./handler.js";
 import { getCurrentUser } from "./storage.js";
 export const messageHandler = (route) => {
@@ -7,6 +7,21 @@ export const messageHandler = (route) => {
     const chatTitle = document.getElementById("chat-title");
     const userList = document.getElementById("user-list");
     const currentUser = getCurrentUser();
+    const inputBar = document.getElementById("message-input-bar");
+    const searchFriend = document.getElementById("search-friend");
+    const addFriend = document.getElementById("add-friend");
+    addFriend.addEventListener("submit", (e) => {
+        e.preventDefault();
+        console.log(Object.fromEntries(new FormData(addFriend)));
+    });
+    searchFriend.addEventListener("click", (event) => {
+        console.log("search friend");
+        chatBody.innerHTML = "";
+        inputBar.classList.toggle("d-none", true);
+        chatTitle.textContent = "";
+        addFriend.classList.toggle("d-none", false);
+        chatBody.appendChild(userProfileCard({ uuid: "some uuid", display_name: "nyzs" }));
+    });
     const messageInput = document.getElementById("message-input");
     const messageInputField = document.getElementById("message-input-field");
     let currentChat = "";
@@ -23,6 +38,9 @@ export const messageHandler = (route) => {
     const renderBody = async (channel, title) => {
         // if (currentChat === channel.uuid) return;
         currentChat = channel.uuid;
+        inputBar.classList.toggle("d-none", false);
+        addFriend.classList.toggle("d-none", true);
+        chatBody.innerHTML = "";
         messageInput.addEventListener("submit", async (e) => {
             e.preventDefault();
             const content = Object.fromEntries(new FormData(messageInput)).input.toString();
@@ -49,7 +67,6 @@ export const messageHandler = (route) => {
         });
         console.log(channel);
         chatTitle.textContent = title;
-        chatBody.innerHTML = "";
         const res = await fetch(BASE_URL + "/chat/" + channel.uuid);
         const data = await res.json();
         console.log("messages: ", data);
