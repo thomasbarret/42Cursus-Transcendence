@@ -27,11 +27,12 @@ export const urlRoute = (event) => {
 };
 export const checkLoggedIn = async () => {
     try {
-        const req = await fetch(BASE_URL + "/user/@me/", {
+        const req = await fetch(BASE_URL + "/user/@me", {
             method: "GET",
         });
         if (req.ok) {
             const json = await req.json();
+            connectWebSocket();
             setCurrentUser(json);
         }
         else {
@@ -93,18 +94,34 @@ export const navigate = (path, delay) => {
         urlRoute(url);
     }
 };
-const socket = new WebSocket("ws://localhost:8080/ws/gateway/");
-socket.addEventListener("open", (e) => {
-    console.log(e);
-});
-socket.addEventListener("message", (e) => {
-    console.log("received socket message: ", JSON.parse(e.data));
-    const data = JSON.parse(e.data);
-    if (data.event === "DIRECT_MESSAGE_CREATE") {
-        console.log("message: ", data.data);
-        const messageEvent = new CustomEvent("messageEvent", {
-            detail: data.data,
-        });
-        document.dispatchEvent(messageEvent);
+export let socket;
+export const connectWebSocket = () => {
+    if (socket &&
+        (socket.readyState === WebSocket.OPEN ||
+            socket.readyState === WebSocket.CONNECTING)) {
+        console.log("WebSocket is already open or connecting.");
+        return;
     }
-});
+    socket = new WebSocket(`${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}/ws/gateway/`);
+    socket.onopen = () => {
+        console.log("WebSocket connection established.");
+    };
+    socket.onclose = () => {
+        console.warn("WebSocket connection closed.");
+    };
+    socket.onerror = (error) => {
+        console.error("WebSocket error:", error);
+    };
+    socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.log("received socket message: ", data);
+        switch (data.event) {
+            case "DIRECT_MESSAGE_CREATE":
+                const messageEvent = new CustomEvent("messageEvent", {
+                    detail: data.data,
+                });
+                document.dispatchEvent(messageEvent);
+                break;
+        }
+    };
+};

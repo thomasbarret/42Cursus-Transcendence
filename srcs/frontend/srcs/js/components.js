@@ -58,13 +58,15 @@ export const messageBoxLeft = (text, time) => {
 export const messageBox = (text, time, current) => {
     return current ? messageBoxRight(text, time) : messageBoxLeft(text, time);
 };
-export const userProfileCard = (user) => {
+export const userProfileCard = (user, event) => {
     const avatar = t("img")
         .attr("src", "https://picsum.photos/80")
         .attr("alt", "Avatar")
         .cl("rounded-circle me-3")
         .attr("style", "width: 80px; height:80px");
     const content = div(t("h5", user.display_name).cl("mb-1"), p(user.uuid).cl("mb-0 small text-muted"));
-    const button = t("button", "Start Chat").cl("btn btn-outline-primary ms-auto");
+    const button = t("button", "Start Chat")
+        .cl("btn btn-outline-primary ms-auto")
+        .onclick$(event);
     return div(avatar, content, button).cl("card mb-2 d-flex align-items-center p-3 flex-row w-100");
 };

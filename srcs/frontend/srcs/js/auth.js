@@ -52,10 +52,6 @@ export const loginHandler = (route) => {
     });
 };
 export const signUpHandler = (route) => {
-    const showToast = document.getElementById("show-toast");
-    showToast.addEventListener("click", () => {
-        Toast("this is a test sadlkfjsdalfj", "primary");
-    });
     console.log("signup handler wow: ", route.description);
     const signUpForm = document.getElementById("signup-form");
     const usernameElement = document.getElementById("username-input");

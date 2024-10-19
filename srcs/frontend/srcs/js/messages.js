@@ -1,6 +1,7 @@
 import { messageBox, Toast, userListBox, userProfileCard, } from "./components.js";
 import { BASE_URL } from "./handler.js";
 import { getCurrentUser } from "./storage.js";
+import { formatChatDate } from "./utils.js";
 export const messageHandler = (route) => {
     console.log("message handler: ", route.description);
     const chatBody = document.getElementById("chat-body");
@@ -20,7 +21,19 @@ export const messageHandler = (route) => {
             Toast("No user has been found.. :(", "warning");
         else {
             users.forEach((user) => {
-                chatBody.appendChild(userProfileCard(user));
+                chatBody.appendChild(userProfileCard(user, async (event) => {
+                    const res = await fetch(BASE_URL + "/chat/@me", {
+                        method: "POST",
+                        body: JSON.stringify({
+                            receiver_uuid: user.uuid,
+                        }),
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                    });
+                    // if (res.ok)
+                    // const data = await res.json();
+                }));
             });
         }
     });
@@ -35,30 +48,30 @@ export const messageHandler = (route) => {
     const messageInputField = document.getElementById("message-input-field");
     let currentChat = "";
     const addMessageToChat = (message) => {
-        chatBody.appendChild(messageBox(message.content, message.created_at, message.user.uuid === currentUser.uuid));
+        chatBody.appendChild(messageBox(message.content, formatChatDate(message.created_at), message.user.uuid === currentUser.uuid));
         chatBody.scrollTop = chatBody.scrollHeight;
     };
     document.addEventListener("messageEvent", (event) => {
         const data = event.detail;
-        console.log("MESSAGE_EVENT LISTENER: ", data);
         if (currentChat === data.channel_uuid)
             addMessageToChat(event.detail);
     });
+    // messageInput.removeEventListener("submit");
     const renderBody = async (channel, title) => {
         // if (currentChat === channel.uuid) return;
         currentChat = channel.uuid;
         inputBar.classList.toggle("d-none", false);
         addFriend.classList.toggle("d-none", true);
-        messageInput.addEventListener("submit", async (e) => {
+        messageInput.onsubmit = async (e) => {
             e.preventDefault();
             const content = Object.fromEntries(new FormData(messageInput)).input.toString();
             if (content.length === 0)
                 return;
             const otherUser = channel.users.filter((u) => u.uuid != currentUser.uuid)[0].uuid;
-            const res = await fetch(BASE_URL + "/chat/@me/", {
+            const res = await fetch(BASE_URL + "/chat/" + channel.uuid, {
                 method: "POST",
                 body: JSON.stringify({
-                    receiver_uuid: otherUser,
+                    // receiver_uuid: otherUser,
                     content: content,
                 }),
                 headers: {
@@ -68,22 +81,24 @@ export const messageHandler = (route) => {
             const message = await res.json();
             if (res.ok) {
                 messageInputField.value = "";
-                addMessageToChat(message);
+                // addMessageToChat(message);
             }
             else
                 Toast("An error has occured: " + message, "danger");
-        });
+            // if (res.ok) {
+            // 	messageInputField.value = "";
+            // 	addMessageToChat(message);
+            // } else Toast("An error has occured: " + message, "danger");
+        };
         chatBody.innerHTML = "";
-        console.log(channel);
         chatTitle.textContent = title;
         const res = await fetch(BASE_URL + "/chat/" + channel.uuid);
         const data = await res.json();
-        console.log("messages: ", data);
         data.messages.forEach((message) => addMessageToChat(message));
     };
     try {
         const getMessages = async () => {
-            const res = await fetch(BASE_URL + "/chat/@me/");
+            const res = await fetch(BASE_URL + "/chat/@me");
             if (res.ok) {
                 const data = await res.json();
                 data.channels.forEach((channel) => {

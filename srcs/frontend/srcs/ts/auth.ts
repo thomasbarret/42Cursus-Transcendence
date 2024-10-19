@@ -65,12 +65,6 @@ export const loginHandler = (route: Routes) => {
 };
 
 export const signUpHandler = (route: Routes) => {
-	const showToast = document.getElementById("show-toast");
-
-	showToast.addEventListener("click", () => {
-		Toast("this is a test sadlkfjsdalfj", "primary");
-	});
-
 	console.log("signup handler wow: ", route.description);
 	const signUpForm = document.getElementById(
 		"signup-form"

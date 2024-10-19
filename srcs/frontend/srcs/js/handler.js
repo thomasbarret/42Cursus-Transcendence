@@ -68,7 +68,7 @@ export const profileHandler = (route, slug) => {
     if (!slug) {
         try {
             const getProfile = async () => {
-                const req = await fetch(BASE_URL + "/user/@me/", {
+                const req = await fetch(BASE_URL + "/user/@me", {
                     method: "GET",
                 });
                 if (req.ok) {

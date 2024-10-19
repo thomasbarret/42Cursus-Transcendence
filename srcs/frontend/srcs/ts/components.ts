@@ -110,7 +110,7 @@ export const messageBox = (text: string, time: string, current: boolean) => {
 	return current ? messageBoxRight(text, time) : messageBoxLeft(text, time);
 };
 
-export const userProfileCard = (user) => {
+export const userProfileCard = (user, event: (event: MouseEvent) => void) => {
 	const avatar = t("img")
 		.attr("src", "https://picsum.photos/80")
 		.attr("alt", "Avatar")
@@ -122,9 +122,9 @@ export const userProfileCard = (user) => {
 		p(user.uuid).cl("mb-0 small text-muted")
 	);
 
-	const button = t("button", "Start Chat").cl(
-		"btn btn-outline-primary ms-auto"
-	);
+	const button = t("button", "Start Chat")
+		.cl("btn btn-outline-primary ms-auto")
+		.onclick$(event);
 
 	return div(avatar, content, button).cl(
 		"card mb-2 d-flex align-items-center p-3 flex-row w-100"
