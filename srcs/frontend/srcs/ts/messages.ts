@@ -22,9 +22,18 @@ export const messageHandler = (route: Routes) => {
 
 	const addFriend = document.getElementById("add-friend") as HTMLFormElement;
 
-	addFriend.addEventListener("submit", (e) => {
+	addFriend.addEventListener("submit", async (e) => {
 		e.preventDefault();
-		console.log(Object.fromEntries(new FormData(addFriend)));
+		chatBody.innerHTML = "";
+		const searchName = Object.fromEntries(new FormData(addFriend)).name;
+
+		console.log(searchName);
+
+		// const req = await fetch(BASE_URL + "/")
+
+		chatBody.appendChild(
+			userProfileCard({ uuid: "some uuid", display_name: "nyzs" })
+		);
 	});
 
 	searchFriend.addEventListener("click", (event) => {
@@ -33,10 +42,6 @@ export const messageHandler = (route: Routes) => {
 		inputBar.classList.toggle("d-none", true);
 		chatTitle.textContent = "";
 		addFriend.classList.toggle("d-none", false);
-
-		chatBody.appendChild(
-			userProfileCard({ uuid: "some uuid", display_name: "nyzs" })
-		);
 	});
 
 	const messageInput = document.getElementById(

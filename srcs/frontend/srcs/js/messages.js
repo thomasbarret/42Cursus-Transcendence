@@ -10,9 +10,13 @@ export const messageHandler = (route) => {
     const inputBar = document.getElementById("message-input-bar");
     const searchFriend = document.getElementById("search-friend");
     const addFriend = document.getElementById("add-friend");
-    addFriend.addEventListener("submit", (e) => {
+    addFriend.addEventListener("submit", async (e) => {
         e.preventDefault();
-        console.log(Object.fromEntries(new FormData(addFriend)));
+        chatBody.innerHTML = "";
+        const searchName = Object.fromEntries(new FormData(addFriend)).name;
+        console.log(searchName);
+        // const req = await fetch(BASE_URL + "/")
+        chatBody.appendChild(userProfileCard({ uuid: "some uuid", display_name: "nyzs" }));
     });
     searchFriend.addEventListener("click", (event) => {
         console.log("search friend");
@@ -20,7 +24,6 @@ export const messageHandler = (route) => {
         inputBar.classList.toggle("d-none", true);
         chatTitle.textContent = "";
         addFriend.classList.toggle("d-none", false);
-        chatBody.appendChild(userProfileCard({ uuid: "some uuid", display_name: "nyzs" }));
     });
     const messageInput = document.getElementById("message-input");
     const messageInputField = document.getElementById("message-input-field");
