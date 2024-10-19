@@ -122,7 +122,11 @@ export const userProfileCard = (user) => {
 		p(user.uuid).cl("mb-0 small text-muted")
 	);
 
-	return div(avatar, content).cl(
+	const button = t("button", "Start Chat").cl(
+		"btn btn-outline-primary ms-auto"
+	);
+
+	return div(avatar, content, button).cl(
 		"card mb-2 d-flex align-items-center p-3 flex-row w-100"
 	);
 };

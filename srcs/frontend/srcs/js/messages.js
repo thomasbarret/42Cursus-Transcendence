@@ -14,9 +14,15 @@ export const messageHandler = (route) => {
         e.preventDefault();
         chatBody.innerHTML = "";
         const searchName = Object.fromEntries(new FormData(addFriend)).name;
-        console.log(searchName);
-        // const req = await fetch(BASE_URL + "/")
-        chatBody.appendChild(userProfileCard({ uuid: "some uuid", display_name: "nyzs" }));
+        const res = await fetch(BASE_URL + "/user/search?query=" + searchName);
+        const users = (await res.json()).users;
+        if (!users || users.length === 0)
+            Toast("No user has been found.. :(", "warning");
+        else {
+            users.forEach((user) => {
+                chatBody.appendChild(userProfileCard(user));
+            });
+        }
     });
     searchFriend.addEventListener("click", (event) => {
         console.log("search friend");
@@ -43,7 +49,6 @@ export const messageHandler = (route) => {
         currentChat = channel.uuid;
         inputBar.classList.toggle("d-none", false);
         addFriend.classList.toggle("d-none", true);
-        chatBody.innerHTML = "";
         messageInput.addEventListener("submit", async (e) => {
             e.preventDefault();
             const content = Object.fromEntries(new FormData(messageInput)).input.toString();
@@ -68,6 +73,7 @@ export const messageHandler = (route) => {
             else
                 Toast("An error has occured: " + message, "danger");
         });
+        chatBody.innerHTML = "";
         console.log(channel);
         chatTitle.textContent = title;
         const res = await fetch(BASE_URL + "/chat/" + channel.uuid);
@@ -91,8 +97,6 @@ export const messageHandler = (route) => {
                     const title = notCurrent.join(", ");
                     userList.appendChild(userListBox(title).onclick$(() => renderBody(channel, title)));
                 });
-                // console.log("data.channels: ", data.channels);
-                // console.log("current user: ", currentUser);
             }
             else {
                 console.log("error occured", res);

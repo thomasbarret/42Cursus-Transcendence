@@ -27,13 +27,16 @@ export const messageHandler = (route: Routes) => {
 		chatBody.innerHTML = "";
 		const searchName = Object.fromEntries(new FormData(addFriend)).name;
 
-		console.log(searchName);
+		const res = await fetch(BASE_URL + "/user/search?query=" + searchName);
+		const users = (await res.json()).users;
 
-		// const req = await fetch(BASE_URL + "/")
-
-		chatBody.appendChild(
-			userProfileCard({ uuid: "some uuid", display_name: "nyzs" })
-		);
+		if (!users || users.length === 0)
+			Toast("No user has been found.. :(", "warning");
+		else {
+			users.forEach((user) => {
+				chatBody.appendChild(userProfileCard(user));
+			});
+		}
 	});
 
 	searchFriend.addEventListener("click", (event) => {
@@ -76,7 +79,6 @@ export const messageHandler = (route: Routes) => {
 
 		inputBar.classList.toggle("d-none", false);
 		addFriend.classList.toggle("d-none", true);
-		chatBody.innerHTML = "";
 		messageInput.addEventListener("submit", async (e) => {
 			e.preventDefault();
 
@@ -106,15 +108,13 @@ export const messageHandler = (route: Routes) => {
 				addMessageToChat(message);
 			} else Toast("An error has occured: " + message, "danger");
 		});
-
+		chatBody.innerHTML = "";
 		console.log(channel);
 		chatTitle.textContent = title;
 
 		const res = await fetch(BASE_URL + "/chat/" + channel.uuid);
 		const data = await res.json();
-
 		console.log("messages: ", data);
-
 		data.messages.forEach((message) => addMessageToChat(message));
 	};
 
@@ -146,8 +146,6 @@ export const messageHandler = (route: Routes) => {
 						)
 					);
 				});
-				// console.log("data.channels: ", data.channels);
-				// console.log("current user: ", currentUser);
 			} else {
 				console.log("error occured", res);
 				Toast("Error occured during message fetch", "danger");
