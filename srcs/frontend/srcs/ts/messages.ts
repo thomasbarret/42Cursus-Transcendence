@@ -32,8 +32,9 @@ export const messageHandler = (route: Routes) => {
 	};
 
 	document.addEventListener("messageEvent", (event: CustomEvent) => {
-		console.log("MESSAGE_EVENT LISTENER: ", event.detail);
-		addMessageToChat(event.detail);
+		const data = event.detail;
+		console.log("MESSAGE_EVENT LISTENER: ", data);
+		if (currentChat === data.channel_uuid) addMessageToChat(event.detail);
 	});
 
 	const renderBody = async (channel, title) => {
