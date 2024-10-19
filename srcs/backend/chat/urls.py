@@ -5,6 +5,6 @@ from .views import (
 )
 
 urlpatterns = [
-    path('@me/', UserDirectChannelView.as_view(), name='direct_channel_list'),
-    path('<uuid:channel_uuid>/', ChannelView.as_view(), name='channel'),
+    path('@me', UserDirectChannelView.as_view(), name='direct_channel_list'),
+    path('<uuid:channel_uuid>', ChannelView.as_view(), name='channel'),
 ]
