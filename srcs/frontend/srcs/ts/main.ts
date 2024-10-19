@@ -100,3 +100,23 @@ export const navigate = (path: string, delay?: number) => {
 		urlRoute(url);
 	}
 };
+
+const socket = new WebSocket("ws://localhost:8080/ws/gateway/");
+
+socket.addEventListener("open", (e) => {
+	console.log(e);
+});
+
+socket.addEventListener("message", (e) => {
+	console.log("received socket message: ", JSON.parse(e.data));
+	const data = JSON.parse(e.data);
+	if (data.event === "DIRECT_MESSAGE_CREATE") {
+		console.log("message: ", data.data);
+
+		const messageEvent = new CustomEvent("messageEvent", {
+			detail: data.data,
+		});
+
+		document.dispatchEvent(messageEvent);
+	}
+});

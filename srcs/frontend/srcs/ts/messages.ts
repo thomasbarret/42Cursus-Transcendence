@@ -28,10 +28,16 @@ export const messageHandler = (route: Routes) => {
 				message.user.uuid === currentUser.uuid
 			)
 		);
+		chatBody.scrollTop = chatBody.scrollHeight;
 	};
 
+	document.addEventListener("messageEvent", (event: CustomEvent) => {
+		console.log("MESSAGE_EVENT LISTENER: ", event.detail);
+		addMessageToChat(event.detail);
+	});
+
 	const renderBody = async (channel, title) => {
-		if (currentChat === channel.uuid) return;
+		// if (currentChat === channel.uuid) return;
 		currentChat = channel.uuid;
 
 		messageInput.addEventListener("submit", async (e) => {
@@ -61,7 +67,6 @@ export const messageHandler = (route: Routes) => {
 			if (res.ok) {
 				messageInputField.value = "";
 				addMessageToChat(message);
-				chatBody.scrollTop = chatBody.scrollHeight;
 			} else Toast("An error has occured: " + message, "danger");
 		});
 
@@ -105,8 +110,8 @@ export const messageHandler = (route: Routes) => {
 						)
 					);
 				});
-				console.log("data.channels: ", data.channels);
-				console.log("current user: ", currentUser);
+				// console.log("data.channels: ", data.channels);
+				// console.log("current user: ", currentUser);
 			} else {
 				console.log("error occured", res);
 				Toast("Error occured during message fetch", "danger");

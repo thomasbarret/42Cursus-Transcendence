@@ -12,10 +12,14 @@ export const messageHandler = (route) => {
     let currentChat = "";
     const addMessageToChat = (message) => {
         chatBody.appendChild(messageBox(message.content, message.created_at, message.user.uuid === currentUser.uuid));
+        chatBody.scrollTop = chatBody.scrollHeight;
     };
+    document.addEventListener("messageEvent", (event) => {
+        console.log("MESSAGE_EVENT LISTENER: ", event.detail);
+        addMessageToChat(event.detail);
+    });
     const renderBody = async (channel, title) => {
-        if (currentChat === channel.uuid)
-            return;
+        // if (currentChat === channel.uuid) return;
         currentChat = channel.uuid;
         messageInput.addEventListener("submit", async (e) => {
             e.preventDefault();
@@ -37,7 +41,6 @@ export const messageHandler = (route) => {
             if (res.ok) {
                 messageInputField.value = "";
                 addMessageToChat(message);
-                chatBody.scrollTop = chatBody.scrollHeight;
             }
             else
                 Toast("An error has occured: " + message, "danger");
@@ -66,8 +69,8 @@ export const messageHandler = (route) => {
                     const title = notCurrent.join(", ");
                     userList.appendChild(userListBox(title).onclick$(() => renderBody(channel, title)));
                 });
-                console.log("data.channels: ", data.channels);
-                console.log("current user: ", currentUser);
+                // console.log("data.channels: ", data.channels);
+                // console.log("current user: ", currentUser);
             }
             else {
                 console.log("error occured", res);
