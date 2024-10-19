@@ -65,6 +65,28 @@ class ProfilView(APIView):
             'avatar': public_user.avatar.url if public_user.avatar else None,
         }, status=status.HTTP_200_OK)
 
+class SearchUserView(APIView):
+    authentication_classes = [TokenFromCookieAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        query = request.query_params.get('query')
+        if query is None:
+            return Response({"error": "Query is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        users = PublicUser.objects.filter(
+            Q(display_name__icontains=query) | Q(user__username__icontains=query)
+        ).exclude(user=request.user)
+
+        return JsonResponse({
+            'users': [{
+                'uuid': user.user.uuid,
+                'username': user.user.username,
+                'display_name': user.display_name,
+                'avatar': user.avatar.url if user.avatar else None,
+            } for user in users]
+        })
+
 class RelationView(APIView):
     authentication_classes = [TokenFromCookieAuthentication]
     permission_classes = [IsAuthenticated]
