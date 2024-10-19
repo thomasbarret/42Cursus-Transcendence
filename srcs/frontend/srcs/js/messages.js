@@ -11,6 +11,11 @@ export const messageHandler = (route) => {
     const inputBar = document.getElementById("message-input-bar");
     const searchFriend = document.getElementById("search-friend");
     const addFriend = document.getElementById("add-friend");
+    const messageInput = document.getElementById("message-input");
+    const messageInputField = document.getElementById("message-input-field");
+    const searchFriendInputField = document.getElementById("search-friend-input-field");
+    let currentChat = "";
+    let allChannels = [];
     addFriend.addEventListener("submit", async (e) => {
         e.preventDefault();
         chatBody.innerHTML = "";
@@ -31,8 +36,14 @@ export const messageHandler = (route) => {
                             "Content-Type": "application/json",
                         },
                     });
-                    // if (res.ok)
-                    // const data = await res.json();
+                    if (res.ok) {
+                        const data = await res.json();
+                        addChannel(data);
+                        renderBody(data);
+                        searchFriendInputField.value = "";
+                    }
+                    else
+                        Toast("Problem occured during channel creation.", "error");
                 }));
             });
         }
@@ -44,9 +55,6 @@ export const messageHandler = (route) => {
         chatTitle.textContent = "";
         addFriend.classList.toggle("d-none", false);
     });
-    const messageInput = document.getElementById("message-input");
-    const messageInputField = document.getElementById("message-input-field");
-    let currentChat = "";
     const addMessageToChat = (message) => {
         chatBody.appendChild(messageBox(message.content, formatChatDate(message.created_at), message.user.uuid === currentUser.uuid));
         chatBody.scrollTop = chatBody.scrollHeight;
@@ -56,8 +64,7 @@ export const messageHandler = (route) => {
         if (currentChat === data.channel_uuid)
             addMessageToChat(event.detail);
     });
-    // messageInput.removeEventListener("submit");
-    const renderBody = async (channel, title) => {
+    const renderBody = async (channel) => {
         // if (currentChat === channel.uuid) return;
         currentChat = channel.uuid;
         inputBar.classList.toggle("d-none", false);
@@ -67,11 +74,9 @@ export const messageHandler = (route) => {
             const content = Object.fromEntries(new FormData(messageInput)).input.toString();
             if (content.length === 0)
                 return;
-            const otherUser = channel.users.filter((u) => u.uuid != currentUser.uuid)[0].uuid;
             const res = await fetch(BASE_URL + "/chat/" + channel.uuid, {
                 method: "POST",
                 body: JSON.stringify({
-                    // receiver_uuid: otherUser,
                     content: content,
                 }),
                 headers: {
@@ -81,7 +86,6 @@ export const messageHandler = (route) => {
             const message = await res.json();
             if (res.ok) {
                 messageInputField.value = "";
-                // addMessageToChat(message);
             }
             else
                 Toast("An error has occured: " + message, "danger");
@@ -91,10 +95,25 @@ export const messageHandler = (route) => {
             // } else Toast("An error has occured: " + message, "danger");
         };
         chatBody.innerHTML = "";
-        chatTitle.textContent = title;
+        chatTitle.textContent = getChannelTitle(channel.users);
         const res = await fetch(BASE_URL + "/chat/" + channel.uuid);
         const data = await res.json();
         data.messages.forEach((message) => addMessageToChat(message));
+    };
+    const getChannelTitle = (users) => {
+        const arr = [];
+        const not = users.filter((u) => u.uuid != currentUser.uuid);
+        not.forEach((el) => arr.push(el.display_name));
+        return arr.join(", ");
+    };
+    const addChannel = (channel) => {
+        const title = getChannelTitle(channel.users);
+        if (allChannels.find((el) => el.uuid === channel.uuid)) {
+            // Toast("Channel already exists.", "warning");
+            return;
+        }
+        allChannels.push(channel);
+        userList.appendChild(userListBox(title).onclick$(() => renderBody(channel)));
     };
     try {
         const getMessages = async () => {
@@ -102,15 +121,7 @@ export const messageHandler = (route) => {
             if (res.ok) {
                 const data = await res.json();
                 data.channels.forEach((channel) => {
-                    const getUser = (users) => {
-                        const arr = [];
-                        const not = users.filter((u) => u.uuid != currentUser.uuid);
-                        not.forEach((el) => arr.push(el.display_name));
-                        return arr;
-                    };
-                    const notCurrent = getUser(channel.users);
-                    const title = notCurrent.join(", ");
-                    userList.appendChild(userListBox(title).onclick$(() => renderBody(channel, title)));
+                    addChannel(channel);
                 });
             }
             else {
