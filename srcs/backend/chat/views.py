@@ -45,6 +45,63 @@ class ChannelView(APIView):
             'created_at': channel.created_at,
         })
 
+    def post(self, request, channel_uuid=None):
+        if channel_uuid is None:
+            return Response({"error": "Channel UUID is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        content = request.data.get('content')
+        channel = Channel.objects.filter(uuid=channel_uuid, users=request.user)
+        if not channel.exists():
+            return Response({"error": "Channel not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        channel = channel.first()
+        if not channel.users.filter(uuid=request.user.uuid).exists():
+            return Response({"error": "User is not in the channel"}, status=status.HTTP_403_FORBIDDEN)
+
+        if content is None:
+            return Response({"error": "Content is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if len(content) > 1000:
+            return Response({"error": "Content is too long"}, status=status.HTTP_400_BAD_REQUEST)
+
+        message = Message.objects.create(type=1, channel=channel, user=request.user, content=content)
+        message.save()
+
+        channel_layer = get_channel_layer()
+        for user in channel.users.all():
+            async_to_sync(channel_layer.group_send)(
+                f"user_{str(user.uuid)}",
+                {
+                    "type": "send_event",
+                    "event_name": channel.type == 1 and "DIRECT_MESSAGE_CREATE" or "GAME_MESSAGE_CREATE",
+                    "data": {
+                        "uuid": str(message.uuid),
+                        "channel_uuid": str(channel.uuid),
+                        "type": message.type,
+                        "content": message.content,
+                        "created_at": str(message.created_at),
+                        "user": {
+                            "uuid": str(message.user.uuid),
+                            "display_name": message.user.publicuser.display_name,
+                            "avatar": message.user.publicuser.avatar.url if message.user.publicuser.avatar else None,
+                        }
+                    }
+                }
+            )
+
+        return JsonResponse({
+            'uuid': message.uuid,
+            'channel_uuid': channel.uuid,
+            'type': message.type,
+            'content': message.content,
+            'created_at': message.created_at,
+            'user': {
+                'uuid': message.user.uuid,
+                'display_name': message.user.publicuser.display_name,
+                'avatar': message.user.publicuser.avatar.url if message.user.publicuser.avatar else None,
+            }
+        })
+
 class UserDirectChannelView(APIView):
     authentication_classes = [TokenFromCookieAuthentication]
     permission_classes = [IsAuthenticated]
@@ -68,7 +125,6 @@ class UserDirectChannelView(APIView):
 
     def post(self, request):
         receiver_uuid = request.data.get('receiver_uuid')
-        content = request.data.get('content')
         sender_user = request.user
 
         if receiver_uuid is None:
@@ -76,9 +132,6 @@ class UserDirectChannelView(APIView):
 
         if receiver_uuid == sender_user.uuid:
             return Response({"error": "You can't send a message to yourself"}, status=status.HTTP_400_BAD_REQUEST)
-
-        if content is None:
-            return Response({"error": "Content is required"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             receiver_user = User.objects.get(uuid=receiver_uuid)
@@ -94,41 +147,14 @@ class UserDirectChannelView(APIView):
         else:
             channel = channel.first()
 
-        message = Message.objects.create(type=1, channel=channel, user=sender_user, content=content)
-        message.save()
-
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-            f"user_{str(receiver_user.uuid)}",
-            {
-                "type": "send_event",
-                "event_name": "DIRECT_MESSAGE_CREATE",
-                "data": {
-                    "uuid": str(message.uuid),
-                    "channel_uuid": str(channel.uuid),
-                    "type": message.type,
-                    "content": message.content,
-                    "created_at": str(message.created_at),
-                    "user": {
-                        "uuid": str(message.user.uuid),
-                        "display_name": message.user.publicuser.display_name,
-                        "username": message.user.username,
-                        "avatar": message.user.publicuser.avatar.url if message.user.publicuser.avatar else None,
-                    }
-                }
-            }
-        )
-
         return JsonResponse({
-            'uuid': message.uuid,
-            'channel_uuid': channel.uuid,
-            'type': message.type,
-            'content': message.content,
-            'created_at': message.created_at,
-            'user': {
-                'uuid': message.user.uuid,
-                'display_name': message.user.publicuser.display_name,
-                'username': message.user.username,
-                'avatar': message.user.publicuser.avatar.url if message.user.publicuser.avatar else None,
-            }
+            'uuid': channel.uuid,
+            'type': channel.type,
+            'users': [{
+                'uuid': user.uuid,
+                'display_name': user.publicuser.display_name,
+                'username': user.username,
+                'avatar': user.publicuser.avatar.url if user.publicuser.avatar else None,
+            } for user in channel.users.all()],
+            'created_at': channel.created_at,
         })

@@ -10,7 +10,7 @@ import uuid
 class Channel(models.Model):
     channel_type = (
         (1, "DM"),
-        (2, "MATCH"),
+        (2, "GAME"),
     )
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     type = models.IntegerField(choices=channel_type)
