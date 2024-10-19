@@ -67,7 +67,7 @@ export const messageBoxRight = (text: string, time: string) => {
 	const content = div(
 		p(text).attr(
 			"class",
-			"small p-2 me-3 mb-1 rounded-3 bg-primary text-white"
+			"small p-2 me-3 mb-1 rounded-3 bg-primary text-white text-wrap text-break"
 		),
 		p(time).attr(
 			"class",
@@ -93,7 +93,7 @@ export const messageBoxLeft = (text: string, time: string) => {
 	const content = div(
 		p(text).attr(
 			"class",
-			"small p-2 ms-3 mb-1 rounded-3  bg-body-secondary text-body-primary"
+			"small p-2 ms-3 mb-1 rounded-3 bg-body-secondary text-body-primary text-wrap text-break"
 		),
 		p(time).attr("class", "small ms-3 mb-3 rounded-3 text-muted")
 	);
