@@ -16,6 +16,7 @@ class Channel(models.Model):
     type = models.IntegerField(choices=channel_type)
     users = models.ManyToManyField(User, related_name='channels')
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 
 class Message(models.Model):
