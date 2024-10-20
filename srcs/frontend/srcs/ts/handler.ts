@@ -1,7 +1,13 @@
-import { messageBoxLeft, messageBoxRight, Toast } from "./components.js";
+import {
+	messageBox,
+	messageBoxLeft,
+	messageBoxRight,
+	Toast,
+	userListBox,
+} from "./components.js";
 import { a, div, h1, t } from "./framework.js";
 import { checkLoggedIn, navigate, urlRoute } from "./main.js";
-import { activateDarkMode, toggleDarkMode } from "./storage.js";
+import { activateDarkMode, getCurrentUser, toggleDarkMode } from "./storage.js";
 import { Routes } from "./types";
 
 export const BASE_URL = "/api";
@@ -49,7 +55,6 @@ export const mainHandler = () => {
 };
 
 export const indexHandler = (route: Routes) => {
-	console.log("current route: ", route.description);
 	let entry = document.getElementById("entry");
 
 	let elements = t(
@@ -67,43 +72,11 @@ export const indexHandler = (route: Routes) => {
 	if (entry) entry.appendChild(elements);
 };
 
-export const contactHandler = (route: Routes) => {
-	console.log("current route: ", route.description);
-};
-
 export const aboutHandler = (route: Routes) => {
 	console.log("current route: ", route.description);
 };
 
-export const messageHandler = (route: Routes) => {
-	console.log("message handler: ", route.description);
-
-	const chatBody = document.getElementById("chat-body");
-
-	chatBody.appendChild(messageBoxLeft("so good omg1", "00:44"));
-	chatBody.appendChild(messageBoxRight("asldkfjsadlkfjsdalkjf", "00:43"));
-	chatBody.appendChild(messageBoxLeft("so good omg2", "00:44"));
-	chatBody.appendChild(messageBoxRight("another of my message", "00:44"));
-	chatBody.appendChild(messageBoxRight("ttttest", "00:44"));
-	chatBody.appendChild(messageBoxRight("", "00:44"));
-	chatBody.appendChild(
-		messageBoxLeft("wow this is an interactive chat", "00:44")
-	);
-	chatBody.appendChild(messageBoxLeft("so good omg", "00:44"));
-	chatBody.appendChild(
-		messageBoxRight(
-			"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer pulvinar justo non nibh aliquam, et sollicitudin leo suscipit. Curabitur volutpat molestie magna sit amet laoreet. Nulla venenatis sem sit amet ultrices semper. Curabitur ultricies interdum ex, vel accumsan ex tincidunt ut. Duis varius ultricies vestibulum. In faucibus fringilla ipsum, gravida commodo ligula efficitur id. Donec tincidunt congue velit, nec iaculis diam ultrices non.",
-			"00:46"
-		)
-	);
-	chatBody.appendChild(messageBoxLeft("so good omg4", "00:44"));
-	setTimeout(() => {
-		chatBody.appendChild(messageBoxLeft("wesh wesh k", "00:44"));
-	}, 3000);
-};
-
 export const profileHandler = (route: Routes, slug?: string) => {
-	console.log("current route: ", route.description);
 	console.log("current path slug: ", slug);
 
 	const usernameField = document.getElementById("username-field");
@@ -119,7 +92,7 @@ export const profileHandler = (route: Routes, slug?: string) => {
 	if (!slug) {
 		try {
 			const getProfile = async () => {
-				const req = await fetch(BASE_URL + "/user/@me/", {
+				const req = await fetch(BASE_URL + "/user/@me", {
 					method: "GET",
 				});
 

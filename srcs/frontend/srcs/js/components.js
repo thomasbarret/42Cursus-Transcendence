@@ -1,6 +1,7 @@
-import { div, p, t } from "./framework.js";
+import { div, p, span, t } from "./framework.js";
 // @ts-ignore
 import * as bootstrap from "bootstrap";
+import { getCurrentUser } from "./storage.js";
 export const ToastComponent = (value, level) => {
     return div(div(div(div(value).cl("toast-body"), t("button")
         .attr("type", "button")
@@ -25,13 +26,30 @@ export const Toast = (value, level, delay) => {
     toastBootstrap.show();
     el.addEventListener("hidden.bs.toast", () => el.remove());
 };
+export const userListBox = (text, lastMessage) => {
+    const img = t("img")
+        .attr("src", "https://picsum.photos/50?random=1")
+        .attr("alt", "user avatar")
+        .cl("rounded-circle me-2")
+        .attr("style", "width: 35px; height: 35px");
+    const username = span(text).cl("small fw-semibold mb-0 text-truncate");
+    if (lastMessage && lastMessage["user"]["uuid"] === getCurrentUser().uuid) {
+        lastMessage["content"] = "You: " + lastMessage["content"];
+    }
+    const lastMsg = lastMessage
+        ? p(lastMessage["content"]).cl("small text-muted mb-0 text-truncate")
+        : "";
+    const userInfo = div(username, lastMsg).cl("flex-grow-1 text-truncate");
+    const li = t("li", img, userInfo).cl("d-flex align-items-center mb-3 btn btn-primary w-100");
+    return li;
+};
 export const messageBoxRight = (text, time) => {
     const img = t("img")
         .attr("src", "https://picsum.photos/45")
         .attr("alt", "avatar 1")
         .attr("style", "width: 30px; height: 30px")
         .attr("class", "rounded-circle");
-    const content = div(p(text).attr("class", "small p-2 me-3 mb-1 rounded-3 bg-primary text-white"), p(time).attr("class", "small me-3 mb-3 rounded-3 text-muted d-flex justify-content-end"));
+    const content = div(p(text).attr("class", "small p-2 me-3 mb-1 rounded-3 bg-primary text-white text-wrap text-break"), p(time).attr("class", "small me-3 mb-3 rounded-3 text-muted d-flex justify-content-end"));
     const message = div(content, img).attr("class", "d-flex flex-row justify-content-end mb-3 pt-1");
     return message;
 };
@@ -41,7 +59,22 @@ export const messageBoxLeft = (text, time) => {
         .attr("alt", "avatar 1")
         .attr("style", "width: 30px; height: 30px")
         .attr("class", "rounded-circle");
-    const content = div(p(text).attr("class", "small p-2 ms-3 mb-1 rounded-3  bg-body-secondary text-body-primary"), p(time).attr("class", "small ms-3 mb-3 rounded-3 text-muted"));
+    const content = div(p(text).attr("class", "small p-2 ms-3 mb-1 rounded-3 bg-body-secondary text-body-primary text-wrap text-break"), p(time).attr("class", "small ms-3 mb-3 rounded-3 text-muted"));
     const message = div(img, content).attr("class", "d-flex flex-row justify-content-start mb-3");
     return message;
+};
+export const messageBox = (text, time, current) => {
+    return current ? messageBoxRight(text, time) : messageBoxLeft(text, time);
+};
+export const userProfileCard = (user, event) => {
+    const avatar = t("img")
+        .attr("src", "https://picsum.photos/80")
+        .attr("alt", "Avatar")
+        .cl("rounded-circle me-3")
+        .attr("style", "width: 80px; height:80px");
+    const content = div(t("h5", user.display_name).cl("mb-1"), p(user.uuid).cl("mb-0 small text-muted"));
+    const button = t("button", "Start Chat")
+        .cl("btn btn-outline-primary ms-auto")
+        .onclick$(event);
+    return div(avatar, content, button).cl("card mb-2 d-flex align-items-center p-3 flex-row w-100");
 };

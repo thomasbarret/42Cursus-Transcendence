@@ -1,12 +1,7 @@
 import { loginHandler, signUpHandler } from "./auth.js";
 import { gameHandler } from "./game.js";
-import {
-	aboutHandler,
-	contactHandler,
-	indexHandler,
-	messageHandler,
-	profileHandler,
-} from "./handler.js";
+import { aboutHandler, indexHandler, profileHandler } from "./handler.js";
+import { messageHandler } from "./messages.js";
 import { Routes } from "./types.js";
 
 const urlPageTitle = "nascent";
@@ -34,12 +29,6 @@ export const routes: Record<string, Routes> = {
 		title: "About Us | " + urlPageTitle,
 		description: "This is the about page",
 		handler: aboutHandler,
-	},
-	"/contact": {
-		page: "/pages/contact.html",
-		title: "Contact Us | " + urlPageTitle,
-		description: "This is the contact page",
-		handler: contactHandler,
 	},
 	"/login": {
 		page: "/pages/login.html",

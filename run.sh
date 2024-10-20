@@ -2,6 +2,14 @@
 
 trap 'docker compose stop' SIGINT
 
+if [ "$1" == "build" ]; then
+	build_flag="--build"
+else
+	build_flag=""
+fi
+
+docker compose up -d $build_flag
+
 docker compose up -d
 
 docker compose exec django python manage.py makemigrations
