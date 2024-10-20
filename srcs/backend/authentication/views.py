@@ -174,9 +174,9 @@ class LoginView(APIView):
             if TOTPDevice.objects.filter(user=user, confirmed=True).exists():
                 if not token:
                     return Response({
-                        'message': '2FA required',
+                        'error': '2FA required',
                         'require_2fa': True,
-                    }, status=status.HTTP_200_OK)
+                    }, status=status.HTTP_401_UNAUTHORIZED)
 
                 device = TOTPDevice.objects.filter(user=user, confirmed=True).first()
                 if not device or not device.verify_token(token):

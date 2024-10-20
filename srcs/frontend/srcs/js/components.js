@@ -12,19 +12,25 @@ export const ToastComponent = (value, level) => {
         .attr("role", "alert")
         .attr("aria-live", "assertive")
         .attr("aria-atomic", "true")
-        .attr("id", "toast-component")).cl("toast-container position-fixed bottom-0 end-0 p-3");
+        .attr("id", "toast-component"))
+        .cl("toast-container position-fixed bottom-0 end-0 p-3")
+        .attr("id", "toast-notification-component");
 };
 export const Toast = (value, level, delay) => {
+    const preCheck = document.getElementById("toast-notification-component");
+    if (preCheck)
+        preCheck.remove();
     if (level === "")
         level = "primary";
     const toast = ToastComponent(value, level);
     document.body.appendChild(toast);
     const el = document.getElementById("toast-component");
+    const wrapper = document.getElementById("toast-notification-component");
+    el.addEventListener("hidden.bs.toast", () => wrapper.remove());
     const toastBootstrap = bootstrap.Toast.getOrCreateInstance(el, {
         delay: delay ? delay : 3000,
     });
     toastBootstrap.show();
-    el.addEventListener("hidden.bs.toast", () => el.remove());
 };
 export const userListBox = (text, lastMessage) => {
     const img = t("img")
