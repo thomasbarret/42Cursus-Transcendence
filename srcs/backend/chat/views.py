@@ -109,6 +109,8 @@ class ChannelView(APIView):
                     }
                 }
             )
+        channel.updated_at = message.created_at
+        channel.save()
 
         return JsonResponse({
             'uuid': message.uuid,
