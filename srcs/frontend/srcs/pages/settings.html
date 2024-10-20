@@ -12,12 +12,12 @@
 				<h6 class="text-muted">Current Email:</h6>
 				<p class="fw-bold" id="current-email"></p>
 				<h6 class="text-muted">2FA Status:</h6>
-				<p class="fw-bold" id="two-factor-status"></p>
+				<p class="fw-bold text-capitalize" id="two-factor-status"></p>
 			</div>
 
 			<hr />
 
-			<form>
+			<form id="settings-form">
 				<!-- Change Username Section -->
 				<div class="mb-4">
 					<label for="username" class="form-label fw-bold"
@@ -29,6 +29,7 @@
 						></span>
 						<input
 							type="text"
+							name="username"
 							class="form-control"
 							id="username"
 							placeholder="Enter new username"
@@ -47,6 +48,7 @@
 						></span>
 						<input
 							type="email"
+							name="email"
 							class="form-control"
 							id="email"
 							placeholder="Enter new email"
@@ -68,6 +70,7 @@
 						<input
 							type="password"
 							class="form-control"
+							name="new_password"
 							id="new-password"
 							placeholder="Enter new password"
 						/>
@@ -85,6 +88,7 @@
 						></span>
 						<input
 							type="password"
+							name="confirm-password"
 							class="form-control"
 							id="confirm-password"
 							placeholder="Confirm new password"
@@ -105,6 +109,7 @@
 						></span>
 						<input
 							type="password"
+							name="password"
 							class="form-control"
 							id="current-password"
 							placeholder="Enter current password"

@@ -108,17 +108,50 @@ export const settingsHandler = async (route) => {
     const currentUsername = document.getElementById("current-username");
     const currentEmail = document.getElementById("current-email");
     const twoFactorStatus = document.getElementById("two-factor-status");
-    const res = await fetch(BASE_URL + "/auth/settings");
-    const data = await res.json();
-    if (res.ok) {
+    const settignsForm = document.getElementById("settings-form");
+    const updateSettings = async () => {
+        const res = await fetch(BASE_URL + "/auth/settings");
+        const data = await res.json();
+        if (res.ok) {
+            console.log(data);
+            currentUsername.textContent = data.username;
+            currentEmail.textContent = data.email;
+            twoFactorStatus.textContent = data["2fa_enabled"];
+            data["2fa_enabled"]
+                ? twoFactorStatus.classList.toggle("text-success")
+                : twoFactorStatus.classList.toggle("text-danger");
+        }
+    };
+    updateSettings();
+    const newPassword = document.getElementById("new-password");
+    const confirmPassword = document.getElementById("confirm-password");
+    settignsForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const data = Object.fromEntries(new FormData(settignsForm));
         console.log(data);
-        currentUsername.textContent = data.username;
-        currentEmail.textContent = data.email;
-        twoFactorStatus.textContent = data["2fa_enabled"];
-        data["2fa_enabled"]
-            ? twoFactorStatus.classList.toggle("text-success")
-            : twoFactorStatus.classList.toggle("text-danger");
-    }
+        if (newPassword.value !== confirmPassword.value) {
+            Toast("New password and Confirm password don't match.", "warning");
+        }
+        else {
+            const body = Object.fromEntries(Object.entries(data).filter(([_, value]) => typeof value === "string" && value.length > 0));
+            const res = await fetch(BASE_URL + "/auth/settings", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(body),
+            });
+            const json = await res.json();
+            if (res.ok) {
+                Toast("Settings updated successfully!", "success");
+                settignsForm.reset();
+                updateSettings();
+            }
+            else {
+                Toast("Failed to update settings: " + json.error, "danger");
+            }
+        }
+    });
     confirmButton.addEventListener("click", async (e) => {
         confirmButton.setAttribute("disabled", "");
         confirmButton.innerHTML = `<span class="visually-hidden" role="status">Loading...</span>`;
