@@ -11,6 +11,9 @@ from .views import (
     Enable2FAView,
     Confirm2FAView,
     Disable2FAView,
+
+    # Settings
+    SettingsView,
 )
 
 urlpatterns = [
@@ -24,4 +27,5 @@ urlpatterns = [
     path('2fa/confirm/', Confirm2FAView.as_view(), name='confirm_2fa'),
     path('2fa/disable/', Disable2FAView.as_view(), name='disable_2fa'),
 
+    path("settings", SettingsView.as_view(), name="settings"),
 ]
