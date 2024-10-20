@@ -315,3 +315,36 @@ class OAuth42CallbackView(APIView):
         )
 
         return response
+
+class SettingsView(APIView):
+    authentication_classes = [TokenFromCookieAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        devices = TOTPDevice.objects.filter(user=user)
+        return Response({
+            'username': user.username,
+            'email': user.email,
+            '2fa_enabled': devices.exists() and devices[0].confirmed
+        })
+
+    def post(self, request):
+        user = request.user
+        username = request.data.get('username')
+        email = request.data.get('email')
+        password = request.data.get('password')
+        new_password = request.data.get('new_password')
+
+        if not user.check_password(password):
+            return Response({'error': 'Invalid password'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if username:
+            user.username = username
+        if email:
+            user.email = email
+        if new_password:
+            user.set_password(new_password)
+        user.save()
+
+        return Response({'message': 'Settings updated successfully'})
