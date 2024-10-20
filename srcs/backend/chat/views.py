@@ -120,6 +120,18 @@ class UserDirectChannelView(APIView):
                     'avatar': user.publicuser.avatar.url if user.publicuser.avatar else None,
                 } for user in channel.users.all()],
                 'created_at': channel.created_at,
+                'updated_at': channel.updated_at,
+                'last_message': {
+                    'uuid': channel.message_set.last().uuid,
+                    'type': channel.message_set.last().type,
+                    'content': channel.message_set.last().content,
+                    'created_at': channel.message_set.last().created_at,
+                    'user': {
+                        'uuid': channel.message_set.last().user.uuid,
+                        'display_name': channel.message_set.last().user.publicuser.display_name,
+                        'avatar': channel.message_set.last().user.publicuser.avatar.url if channel.message_set.last().user.publicuser.avatar else None,
+                    }
+                } if channel.message_set.last() else None
             } for channel in user_channels]
         })
 
