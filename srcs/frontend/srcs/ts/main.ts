@@ -1,3 +1,4 @@
+import { Toast } from "./components.js";
 import { BASE_URL, mainHandler, navHandler } from "./handler.js";
 import { routes } from "./route.js";
 import {
@@ -107,6 +108,7 @@ export const navigate = (path: string, delay?: number) => {
 };
 
 export let socket: WebSocket;
+export let socketReconnectTry = 0;
 
 export const closeWebSocket = () => {
 	if (
@@ -133,13 +135,23 @@ export const connectWebSocket = () => {
 	);
 
 	socket.onopen = () => {
+		socketReconnectTry = 0;
 		console.log("WebSocket connection established.");
 	};
 
 	socket.onclose = () => {
 		console.warn("WebSocket connection closed.");
 		setTimeout(async () => {
-			if (getCurrentUser()) connectWebSocket();
+			if (getCurrentUser()) {
+				if (socketReconnectTry === 5) {
+					Toast(
+						"Failed to make WebSocket connection, please retry again later.",
+						"danger"
+					);
+				} else {
+					connectWebSocket();
+				}
+			}
 		}, 1000);
 	};
 

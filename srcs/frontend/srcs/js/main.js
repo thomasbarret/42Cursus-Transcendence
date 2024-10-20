@@ -1,3 +1,4 @@
+import { Toast } from "./components.js";
 import { BASE_URL, mainHandler, navHandler } from "./handler.js";
 import { routes } from "./route.js";
 import { getCurrentUser, removeCurrentUser, setCurrentUser, } from "./storage.js";
@@ -95,6 +96,7 @@ export const navigate = (path, delay) => {
     }
 };
 export let socket;
+export let socketReconnectTry = 0;
 export const closeWebSocket = () => {
     if ((socket && socket.readyState === WebSocket.OPEN) ||
         socket.readyState === WebSocket.CONNECTING)
@@ -109,13 +111,20 @@ export const connectWebSocket = () => {
     }
     socket = new WebSocket(`${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}/ws/gateway/`);
     socket.onopen = () => {
+        socketReconnectTry = 0;
         console.log("WebSocket connection established.");
     };
     socket.onclose = () => {
         console.warn("WebSocket connection closed.");
         setTimeout(async () => {
-            if (getCurrentUser())
-                connectWebSocket();
+            if (getCurrentUser()) {
+                if (socketReconnectTry === 5) {
+                    Toast("Failed to make WebSocket connection, please retry again later.", "danger");
+                }
+                else {
+                    connectWebSocket();
+                }
+            }
         }, 1000);
     };
     socket.onerror = (error) => {

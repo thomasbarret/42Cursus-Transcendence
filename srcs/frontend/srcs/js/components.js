@@ -1,6 +1,7 @@
 import { div, p, span, t } from "./framework.js";
 // @ts-ignore
 import * as bootstrap from "bootstrap";
+import { getCurrentUser } from "./storage.js";
 export const ToastComponent = (value, level) => {
     return div(div(div(div(value).cl("toast-body"), t("button")
         .attr("type", "button")
@@ -25,14 +26,21 @@ export const Toast = (value, level, delay) => {
     toastBootstrap.show();
     el.addEventListener("hidden.bs.toast", () => el.remove());
 };
-export const userListBox = (text) => {
+export const userListBox = (text, lastMessage) => {
     const img = t("img")
         .attr("src", "https://picsum.photos/50?random=1")
         .attr("alt", "user avatar")
         .cl("rounded-circle me-2")
         .attr("style", "width: 35px; height: 35px");
-    const user = span(text).cl("small fw-semibold");
-    const li = t("li", img, user).cl("d-flex align-items-center mb-3 btn btn-primary");
+    const username = span(text).cl("small fw-semibold mb-0 text-truncate");
+    if (lastMessage && lastMessage["user"]["uuid"] === getCurrentUser().uuid) {
+        lastMessage["content"] = "You: " + lastMessage["content"];
+    }
+    const lastMsg = lastMessage
+        ? p(lastMessage["content"]).cl("small text-muted mb-0 text-truncate")
+        : "";
+    const userInfo = div(username, lastMsg).cl("flex-grow-1 text-truncate");
+    const li = t("li", img, userInfo).cl("d-flex align-items-center mb-3 btn btn-primary w-100");
     return li;
 };
 export const messageBoxRight = (text, time) => {
