@@ -5,6 +5,7 @@ import {
 	userProfileCard,
 } from "./components.js";
 import { BASE_URL } from "./handler.js";
+import { navigate } from "./main.js";
 import { getCurrentUser } from "./storage.js";
 import { Routes } from "./types.js";
 import { formatChatDate } from "./utils.js";
@@ -86,7 +87,8 @@ export const messageHandler = (route: Routes) => {
 				messageBox(
 					message.content,
 					formatChatDate(message.created_at),
-					message.user.uuid === currentUser.uuid
+					message.user.uuid === currentUser.uuid,
+					message.user.uuid
 				)
 			);
 			chatBody.scrollTop = chatBody.scrollHeight;
@@ -112,6 +114,14 @@ export const messageHandler = (route: Routes) => {
 			messageInput.onsubmit = async (e) => {
 				e.preventDefault();
 
+				if (messageInputField.value.length > 1000) {
+					Toast(
+						"You are limited to a maximum of 1000 characters per message.",
+						"danger"
+					);
+					return;
+				}
+
 				const content = Object.fromEntries(
 					new FormData(messageInput)
 				).input.toString();
@@ -130,7 +140,7 @@ export const messageHandler = (route: Routes) => {
 				const message = await res.json();
 
 				if (res.ok) {
-					messageInputField.value = "";
+					messageInput.reset();
 				} else Toast("An error has occured: " + message, "danger");
 			};
 			chatBody.innerHTML = "";

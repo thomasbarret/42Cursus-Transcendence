@@ -82,40 +82,41 @@ export const profileHandler = (route: Routes, slug?: string) => {
 	const loseField = document.getElementById("lose-field");
 	const playedField = document.getElementById("played-field");
 	const addFriendField = document.getElementById("add-friend");
+	const pongGameData = document.getElementById("pong-game-data");
 	const avatarField = document.getElementById(
 		"avatar-field"
 	) as HTMLImageElement;
 
-	if (!slug) {
-		try {
-			const getProfile = async () => {
-				const req = await fetch(BASE_URL + "/user/@me", {
-					method: "GET",
-				});
+	try {
+		const getUserProfile = async () => {
+			const url = "/user/" + (slug ? slug : "@me");
+			const req = await fetch(BASE_URL + url, {
+				method: "GET",
+			});
 
-				if (req.ok) {
-					const data = await req.json();
-					usernameField.textContent = data.display_name;
-					uuidField.textContent = data.uuid;
-					const winTotal = Math.floor(Math.random() * 20);
-					const loseTotal = Math.floor(Math.random() * 20);
-					const playedTotal = winTotal + loseTotal;
+			if (req.ok) {
+				const data = await req.json();
+				usernameField.textContent = data.display_name;
+				uuidField.textContent = data.uuid;
+				const winTotal = Math.floor(Math.random() * 20);
+				const loseTotal = Math.floor(Math.random() * 20);
+				const playedTotal = winTotal + loseTotal;
 
-					winField.textContent = "Wins: " + winTotal.toString();
-					loseField.textContent = "Losses: " + loseTotal.toString();
-					playedField.textContent =
-						"Games Played: " + playedTotal.toString();
-				} else {
-					navigate("/login");
-				}
-			};
-			getProfile();
-		} catch (error) {
-			Toast("Network error", "danger");
-		}
-		addFriendField.remove();
-	} else {
-		usernameField.textContent = slug;
+				winField.textContent = "Wins: " + winTotal.toString();
+				loseField.textContent = "Losses: " + loseTotal.toString();
+				playedField.textContent =
+					"Games Played: " + playedTotal.toString();
+			} else {
+				usernameField.textContent = "User not found!";
+				addFriendField.remove();
+				pongGameData.remove();
+				Toast("User not found!", "danger");
+			}
+		};
+		getUserProfile();
+		if (!slug) addFriendField.remove();
+	} catch (error) {
+		Toast("Network error", "danger");
 	}
 };
 

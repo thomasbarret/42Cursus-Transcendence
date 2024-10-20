@@ -1,8 +1,9 @@
-import { div, p, span, t } from "./framework.js";
+import { a, div, p, span, t } from "./framework.js";
 
 // @ts-ignore
 import * as bootstrap from "bootstrap";
 import { getCurrentUser } from "./storage.js";
+import { navigate } from "./main.js";
 
 export const ToastComponent = (value: string, level?: string) => {
 	return div(
@@ -99,12 +100,14 @@ export const messageBoxRight = (text: string, time: string) => {
 	return message;
 };
 
-export const messageBoxLeft = (text: string, time: string) => {
+export const messageBoxLeft = (text: string, time: string, uuid: string) => {
 	const img = t("img")
 		.attr("src", "https://picsum.photos/45")
 		.attr("alt", "avatar 1")
 		.attr("style", "width: 30px; height: 30px")
-		.attr("class", "rounded-circle");
+		.attr("class", "rounded-circle")
+		.attr("role", "button")
+		.onclick$(() => navigate("/profile/" + uuid));
 
 	const content = div(
 		p(text).attr(
@@ -122,8 +125,15 @@ export const messageBoxLeft = (text: string, time: string) => {
 	return message;
 };
 
-export const messageBox = (text: string, time: string, current: boolean) => {
-	return current ? messageBoxRight(text, time) : messageBoxLeft(text, time);
+export const messageBox = (
+	text: string,
+	time: string,
+	current: boolean,
+	uuid: string
+) => {
+	return current
+		? messageBoxRight(text, time)
+		: messageBoxLeft(text, time, uuid);
 };
 
 export const userProfileCard = (user, event: (event: MouseEvent) => void) => {
@@ -131,7 +141,10 @@ export const userProfileCard = (user, event: (event: MouseEvent) => void) => {
 		.attr("src", "https://picsum.photos/80")
 		.attr("alt", "Avatar")
 		.cl("rounded-circle me-3")
-		.attr("style", "width: 80px; height:80px");
+		.attr("style", "width: 80px; height:80px")
+
+		.attr("role", "button")
+		.onclick$(() => navigate("/profile/" + user.uuid));
 
 	const content = div(
 		t("h5", user.display_name).cl("mb-1"),

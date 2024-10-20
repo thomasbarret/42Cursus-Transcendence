@@ -2,6 +2,7 @@ import { div, p, span, t } from "./framework.js";
 // @ts-ignore
 import * as bootstrap from "bootstrap";
 import { getCurrentUser } from "./storage.js";
+import { navigate } from "./main.js";
 export const ToastComponent = (value, level) => {
     return div(div(div(div(value).cl("toast-body"), t("button")
         .attr("type", "button")
@@ -59,25 +60,31 @@ export const messageBoxRight = (text, time) => {
     const message = div(content, img).attr("class", "d-flex flex-row justify-content-end mb-3 pt-1");
     return message;
 };
-export const messageBoxLeft = (text, time) => {
+export const messageBoxLeft = (text, time, uuid) => {
     const img = t("img")
         .attr("src", "https://picsum.photos/45")
         .attr("alt", "avatar 1")
         .attr("style", "width: 30px; height: 30px")
-        .attr("class", "rounded-circle");
+        .attr("class", "rounded-circle")
+        .attr("role", "button")
+        .onclick$(() => navigate("/profile/" + uuid));
     const content = div(p(text).attr("class", "small p-2 ms-3 mb-1 rounded-3 bg-body-secondary text-body-primary text-wrap text-break"), p(time).attr("class", "small ms-3 mb-3 rounded-3 text-muted"));
     const message = div(img, content).attr("class", "d-flex flex-row justify-content-start mb-3");
     return message;
 };
-export const messageBox = (text, time, current) => {
-    return current ? messageBoxRight(text, time) : messageBoxLeft(text, time);
+export const messageBox = (text, time, current, uuid) => {
+    return current
+        ? messageBoxRight(text, time)
+        : messageBoxLeft(text, time, uuid);
 };
 export const userProfileCard = (user, event) => {
     const avatar = t("img")
         .attr("src", "https://picsum.photos/80")
         .attr("alt", "Avatar")
         .cl("rounded-circle me-3")
-        .attr("style", "width: 80px; height:80px");
+        .attr("style", "width: 80px; height:80px")
+        .attr("role", "button")
+        .onclick$(() => navigate("/profile/" + user.uuid));
     const content = div(t("h5", user.display_name).cl("mb-1"), p(user.uuid).cl("mb-0 small text-muted"));
     const button = t("button", "Start Chat")
         .cl("btn btn-outline-primary ms-auto")
