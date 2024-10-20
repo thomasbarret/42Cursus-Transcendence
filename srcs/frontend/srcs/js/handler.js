@@ -1,7 +1,9 @@
-import { Toast, } from "./components.js";
+import { Toast } from "./components.js";
 import { a, h1, t } from "./framework.js";
 import { checkLoggedIn, navigate } from "./main.js";
 import { activateDarkMode, toggleDarkMode } from "./storage.js";
+// @ts-ignore
+import * as bootstrap from "bootstrap";
 export const BASE_URL = "/api";
 export const navHandler = () => {
     const navAuth = document.getElementById("nav-auth");
@@ -92,7 +94,55 @@ export const profileHandler = (route, slug) => {
     else {
         usernameField.textContent = slug;
     }
-    // const entry = document.getElementById("entry");
-    // if (!slug) entry.appendChild(div("this is my own profile page"));
-    // else entry.appendChild(div("seeing profile for user: " + slug));
+};
+export const settingsHandler = (route) => {
+    console.log("settings route");
+    const enable2FAButton = document.getElementById("enable-two-factor");
+    const QRCodeElement = document.getElementById("qrcode");
+    const twoFactorCode = document.getElementById("two-factor-code");
+    const confirmButton = document.getElementById("two-factor-confirm");
+    const twoFactorModal = new bootstrap.Modal("#twoFactorAuthModal", {
+        keyboard: false,
+        backdrop: "static",
+    });
+    confirmButton.addEventListener("click", async (e) => {
+        confirmButton.setAttribute("disabled", "");
+        confirmButton.innerHTML = `<span class="visually-hidden" role="status">Loading...</span>`;
+        const res = await fetch(BASE_URL + "/auth/2fa/confirm/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                token: twoFactorCode.value,
+            }),
+        });
+        const data = await res.json();
+        confirmButton.removeAttribute("disabled");
+        confirmButton.innerHTML = "Verify";
+        if (res.ok) {
+            Toast("Successfully added 2FA authentification!", "success");
+            twoFactorModal.hide();
+        }
+        else {
+            Toast("2FA: Invalid Token entered, try again.", "danger");
+        }
+        console.log(data);
+    });
+    enable2FAButton.addEventListener("click", async (e) => {
+        QRCodeElement.textContent = "";
+        const res = await fetch(BASE_URL + "/auth/2fa/enable/", {
+            method: "POST",
+        });
+        const data = await res.json();
+        if (res.ok) {
+            // @ts-ignore
+            new QRCode(QRCodeElement, data.secret);
+            twoFactorModal.show();
+        }
+        else {
+            Toast("Error occured when enabling 2FA, please try again later.", "danger");
+        }
+        console.log(data);
+    });
 };

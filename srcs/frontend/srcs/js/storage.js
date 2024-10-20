@@ -15,10 +15,7 @@ export const toggleDarkMode = (toggle) => {
     activateDarkMode(toggle);
 };
 export const setCurrentUser = (data) => {
-    localStorage.setItem("user", JSON.stringify({
-        user: data.display_name,
-        uuid: data.uuid,
-    }));
+    localStorage.setItem("user", JSON.stringify(data));
 };
 export const getCurrentUser = () => {
     return localStorage.getItem("user")
