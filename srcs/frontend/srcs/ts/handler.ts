@@ -143,17 +143,23 @@ export const settingsHandler = async (route: Routes) => {
 		"settings-form"
 	) as HTMLFormElement;
 
+	const disable2FAButton = document.getElementById("disable-two-factor");
 	const updateSettings = async () => {
 		const res = await fetch(BASE_URL + "/auth/settings");
 		const data = await res.json();
 		if (res.ok) {
-			console.log(data);
 			currentUsername.textContent = data.username;
 			currentEmail.textContent = data.email;
 			twoFactorStatus.textContent = data["2fa_enabled"];
-			data["2fa_enabled"]
-				? twoFactorStatus.classList.toggle("text-success")
-				: twoFactorStatus.classList.toggle("text-danger");
+			if (data["2fa_enabled"]) {
+				twoFactorStatus.classList.toggle("text-success");
+				enable2FAButton.classList.toggle("d-none", true);
+				disable2FAButton.classList.toggle("d-none", false);
+			} else {
+				twoFactorStatus.classList.toggle("text-danger");
+				disable2FAButton.classList.toggle("d-none", true);
+				enable2FAButton.classList.toggle("d-none", false);
+			}
 		}
 	};
 	updateSettings();
@@ -165,12 +171,45 @@ export const settingsHandler = async (route: Routes) => {
 		"confirm-password"
 	) as HTMLInputElement;
 
+	const otpModal = new bootstrap.Modal("#disable-otp-modal", {
+		keyboard: false,
+		backdrop: "static",
+	});
+	const otpCode = document.getElementById(
+		"disable-otp-code"
+	) as HTMLInputElement;
+	const otpSubmit = document.getElementById("disable-otp-submit");
+
+	otpSubmit.addEventListener("click", async () => {
+		const res = await fetch(BASE_URL + "/auth/2fa/disable/", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({
+				token: otpCode.value,
+			}),
+		});
+
+		const json = await res.json();
+
+		if (res.ok) {
+			otpModal.hide();
+			Toast("Disabled 2FA authentification successfully!", "success");
+			updateSettings();
+		} else {
+			Toast("Failed to disable 2FA: " + json["error"], "danger");
+		}
+	});
+
+	disable2FAButton.addEventListener("click", () => {
+		otpModal.show();
+	});
+
 	settignsForm.addEventListener("submit", async (e) => {
 		e.preventDefault();
 
 		const data = Object.fromEntries(new FormData(settignsForm));
-		console.log(data);
-
 		if (newPassword.value !== confirmPassword.value) {
 			Toast("New password and Confirm password don't match.", "warning");
 		} else {
@@ -196,7 +235,7 @@ export const settingsHandler = async (route: Routes) => {
 				settignsForm.reset();
 				updateSettings();
 			} else {
-				Toast("Failed to update settings: " + json.error, "danger");
+				Toast("Failed to update settings: " + json["error"], "danger");
 			}
 		}
 	});
@@ -222,11 +261,10 @@ export const settingsHandler = async (route: Routes) => {
 		if (res.ok) {
 			Toast("Successfully added 2FA authentification!", "success");
 			twoFactorModal.hide();
+			updateSettings();
 		} else {
 			Toast("2FA: Invalid Token entered, try again.", "danger");
 		}
-
-		console.log(data);
 	});
 
 	enable2FAButton.addEventListener("click", async (e) => {
@@ -248,7 +286,5 @@ export const settingsHandler = async (route: Routes) => {
 				"danger"
 			);
 		}
-
-		console.log(data);
 	});
 };

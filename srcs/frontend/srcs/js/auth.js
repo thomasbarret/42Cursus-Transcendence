@@ -115,9 +115,9 @@ export const signUpHandler = (route) => {
                 navigate("/login", 500);
             }
             else {
-                if (json.error === "Username already exists")
+                if (json["error"] === "Username already exists")
                     usernameElement.classList.add("is-invalid");
-                else if (json.error === "Email already exists")
+                else if (json["error"] === "Email already exists")
                     emailElement.classList.add("is-invalid");
                 Toast("Failed to create account", "danger", 1000);
             }
