@@ -178,7 +178,7 @@ export const messageHandler = (route: Routes) => {
 				// }
 				userList.textContent = "";
 
-				data.channels.forEach((channel) => {
+				data.channels.reverse().forEach((channel) => {
 					addChannel(channel);
 				});
 				// .sort(
