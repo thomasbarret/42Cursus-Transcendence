@@ -92,8 +92,15 @@ export const messageHandler = (route: Routes) => {
 		chatBody.scrollTop = chatBody.scrollHeight;
 	};
 
-	document.addEventListener("messageEvent", (event: CustomEvent) => {
+	document.addEventListener("messageEvent", async (event: CustomEvent) => {
 		const data = event.detail;
+
+		console.log(data);
+		const channel = {
+			uuid: data.channel_uuid,
+			users: [data.user],
+		};
+		addChannel(channel);
 		if (currentChat === data.channel_uuid) addMessageToChat(event.detail);
 	});
 

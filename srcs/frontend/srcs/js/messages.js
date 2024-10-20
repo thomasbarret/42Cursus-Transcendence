@@ -59,8 +59,14 @@ export const messageHandler = (route) => {
         chatBody.appendChild(messageBox(message.content, formatChatDate(message.created_at), message.user.uuid === currentUser.uuid));
         chatBody.scrollTop = chatBody.scrollHeight;
     };
-    document.addEventListener("messageEvent", (event) => {
+    document.addEventListener("messageEvent", async (event) => {
         const data = event.detail;
+        console.log(data);
+        const channel = {
+            uuid: data.channel_uuid,
+            users: [data.user],
+        };
+        addChannel(channel);
         if (currentChat === data.channel_uuid)
             addMessageToChat(event.detail);
     });
