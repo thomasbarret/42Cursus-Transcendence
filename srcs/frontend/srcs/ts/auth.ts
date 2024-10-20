@@ -14,7 +14,6 @@ const auth = (url: string, body: Object) => {
 };
 
 export const loginHandler = (route: Routes) => {
-	console.log("login handler wow: ", route.description);
 	const loginForm = document.getElementById("login-form") as HTMLFormElement;
 	const emailElement = document.getElementById(
 		"email-input"
@@ -65,7 +64,6 @@ export const loginHandler = (route: Routes) => {
 };
 
 export const signUpHandler = (route: Routes) => {
-	console.log("signup handler wow: ", route.description);
 	const signUpForm = document.getElementById(
 		"signup-form"
 	) as HTMLFormElement;
@@ -112,16 +110,12 @@ export const signUpHandler = (route: Routes) => {
 			password: data.password,
 		};
 
-		console.log(body);
-
 		const url = BASE_URL + "/auth/register/";
 		try {
 			const res = await auth(url, body);
 
 			const json = await res.json();
-			console.log(json);
 			if (res.ok) {
-				console.log(res.status);
 				Toast(
 					"Successfully created account, you can Login now!",
 					"success"

@@ -1,6 +1,6 @@
 import { BASE_URL, mainHandler, navHandler } from "./handler.js";
 import { routes } from "./route.js";
-import { removeCurrentUser, setCurrentUser } from "./storage.js";
+import { getCurrentUser, removeCurrentUser, setCurrentUser, } from "./storage.js";
 document.addEventListener("click", (e) => {
     const { target } = e;
     if (!(target instanceof HTMLElement) ||
@@ -20,7 +20,6 @@ export const urlRoute = (event) => {
         newLocation = event.target.href;
     }
     if (newLocation) {
-        // console.log(newLocation);
         window.history.pushState({}, "", newLocation);
         locationHandler();
     }
@@ -36,6 +35,7 @@ export const checkLoggedIn = async () => {
             setCurrentUser(json);
         }
         else {
+            closeWebSocket();
             removeCurrentUser();
         }
         return req.ok;
@@ -95,6 +95,11 @@ export const navigate = (path, delay) => {
     }
 };
 export let socket;
+export const closeWebSocket = () => {
+    if ((socket && socket.readyState === WebSocket.OPEN) ||
+        socket.readyState === WebSocket.CONNECTING)
+        socket.close();
+};
 export const connectWebSocket = () => {
     if (socket &&
         (socket.readyState === WebSocket.OPEN ||
@@ -108,6 +113,10 @@ export const connectWebSocket = () => {
     };
     socket.onclose = () => {
         console.warn("WebSocket connection closed.");
+        setTimeout(async () => {
+            if (getCurrentUser())
+                connectWebSocket();
+        }, 1000);
     };
     socket.onerror = (error) => {
         console.error("WebSocket error:", error);
@@ -125,3 +134,5 @@ export const connectWebSocket = () => {
         }
     };
 };
+removeCurrentUser();
+connectWebSocket();

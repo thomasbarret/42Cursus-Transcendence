@@ -41,7 +41,6 @@ export const mainHandler = () => {
     activateDarkMode(toggle);
 };
 export const indexHandler = (route) => {
-    console.log("current route: ", route.description);
     let entry = document.getElementById("entry");
     let elements = t("div", t("h1", "this is the content of the h1").attr("id", "wow"), t("a", "this is the content of the ahref")
         .attr("href", "/asdf")
@@ -49,14 +48,10 @@ export const indexHandler = (route) => {
     if (entry)
         entry.appendChild(elements);
 };
-export const contactHandler = (route) => {
-    console.log("current route: ", route.description);
-};
 export const aboutHandler = (route) => {
     console.log("current route: ", route.description);
 };
 export const profileHandler = (route, slug) => {
-    console.log("current route: ", route.description);
     console.log("current path slug: ", slug);
     const usernameField = document.getElementById("username-field");
     const uuidField = document.getElementById("uuid-field");

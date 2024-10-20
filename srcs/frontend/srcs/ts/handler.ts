@@ -55,7 +55,6 @@ export const mainHandler = () => {
 };
 
 export const indexHandler = (route: Routes) => {
-	console.log("current route: ", route.description);
 	let entry = document.getElementById("entry");
 
 	let elements = t(
@@ -73,16 +72,11 @@ export const indexHandler = (route: Routes) => {
 	if (entry) entry.appendChild(elements);
 };
 
-export const contactHandler = (route: Routes) => {
-	console.log("current route: ", route.description);
-};
-
 export const aboutHandler = (route: Routes) => {
 	console.log("current route: ", route.description);
 };
 
 export const profileHandler = (route: Routes, slug?: string) => {
-	console.log("current route: ", route.description);
 	console.log("current path slug: ", slug);
 
 	const usernameField = document.getElementById("username-field");

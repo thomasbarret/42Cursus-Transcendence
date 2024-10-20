@@ -11,7 +11,6 @@ const auth = (url, body) => {
     });
 };
 export const loginHandler = (route) => {
-    console.log("login handler wow: ", route.description);
     const loginForm = document.getElementById("login-form");
     const emailElement = document.getElementById("email-input");
     const passwordElement = document.getElementById("password-input");
@@ -52,7 +51,6 @@ export const loginHandler = (route) => {
     });
 };
 export const signUpHandler = (route) => {
-    console.log("signup handler wow: ", route.description);
     const signUpForm = document.getElementById("signup-form");
     const usernameElement = document.getElementById("username-input");
     const emailElement = document.getElementById("email-input");
@@ -82,14 +80,11 @@ export const signUpHandler = (route) => {
             email: data.email,
             password: data.password,
         };
-        console.log(body);
         const url = BASE_URL + "/auth/register/";
         try {
             const res = await auth(url, body);
             const json = await res.json();
-            console.log(json);
             if (res.ok) {
-                console.log(res.status);
                 Toast("Successfully created account, you can Login now!", "success");
                 navigate("/login", 500);
             }

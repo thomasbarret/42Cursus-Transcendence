@@ -3,7 +3,6 @@ import { BASE_URL } from "./handler.js";
 import { getCurrentUser } from "./storage.js";
 import { formatChatDate } from "./utils.js";
 export const messageHandler = (route) => {
-    console.log("message handler: ", route.description);
     const chatBody = document.getElementById("chat-body");
     const chatTitle = document.getElementById("chat-title");
     const userList = document.getElementById("user-list");
@@ -49,7 +48,6 @@ export const messageHandler = (route) => {
         }
     });
     searchFriend.addEventListener("click", (event) => {
-        console.log("search friend");
         chatBody.innerHTML = "";
         inputBar.classList.toggle("d-none", true);
         chatTitle.textContent = "";
@@ -61,7 +59,6 @@ export const messageHandler = (route) => {
     };
     document.addEventListener("messageEvent", async (event) => {
         const data = event.detail;
-        console.log(data);
         const channel = {
             uuid: data.channel_uuid,
             users: [data.user],
