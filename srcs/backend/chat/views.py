@@ -11,6 +11,10 @@ from authentication.models import User
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
+from user.models import UserRelation
+from django.db.models import Q
+
+
 class ChannelView(APIView):
     authentication_classes = [TokenFromCookieAuthentication]
     permission_classes = [IsAuthenticated]
@@ -64,11 +68,28 @@ class ChannelView(APIView):
         if len(content) > 1000:
             return Response({"error": "Content is too long"}, status=status.HTTP_400_BAD_REQUEST)
 
+        if channel.type == 1:
+            receiver = channel.users.exclude(uuid=request.user.uuid).first()
+            relation = UserRelation.objects.filter(
+                Q(user_1=request.user) | Q(user_2=request.user),
+                Q(user_1=receiver) | Q(user_2=receiver),
+                type=2,
+                )
+            if relation.exists():
+                return Response({"error": "User is blocked"}, status=status.HTTP_403_FORBIDDEN)
+
+
         message = Message.objects.create(type=1, channel=channel, user=request.user, content=content)
         message.save()
 
         channel_layer = get_channel_layer()
         for user in channel.users.all():
+            relation = UserRelation.objects.filter(
+                Q(user_1=request.user) | Q(user_2=request.user),
+                Q(user_1=user) | Q(user_2=user),
+                type=2,
+                )
+
             async_to_sync(channel_layer.group_send)(
                 f"user_{str(user.uuid)}",
                 {
@@ -78,7 +99,7 @@ class ChannelView(APIView):
                         "uuid": str(message.uuid),
                         "channel_uuid": str(channel.uuid),
                         "type": message.type,
-                        "content": message.content,
+                        "content": relation.exists() and "Message is from a blocked user." or message.content,
                         "created_at": str(message.created_at),
                         "user": {
                             "uuid": str(message.user.uuid),
@@ -120,6 +141,18 @@ class UserDirectChannelView(APIView):
                     'avatar': user.publicuser.avatar.url if user.publicuser.avatar else None,
                 } for user in channel.users.all()],
                 'created_at': channel.created_at,
+                'updated_at': channel.updated_at,
+                'last_message': {
+                    'uuid': channel.message_set.last().uuid,
+                    'type': channel.message_set.last().type,
+                    'content': channel.message_set.last().content,
+                    'created_at': channel.message_set.last().created_at,
+                    'user': {
+                        'uuid': channel.message_set.last().user.uuid,
+                        'display_name': channel.message_set.last().user.publicuser.display_name,
+                        'avatar': channel.message_set.last().user.publicuser.avatar.url if channel.message_set.last().user.publicuser.avatar else None,
+                    }
+                } if channel.message_set.last() else None
             } for channel in user_channels]
         })
 
