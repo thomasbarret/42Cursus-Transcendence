@@ -119,7 +119,7 @@ export const profileHandler = (route: Routes, slug?: string) => {
 	}
 };
 
-export const settingsHandler = (route: Routes) => {
+export const settingsHandler = async (route: Routes) => {
 	console.log("settings route");
 
 	const enable2FAButton = document.getElementById("enable-two-factor");
@@ -134,6 +134,23 @@ export const settingsHandler = (route: Routes) => {
 		keyboard: false,
 		backdrop: "static",
 	});
+
+	const currentUsername = document.getElementById("current-username");
+	const currentEmail = document.getElementById("current-email");
+	const twoFactorStatus = document.getElementById("two-factor-status");
+
+	const res = await fetch(BASE_URL + "/auth/settings");
+
+	const data = await res.json();
+	if (res.ok) {
+		console.log(data);
+		currentUsername.textContent = data.username;
+		currentEmail.textContent = data.email;
+		twoFactorStatus.textContent = data["2fa_enabled"];
+		data["2fa_enabled"]
+			? twoFactorStatus.classList.toggle("text-success")
+			: twoFactorStatus.classList.toggle("text-danger");
+	}
 
 	confirmButton.addEventListener("click", async (e) => {
 		confirmButton.setAttribute("disabled", "");

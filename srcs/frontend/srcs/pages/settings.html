@@ -5,56 +5,126 @@
 		<div class="card-body">
 			<h3 class="card-title text-center mb-4">Settings</h3>
 
+			<!-- User Information -->
+			<div class="mb-4">
+				<h6 class="text-muted">Current Username:</h6>
+				<p class="fw-bold" id="current-username"></p>
+				<h6 class="text-muted">Current Email:</h6>
+				<p class="fw-bold" id="current-email"></p>
+				<h6 class="text-muted">2FA Status:</h6>
+				<p class="fw-bold" id="two-factor-status"></p>
+			</div>
+
+			<hr />
+
 			<form>
 				<!-- Change Username Section -->
 				<div class="mb-4">
-					<label for="username" class="form-label"
+					<label for="username" class="form-label fw-bold"
 						>Change Username</label
 					>
-					<div class="input-group">
+					<div class="input-group mb-2">
+						<span class="input-group-text"
+							><i class="bi bi-person"></i
+						></span>
 						<input
 							type="text"
 							class="form-control"
 							id="username"
 							placeholder="Enter new username"
 						/>
-						<button
-							class="btn btn-primary"
-							type="button"
-							id="change-username"
-						>
-							Save
-						</button>
 					</div>
 				</div>
+
+				<!-- Change Email Section -->
 				<div class="mb-4">
-					<label for="username" class="form-label"
+					<label for="email" class="form-label fw-bold"
 						>Change Email</label
 					>
-					<div class="input-group">
+					<div class="input-group mb-2">
+						<span class="input-group-text"
+							><i class="bi bi-envelope"></i
+						></span>
 						<input
 							type="email"
 							class="form-control"
 							id="email"
 							placeholder="Enter new email"
 						/>
-						<button
-							class="btn btn-primary"
-							type="button"
-							id="change-username"
-						>
-							Save
-						</button>
+					</div>
+				</div>
+
+				<hr />
+
+				<!-- New Password Section -->
+				<div class="mb-4">
+					<label for="new-password" class="form-label fw-bold"
+						>New Password</label
+					>
+					<div class="input-group mb-2">
+						<span class="input-group-text"
+							><i class="bi bi-lock"></i
+						></span>
+						<input
+							type="password"
+							class="form-control"
+							id="new-password"
+							placeholder="Enter new password"
+						/>
+					</div>
+				</div>
+
+				<!-- Confirm New Password Section -->
+				<div class="mb-4">
+					<label for="confirm-password" class="form-label fw-bold"
+						>Confirm New Password</label
+					>
+					<div class="input-group mb-2">
+						<span class="input-group-text"
+							><i class="bi bi-lock"></i
+						></span>
+						<input
+							type="password"
+							class="form-control"
+							id="confirm-password"
+							placeholder="Confirm new password"
+						/>
+					</div>
+				</div>
+
+				<hr />
+				<!-- Current Password Section -->
+				<div class="mb-4">
+					<label for="current-password" class="form-label fw-bold"
+						>Current Password
+						<span class="text-danger">*</span></label
+					>
+					<div class="input-group mb-2">
+						<span class="input-group-text"
+							><i class="bi bi-key"></i
+						></span>
+						<input
+							type="password"
+							class="form-control"
+							id="current-password"
+							placeholder="Enter current password"
+							required
+						/>
 					</div>
 				</div>
 
 				<!-- Enable/Disable 2FA Section -->
 				<button
 					type="button"
-					class="btn btn-primary mb-4"
+					class="btn btn-primary mb-4 mt-3"
 					id="enable-two-factor"
 				>
 					Enable Two-Factor Authentication (2FA)
+				</button>
+
+				<!-- Save Changes Button -->
+				<button type="submit" class="btn btn-success w-100">
+					Save
 				</button>
 			</form>
 		</div>
@@ -91,7 +161,7 @@
 					<div id="qrcode"></div>
 				</div>
 				<div class="mb-3">
-					<label for="twoFactorCode" class="form-label"
+					<label for="two-factor-code" class="form-label"
 						>6-Digit Code</label
 					>
 					<input
