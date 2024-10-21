@@ -1,7 +1,7 @@
-import { Toast } from "./components.js";
-import { a, h1, t } from "./framework.js";
+import { profileCard, Toast } from "./components.js";
+import { a, button, div, h1, t } from "./framework.js";
 import { checkLoggedIn, navigate } from "./main.js";
-import { activateDarkMode, toggleDarkMode } from "./storage.js";
+import { activateDarkMode, getCurrentUser, toggleDarkMode } from "./storage.js";
 // @ts-ignore
 import * as bootstrap from "bootstrap";
 export const BASE_URL = "/api";
@@ -10,26 +10,24 @@ export const navHandler = () => {
     navAuth.innerHTML = "";
     checkLoggedIn().then((loggedIn) => {
         if (loggedIn) {
-            const logoutButon = t("button", "Logout")
-                .cl("btn btn-primary")
+            const logoutButon = div(getCurrentUser().username, button("Logout")
+                .cl("btn btn-primary mx-2")
                 .onclick$(async (event) => {
                 await fetch(BASE_URL + "/auth/logout/", {
                     method: "POST",
                 });
                 navigate("/");
                 // navHandler();
-            });
+            })).cl("fw-bold");
             navAuth.appendChild(logoutButon);
         }
         else {
-            const loginButton = a("Login")
+            const loginButton = a("/login", "Login")
                 .attr("data-router-navigation", "true")
-                .cl("btn btn-primary col me-1")
-                .attr("href", "/login");
-            const signUpButton = a("Sign Up")
+                .cl("btn btn-primary col me-1");
+            const signUpButton = a("/signup", "Sign Up")
                 .attr("data-router-navigation", "true")
-                .cl("btn col")
-                .attr("href", "/signup");
+                .cl("btn col");
             navAuth.appendChild(loginButton);
             navAuth.appendChild(signUpButton);
         }
@@ -55,42 +53,45 @@ export const aboutHandler = (route) => {
 };
 export const profileHandler = (route, slug) => {
     console.log("current path slug: ", slug);
-    const usernameField = document.getElementById("username-field");
-    const uuidField = document.getElementById("uuid-field");
-    const winField = document.getElementById("win-field");
-    const loseField = document.getElementById("lose-field");
-    const playedField = document.getElementById("played-field");
-    const addFriendField = document.getElementById("add-friend");
-    const pongGameData = document.getElementById("pong-game-data");
-    const avatarField = document.getElementById("avatar-field");
+    const profile = document.getElementById("profile");
     try {
         const getUserProfile = async () => {
+            profile.textContent = "";
             const url = "/user/" + (slug ? slug : "@me");
             const req = await fetch(BASE_URL + url, {
                 method: "GET",
             });
             if (req.ok) {
                 const data = await req.json();
-                usernameField.textContent = data.display_name;
-                uuidField.textContent = data.uuid;
-                const winTotal = Math.floor(Math.random() * 20);
-                const loseTotal = Math.floor(Math.random() * 20);
-                const playedTotal = winTotal + loseTotal;
-                winField.textContent = "Wins: " + winTotal.toString();
-                loseField.textContent = "Losses: " + loseTotal.toString();
-                playedField.textContent =
-                    "Games Played: " + playedTotal.toString();
+                console.log(data);
+                const postRelation = async (type) => {
+                    const res = await fetch(BASE_URL + "/user/relation/@me", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            username: data.username,
+                            type,
+                        }),
+                    });
+                    const json = await res.json();
+                    if (res.ok) {
+                        Toast('Added relation with "' + data.username + '"', "success");
+                        getUserProfile();
+                    }
+                    else {
+                        Toast("Error occured: " + json["error"], "danger");
+                    }
+                };
+                profile.appendChild(profileCard({ ...data, me: !slug }, postRelation));
             }
             else {
-                usernameField.textContent = "User not found!";
-                addFriendField.remove();
-                pongGameData.remove();
+                profile.appendChild(profileCard(false));
                 Toast("User not found!", "danger");
             }
         };
         getUserProfile();
-        if (!slug)
-            addFriendField.remove();
     }
     catch (error) {
         Toast("Network error", "danger");

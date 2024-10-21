@@ -1,4 +1,5 @@
 import { loginHandler, signUpHandler } from "./auth.js";
+import { friendsHandler } from "./friends.js";
 import { gameHandler } from "./game.js";
 import {
 	aboutHandler,
@@ -52,6 +53,13 @@ export const routes: Record<string, Routes> = {
 		title: "Settings | " + urlPageTitle,
 		description: "Settings Page",
 		handler: settingsHandler,
+		auth: true,
+	},
+	"/friends": {
+		page: "/pages/friends.html",
+		title: "Friends | " + urlPageTitle,
+		description: "Friends Page",
+		handler: friendsHandler,
 		auth: true,
 	},
 	"/messages": {

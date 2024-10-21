@@ -1,9 +1,25 @@
-import { a, div, p, span, t } from "./framework.js";
+import {
+	a,
+	button,
+	div,
+	h1,
+	h3,
+	h5,
+	h6,
+	img,
+	li,
+	p,
+	span,
+	t,
+	ul,
+} from "./framework.js";
 
 // @ts-ignore
 import * as bootstrap from "bootstrap";
 import { getCurrentUser } from "./storage.js";
 import { navigate } from "./main.js";
+
+export const goToProfile = (uuid: string) => navigate("/profile/" + uuid);
 
 export const ToastComponent = (value: string, level?: string) => {
 	return div(
@@ -49,8 +65,7 @@ export const Toast = (value: string, level?: string, delay?: number) => {
 };
 
 export const userListBox = (text: string, lastMessage?) => {
-	const img = t("img")
-		.attr("src", "https://picsum.photos/50?random=1")
+	const image = img("https://picsum.photos/50?random=1")
 		.attr("alt", "user avatar")
 		.cl("rounded-circle me-2")
 		.attr("style", "width: 35px; height: 35px");
@@ -67,7 +82,7 @@ export const userListBox = (text: string, lastMessage?) => {
 
 	const userInfo = div(username, lastMsg).cl("flex-grow-1 text-truncate");
 
-	const li = t("li", img, userInfo).cl(
+	const li = t("li", image, userInfo).cl(
 		"d-flex align-items-center mb-3 btn btn-primary w-100"
 	);
 
@@ -75,8 +90,7 @@ export const userListBox = (text: string, lastMessage?) => {
 };
 
 export const messageBoxRight = (text: string, time: string) => {
-	const img = t("img")
-		.attr("src", "https://picsum.photos/45")
+	const image = img("https://picsum.photos/45")
 		.attr("alt", "avatar 1")
 		.attr("style", "width: 30px; height: 30px")
 		.attr("class", "rounded-circle");
@@ -92,7 +106,7 @@ export const messageBoxRight = (text: string, time: string) => {
 		)
 	);
 
-	const message = div(content, img).attr(
+	const message = div(content, image).attr(
 		"class",
 		"d-flex flex-row justify-content-end mb-3 pt-1"
 	);
@@ -101,13 +115,12 @@ export const messageBoxRight = (text: string, time: string) => {
 };
 
 export const messageBoxLeft = (text: string, time: string, uuid: string) => {
-	const img = t("img")
-		.attr("src", "https://picsum.photos/45")
+	const image = img("https://picsum.photos/45")
 		.attr("alt", "avatar 1")
 		.attr("style", "width: 30px; height: 30px")
 		.attr("class", "rounded-circle")
 		.attr("role", "button")
-		.onclick$(() => navigate("/profile/" + uuid));
+		.onclick$(() => goToProfile(uuid));
 
 	const content = div(
 		p(text).attr(
@@ -117,7 +130,7 @@ export const messageBoxLeft = (text: string, time: string, uuid: string) => {
 		p(time).attr("class", "small ms-3 mb-3 rounded-3 text-muted")
 	);
 
-	const message = div(img, content).attr(
+	const message = div(image, content).attr(
 		"class",
 		"d-flex flex-row justify-content-start mb-3"
 	);
@@ -137,25 +150,117 @@ export const messageBox = (
 };
 
 export const userProfileCard = (user, event: (event: MouseEvent) => void) => {
-	const avatar = t("img")
-		.attr("src", "https://picsum.photos/80")
+	const avatar = img("https://picsum.photos/80")
 		.attr("alt", "Avatar")
 		.cl("rounded-circle me-3")
 		.attr("style", "width: 80px; height:80px")
 
 		.attr("role", "button")
-		.onclick$(() => navigate("/profile/" + user.uuid));
+		.onclick$(() => goToProfile(user.uuid));
 
 	const content = div(
 		t("h5", user.display_name).cl("mb-1"),
 		p(user.uuid).cl("mb-0 small text-muted")
 	);
 
-	const button = t("button", "Start Chat")
+	const startChat = t("button", "Start Chat")
 		.cl("btn btn-outline-primary ms-auto")
 		.onclick$(event);
 
-	return div(avatar, content, button).cl(
+	// const addFriend = t("button", "Add Friend")
+	// 	.cl("btn btn-success")
+	// 	.onclick$(() => {
+	// 		console.log("added me friend");
+	// 	});
+	// return div(avatar, content, div(addFriend, startChat).cl("ms-auto")).cl(
+	// 	"card mb-2 d-flex align-items-center p-3 flex-row w-100"
+	// );
+
+	return div(avatar, content, startChat).cl(
 		"card mb-2 d-flex align-items-center p-3 flex-row w-100"
 	);
+};
+
+export const relationCard = (
+	user,
+	relation: string,
+	callback: (event: MouseEvent) => void
+) => {
+	const button = (() => {
+		switch (relation) {
+			case "blocked":
+				return t("button", "Unblock").cl("btn btn-sm btn-warning");
+			case "send":
+				return t("button", "Unsend").cl("btn btn-sm btn-secondary");
+			case "receive":
+				return t("button", "Accept").cl("btn btn-sm btn-success");
+			case "friends":
+				return t("button", "Remove").cl("btn btn-sm btn-danger");
+		}
+	})().onclick$(callback);
+
+	return div(
+		div(
+			img("https://picsum.photos/50")
+				.attr("alt", "avatar")
+				.cl("rounded-circle me-3")
+				.attr("role", "button")
+				.onclick$(() => goToProfile(user.uuid)),
+			div(
+				user.display_name + " (@" + user.username + ")",
+				t("br"),
+				t("small", user.uuid).cl("uuid text-muted")
+			)
+		).cl("d-flex align-items-center"),
+		button
+	).cl(
+		"friend-card d-flex align-items-center justify-content-between p-2 mb-2 border rounded"
+	);
+};
+
+export const profileCard = (user: any | false, callback?) => {
+	if (user === false)
+		return div(h1("User not found!").cl("display-1")).cl(
+			"card-body text-center"
+		);
+
+	const add = () => {
+		if (user.is_blocked || user.is_friend) return "";
+		const btn = button("Add Friend")
+			.cl("btn btn-success")
+			.onclick$(() => callback(1));
+		return user.friend_request_sent ? btn.attr("disabled", "") : btn;
+	};
+
+	const block = () => {
+		if (user.is_blocked) return "";
+		return button("Block")
+			.cl("btn btn-danger")
+			.onclick$(() => callback(2));
+	};
+
+	const buttons = [add(), block()];
+
+	const container = user.me
+		? ""
+		: div(...buttons).cl("d-flex justify-content-center gap-2 mt-3");
+
+	return div(
+		img("https://picsum.photos/200")
+			.attr("alt", "avatar")
+			.attr("style", "width: 120px; height: 120px")
+			.attr("id", "avatar-field")
+			.cl("rounded-circle mb-3"),
+		h3(user.username).cl("card-title"),
+		h6(user.uuid).cl("card-title"),
+		container,
+		div(
+			h5("Pong Game Data"),
+			ul(
+				li("Wins: 10").cl("list-group-item"),
+				li("Losses: 0").cl("list-group-item"),
+				li("Games Played: 10").cl("list-group-item")
+			).cl("list-group list-group-flish mt-3")
+		).cl("mt-4")
+	).cl("card-body text-center");
 };

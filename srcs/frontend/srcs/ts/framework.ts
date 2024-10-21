@@ -46,6 +46,46 @@ export const h1 = (
 	)[]
 ): TagElement<keyof HTMLElementTagNameMap> => t("h1", ...children);
 
+export const h2 = (
+	...children: (
+		| HTMLElement
+		| TagElement<keyof HTMLElementTagNameMap>
+		| string
+	)[]
+): TagElement<keyof HTMLElementTagNameMap> => t("h2", ...children);
+
+export const h3 = (
+	...children: (
+		| HTMLElement
+		| TagElement<keyof HTMLElementTagNameMap>
+		| string
+	)[]
+): TagElement<keyof HTMLElementTagNameMap> => t("h3", ...children);
+
+export const h4 = (
+	...children: (
+		| HTMLElement
+		| TagElement<keyof HTMLElementTagNameMap>
+		| string
+	)[]
+): TagElement<keyof HTMLElementTagNameMap> => t("h4", ...children);
+
+export const h5 = (
+	...children: (
+		| HTMLElement
+		| TagElement<keyof HTMLElementTagNameMap>
+		| string
+	)[]
+): TagElement<keyof HTMLElementTagNameMap> => t("h5", ...children);
+
+export const h6 = (
+	...children: (
+		| HTMLElement
+		| TagElement<keyof HTMLElementTagNameMap>
+		| string
+	)[]
+): TagElement<keyof HTMLElementTagNameMap> => t("h6", ...children);
+
 export const p = (
 	...children: (
 		| HTMLElement
@@ -55,12 +95,24 @@ export const p = (
 ): TagElement<keyof HTMLElementTagNameMap> => t("p", ...children);
 
 export const a = (
+	href: string,
 	...children: (
 		| HTMLElement
 		| TagElement<keyof HTMLElementTagNameMap>
 		| string
 	)[]
-): TagElement<keyof HTMLElementTagNameMap> => t("a", ...children);
+): TagElement<keyof HTMLElementTagNameMap> =>
+	t("a", ...children).attr("href", href);
+
+export const img = (
+	source: string,
+	...children: (
+		| HTMLElement
+		| TagElement<keyof HTMLElementTagNameMap>
+		| string
+	)[]
+): TagElement<keyof HTMLElementTagNameMap> =>
+	t("img", ...children).attr("src", source);
 
 export const div = (
 	...children: (
@@ -77,3 +129,27 @@ export const span = (
 		| string
 	)[]
 ): TagElement<keyof HTMLElementTagNameMap> => t("span", ...children);
+
+export const button = (
+	...children: (
+		| HTMLElement
+		| TagElement<keyof HTMLElementTagNameMap>
+		| string
+	)[]
+): TagElement<keyof HTMLElementTagNameMap> => t("button", ...children);
+
+export const li = (
+	...children: (
+		| HTMLElement
+		| TagElement<keyof HTMLElementTagNameMap>
+		| string
+	)[]
+): TagElement<keyof HTMLElementTagNameMap> => t("li", ...children);
+
+export const ul = (
+	...children: (
+		| HTMLElement
+		| TagElement<keyof HTMLElementTagNameMap>
+		| string
+	)[]
+): TagElement<keyof HTMLElementTagNameMap> => t("ul", ...children);

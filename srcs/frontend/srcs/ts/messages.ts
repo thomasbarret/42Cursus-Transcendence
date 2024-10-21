@@ -47,6 +47,8 @@ export const messageHandler = (route: Routes) => {
 			if (!users || users.length === 0)
 				Toast("No user has been found.. :(", "warning");
 			else {
+				console.log(users);
+
 				users.forEach((user) => {
 					chatBody.appendChild(
 						userProfileCard(user, async (event) => {
@@ -141,7 +143,12 @@ export const messageHandler = (route: Routes) => {
 
 				if (res.ok) {
 					messageInput.reset();
-				} else Toast("An error has occured: " + message, "danger");
+				} else {
+					Toast(
+						"An error has occured: " + message["error"],
+						"danger"
+					);
+				}
 			};
 			chatBody.innerHTML = "";
 			chatTitle.textContent = getChannelTitle(channel.users);
@@ -154,7 +161,9 @@ export const messageHandler = (route: Routes) => {
 			const arr = [];
 			const not = users.filter((u) => u.uuid != currentUser.uuid);
 
-			not.forEach((el) => arr.push(el.display_name));
+			not.forEach((el) =>
+				arr.push(el.display_name + " (@" + el.username + ")")
+			);
 			return arr.join(", ");
 		};
 
