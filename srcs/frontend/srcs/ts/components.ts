@@ -220,18 +220,30 @@ export const relationCard = (
 	);
 };
 
-export const profileCard = (user: any | false, me?: boolean) => {
+export const profileCard = (user: any | false, callback?) => {
 	if (user === false)
 		return div(h1("User not found!").cl("display-1")).cl(
 			"card-body text-center"
 		);
 
-	const buttons = [
-		button("Add Friend").cl("btn btn-success"),
-		button("Block").cl("btn btn-danger"),
-	];
+	const add = () => {
+		if (user.is_blocked || user.is_friend) return "";
+		const btn = button("Add Friend")
+			.cl("btn btn-success")
+			.onclick$(() => callback(1));
+		return user.friend_request_sent ? btn.attr("disabled", "") : btn;
+	};
 
-	const container = me
+	const block = () => {
+		if (user.is_blocked) return "";
+		return button("Block")
+			.cl("btn btn-danger")
+			.onclick$(() => callback(2));
+	};
+
+	const buttons = [add(), block()];
+
+	const container = user.me
 		? ""
 		: div(...buttons).cl("d-flex justify-content-center gap-2 mt-3");
 

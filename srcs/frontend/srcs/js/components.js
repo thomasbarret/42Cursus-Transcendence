@@ -117,14 +117,26 @@ export const relationCard = (user, relation, callback) => {
         .attr("role", "button")
         .onclick$(() => goToProfile(user.uuid)), div(user.display_name + " (@" + user.username + ")", t("br"), t("small", user.uuid).cl("uuid text-muted"))).cl("d-flex align-items-center"), button).cl("friend-card d-flex align-items-center justify-content-between p-2 mb-2 border rounded");
 };
-export const profileCard = (user, me) => {
+export const profileCard = (user, callback) => {
     if (user === false)
         return div(h1("User not found!").cl("display-1")).cl("card-body text-center");
-    const buttons = [
-        button("Add Friend").cl("btn btn-success"),
-        button("Block").cl("btn btn-danger"),
-    ];
-    const container = me
+    const add = () => {
+        if (user.is_blocked || user.is_friend)
+            return "";
+        const btn = button("Add Friend")
+            .cl("btn btn-success")
+            .onclick$(() => callback(1));
+        return user.friend_request_sent ? btn.attr("disabled", "") : btn;
+    };
+    const block = () => {
+        if (user.is_blocked)
+            return "";
+        return button("Block")
+            .cl("btn btn-danger")
+            .onclick$(() => callback(2));
+    };
+    const buttons = [add(), block()];
+    const container = user.me
         ? ""
         : div(...buttons).cl("d-flex justify-content-center gap-2 mt-3");
     return div(img("https://picsum.photos/200")

@@ -78,6 +78,7 @@ export const profileHandler = (route: Routes, slug?: string) => {
 
 	try {
 		const getUserProfile = async () => {
+			profile.textContent = "";
 			const url = "/user/" + (slug ? slug : "@me");
 			const req = await fetch(BASE_URL + url, {
 				method: "GET",
@@ -87,7 +88,34 @@ export const profileHandler = (route: Routes, slug?: string) => {
 				const data = await req.json();
 
 				console.log(data);
-				profile.appendChild(profileCard(data, !slug));
+
+				const postRelation = async (type: number) => {
+					const res = await fetch(BASE_URL + "/user/relation/@me", {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify({
+							username: data.username,
+							type,
+						}),
+					});
+					const json = await res.json();
+
+					if (res.ok) {
+						Toast(
+							'Added relation with "' + data.username + '"',
+							"success"
+						);
+						getUserProfile();
+					} else {
+						Toast("Error occured: " + json["error"], "danger");
+					}
+				};
+
+				profile.appendChild(
+					profileCard({ ...data, me: !slug }, postRelation)
+				);
 			} else {
 				profile.appendChild(profileCard(false));
 				Toast("User not found!", "danger");
