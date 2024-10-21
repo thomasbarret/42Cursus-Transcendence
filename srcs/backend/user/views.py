@@ -35,6 +35,17 @@ class ProfilView(APIView):
         if public_user is None:
             return Response({"error": "Authentication required for '@me'"}, status=status.HTTP_401_UNAUTHORIZED)
 
+
+        if user_uuid == '@me':
+            return JsonResponse({
+                'uuid': public_user.user.uuid,
+                'username': public_user.user.username,
+                'display_name': public_user.display_name,
+                'avatar': public_user.avatar.url if public_user.avatar else None,
+                'status': public_user.status,
+            })
+
+
         is_blocked = UserRelation.objects.filter(
             Q(user_1=request.user, user_2=public_user.user, type=2) | Q(user_1=public_user.user, user_2=request.user, type=2)
         ).exists()
@@ -55,7 +66,6 @@ class ProfilView(APIView):
             'username': public_user.user.username,
             'avatar': public_user.avatar.url if public_user.avatar else None,
             'status': public_user.status,
-
             'is_blocked': is_blocked,
             'is_friend': is_friend,
             'friend_request_sent': friend_request_sent,
