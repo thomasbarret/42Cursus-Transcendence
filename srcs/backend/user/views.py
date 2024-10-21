@@ -52,6 +52,7 @@ class ProfilView(APIView):
         return JsonResponse({
             'uuid': public_user.user.uuid,
             'display_name': public_user.display_name,
+            'username': public_user.user.username,
             'avatar': public_user.avatar.url if public_user.avatar else None,
             'status': public_user.status,
 

@@ -1,4 +1,18 @@
-import { a, div, p, span, t } from "./framework.js";
+import {
+	a,
+	button,
+	div,
+	h1,
+	h3,
+	h5,
+	h6,
+	img,
+	li,
+	p,
+	span,
+	t,
+	ul,
+} from "./framework.js";
 
 // @ts-ignore
 import * as bootstrap from "bootstrap";
@@ -51,8 +65,7 @@ export const Toast = (value: string, level?: string, delay?: number) => {
 };
 
 export const userListBox = (text: string, lastMessage?) => {
-	const img = t("img")
-		.attr("src", "https://picsum.photos/50?random=1")
+	const image = img("https://picsum.photos/50?random=1")
 		.attr("alt", "user avatar")
 		.cl("rounded-circle me-2")
 		.attr("style", "width: 35px; height: 35px");
@@ -69,7 +82,7 @@ export const userListBox = (text: string, lastMessage?) => {
 
 	const userInfo = div(username, lastMsg).cl("flex-grow-1 text-truncate");
 
-	const li = t("li", img, userInfo).cl(
+	const li = t("li", image, userInfo).cl(
 		"d-flex align-items-center mb-3 btn btn-primary w-100"
 	);
 
@@ -77,8 +90,7 @@ export const userListBox = (text: string, lastMessage?) => {
 };
 
 export const messageBoxRight = (text: string, time: string) => {
-	const img = t("img")
-		.attr("src", "https://picsum.photos/45")
+	const image = img("https://picsum.photos/45")
 		.attr("alt", "avatar 1")
 		.attr("style", "width: 30px; height: 30px")
 		.attr("class", "rounded-circle");
@@ -94,7 +106,7 @@ export const messageBoxRight = (text: string, time: string) => {
 		)
 	);
 
-	const message = div(content, img).attr(
+	const message = div(content, image).attr(
 		"class",
 		"d-flex flex-row justify-content-end mb-3 pt-1"
 	);
@@ -103,8 +115,7 @@ export const messageBoxRight = (text: string, time: string) => {
 };
 
 export const messageBoxLeft = (text: string, time: string, uuid: string) => {
-	const img = t("img")
-		.attr("src", "https://picsum.photos/45")
+	const image = img("https://picsum.photos/45")
 		.attr("alt", "avatar 1")
 		.attr("style", "width: 30px; height: 30px")
 		.attr("class", "rounded-circle")
@@ -119,7 +130,7 @@ export const messageBoxLeft = (text: string, time: string, uuid: string) => {
 		p(time).attr("class", "small ms-3 mb-3 rounded-3 text-muted")
 	);
 
-	const message = div(img, content).attr(
+	const message = div(image, content).attr(
 		"class",
 		"d-flex flex-row justify-content-start mb-3"
 	);
@@ -139,8 +150,7 @@ export const messageBox = (
 };
 
 export const userProfileCard = (user, event: (event: MouseEvent) => void) => {
-	const avatar = t("img")
-		.attr("src", "https://picsum.photos/80")
+	const avatar = img("https://picsum.photos/80")
 		.attr("alt", "Avatar")
 		.cl("rounded-circle me-3")
 		.attr("style", "width: 80px; height:80px")
@@ -193,8 +203,7 @@ export const relationCard = (
 
 	return div(
 		div(
-			t("img")
-				.attr("src", "https://picsum.photos/50")
+			img("https://picsum.photos/50")
 				.attr("alt", "avatar")
 				.cl("rounded-circle me-3")
 				.attr("role", "button")
@@ -209,4 +218,39 @@ export const relationCard = (
 	).cl(
 		"friend-card d-flex align-items-center justify-content-between p-2 mb-2 border rounded"
 	);
+};
+
+export const profileCard = (user: any | false, me?: boolean) => {
+	if (user === false)
+		return div(h1("User not found!").cl("display-1")).cl(
+			"card-body text-center"
+		);
+
+	const buttons = [
+		button("Add Friend").cl("btn btn-success"),
+		button("Block").cl("btn btn-danger"),
+	];
+
+	const container = me
+		? ""
+		: div(...buttons).cl("d-flex justify-content-center gap-2 mt-3");
+
+	return div(
+		img("https://picsum.photos/200")
+			.attr("alt", "avatar")
+			.attr("style", "width: 120px; height: 120px")
+			.attr("id", "avatar-field")
+			.cl("rounded-circle mb-3"),
+		h3(user.username).cl("card-title"),
+		h6(user.uuid).cl("card-title"),
+		container,
+		div(
+			h5("Pong Game Data"),
+			ul(
+				li("Wins: 10").cl("list-group-item"),
+				li("Losses: 0").cl("list-group-item"),
+				li("Games Played: 10").cl("list-group-item")
+			).cl("list-group list-group-flish mt-3")
+		).cl("mt-4")
+	).cl("card-body text-center");
 };

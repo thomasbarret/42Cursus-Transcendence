@@ -1,5 +1,5 @@
-import { Toast } from "./components.js";
-import { a, h1, t } from "./framework.js";
+import { profileCard, Toast } from "./components.js";
+import { a, div, h1, t } from "./framework.js";
 import { checkLoggedIn, navigate } from "./main.js";
 import { activateDarkMode, toggleDarkMode } from "./storage.js";
 import { Routes } from "./types";
@@ -26,15 +26,13 @@ export const navHandler = () => {
 				});
 			navAuth.appendChild(logoutButon);
 		} else {
-			const loginButton = a("Login")
+			const loginButton = a("/login", "Login")
 				.attr("data-router-navigation", "true")
-				.cl("btn btn-primary col me-1")
-				.attr("href", "/login");
+				.cl("btn btn-primary col me-1");
 
-			const signUpButton = a("Sign Up")
+			const signUpButton = a("/signup", "Sign Up")
 				.attr("data-router-navigation", "true")
-				.cl("btn col")
-				.attr("href", "/signup");
+				.cl("btn col");
 
 			navAuth.appendChild(loginButton);
 			navAuth.appendChild(signUpButton);
@@ -76,16 +74,7 @@ export const aboutHandler = (route: Routes) => {
 export const profileHandler = (route: Routes, slug?: string) => {
 	console.log("current path slug: ", slug);
 
-	const usernameField = document.getElementById("username-field");
-	const uuidField = document.getElementById("uuid-field");
-	const winField = document.getElementById("win-field");
-	const loseField = document.getElementById("lose-field");
-	const playedField = document.getElementById("played-field");
-	const addFriendField = document.getElementById("add-friend");
-	const pongGameData = document.getElementById("pong-game-data");
-	const avatarField = document.getElementById(
-		"avatar-field"
-	) as HTMLImageElement;
+	const profile = document.getElementById("profile");
 
 	try {
 		const getUserProfile = async () => {
@@ -96,25 +85,16 @@ export const profileHandler = (route: Routes, slug?: string) => {
 
 			if (req.ok) {
 				const data = await req.json();
-				usernameField.textContent = data.display_name;
-				uuidField.textContent = data.uuid;
-				const winTotal = Math.floor(Math.random() * 20);
-				const loseTotal = Math.floor(Math.random() * 20);
-				const playedTotal = winTotal + loseTotal;
 
-				winField.textContent = "Wins: " + winTotal.toString();
-				loseField.textContent = "Losses: " + loseTotal.toString();
-				playedField.textContent =
-					"Games Played: " + playedTotal.toString();
+				console.log(data);
+				profile.appendChild(profileCard(data, !slug));
 			} else {
-				usernameField.textContent = "User not found!";
-				addFriendField.remove();
-				pongGameData.remove();
+				profile.appendChild(profileCard(false));
 				Toast("User not found!", "danger");
 			}
 		};
+
 		getUserProfile();
-		if (!slug) addFriendField.remove();
 	} catch (error) {
 		Toast("Network error", "danger");
 	}
