@@ -337,7 +337,7 @@ class RelationView(APIView):
             relation = UserRelation.objects.get(uuid=relation_uuid)
         except UserRelation.DoesNotExist:
             return Response({"error": "Relation not found"}, status=status.HTTP_404_NOT_FOUND)
-        if relation.status != 2:
+        if relation.status != 2 and relation.author != request.user:
             return Response({"error": "You can delete only accepted relations"}, status=status.HTTP_400_BAD_REQUEST)
         if relation.user_1 != request.user and relation.user_2 != request.user:
             return Response({"error": "You can only delete your own relations"}, status=status.HTTP_403_FORBIDDEN)
