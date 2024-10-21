@@ -13,6 +13,8 @@ from channels.layers import get_channel_layer
 from .models import UserRelation
 from django.db.models import Q
 
+def get_avatar_url(user):
+    return user.publicuser.avatar.url if user.publicuser.avatar else None
 
 class ProfilView(APIView):
     authentication_classes = [TokenFromCookieAuthentication]
@@ -41,7 +43,7 @@ class ProfilView(APIView):
                 'uuid': public_user.user.uuid,
                 'username': public_user.user.username,
                 'display_name': public_user.display_name,
-                'avatar': public_user.avatar.url if public_user.avatar else None,
+                'avatar': get_avatar_url(public_user.user),
                 'status': public_user.status,
             })
 
@@ -64,7 +66,7 @@ class ProfilView(APIView):
             'uuid': public_user.user.uuid,
             'display_name': public_user.display_name,
             'username': public_user.user.username,
-            'avatar': public_user.avatar.url if public_user.avatar else None,
+            'avatar': get_avatar_url(public_user.user),
             'status': public_user.status,
             'is_blocked': is_blocked,
             'is_friend': is_friend,
@@ -91,7 +93,7 @@ class ProfilView(APIView):
 
         return Response({
             'display_name': public_user.display_name,
-            'avatar': public_user.avatar.url if public_user.avatar else None,
+            'avatar': get_avatar_url(public_user.user),
         }, status=status.HTTP_200_OK)
 
 class SearchUserView(APIView):
@@ -112,7 +114,7 @@ class SearchUserView(APIView):
                 'uuid': user.user.uuid,
                 'username': user.user.username,
                 'display_name': user.display_name,
-                'avatar': user.avatar.url if user.avatar else None,
+                'avatar': get_avatar_url(user.user),
             } for user in users]
         })
 
@@ -152,7 +154,7 @@ class RelationView(APIView):
                     'uuid': relation.user_1.uuid if relation.user_1 != request.user else relation.user_2.uuid,
                     'username': relation.user_1.username if relation.user_1 != request.user else relation.user_2.username,
                     'display_name': relation.user_1.publicuser.display_name if relation.user_1 != request.user else relation.user_2.publicuser.display_name,
-                    'avatar': (relation.user_1.publicuser.avatar.url if relation.user_1 != request.user and relation.user_1.publicuser.avatar else relation.user_2.publicuser.avatar.url) if relation.user_1 != request.user else (relation.user_2.publicuser.avatar.url if relation.user_2.publicuser.avatar else None),
+                    'avatar': get_avatar_url(relation.user_1) if relation.user_1 != request.user else get_avatar_url(relation.user_2),
                 }
             } for relation in friends],
             'blocked': [{
@@ -161,7 +163,7 @@ class RelationView(APIView):
                     'uuid': relation.user_1.uuid if relation.user_1 != request.user else relation.user_2.uuid,
                     'username': relation.user_1.username if relation.user_1 != request.user else relation.user_2.username,
                     'display_name': relation.user_1.publicuser.display_name if relation.user_1 != request.user else relation.user_2.publicuser.display_name,
-                    'avatar': (relation.user_1.publicuser.avatar.url if relation.user_1 != request.user and relation.user_1.publicuser.avatar else relation.user_2.publicuser.avatar.url) if relation.user_1 != request.user else (relation.user_2.publicuser.avatar.url if relation.user_2.publicuser.avatar else None),
+                    'avatar': get_avatar_url(relation.user_1) if relation.user_1 != request.user else get_avatar_url(relation.user_2),
                 }
             } for relation in blocked],
             'send': [{
@@ -170,7 +172,7 @@ class RelationView(APIView):
                     'uuid': relation.user_1.uuid if relation.user_1 != request.user else relation.user_2.uuid,
                     'username': relation.user_1.username if relation.user_1 != request.user else relation.user_2.username,
                     'display_name': relation.user_1.publicuser.display_name if relation.user_1 != request.user else relation.user_2.publicuser.display_name,
-                    'avatar': (relation.user_1.publicuser.avatar.url if relation.user_1 != request.user and relation.user_1.publicuser.avatar else relation.user_2.publicuser.avatar.url) if relation.user_1 != request.user else (relation.user_2.publicuser.avatar.url if relation.user_2.publicuser.avatar else None),
+                    'avatar': get_avatar_url(relation.user_1) if relation.user_1 != request.user else get_avatar_url(relation.user_2),
                 }
             } for relation in friends_send],
             'receive': [{
@@ -179,7 +181,7 @@ class RelationView(APIView):
                     'uuid': relation.user_1.uuid if relation.user_1 != request.user else relation.user_2.uuid,
                     'username': relation.user_1.username if relation.user_1 != request.user else relation.user_2.username,
                     'display_name': relation.user_1.publicuser.display_name if relation.user_1 != request.user else relation.user_2.publicuser.display_name,
-                    'avatar': (relation.user_1.publicuser.avatar.url if relation.user_1 != request.user and relation.user_1.publicuser.avatar else relation.user_2.publicuser.avatar.url) if relation.user_1 != request.user else (relation.user_2.publicuser.avatar.url if relation.user_2.publicuser.avatar else None),
+                    'avatar': get_avatar_url(relation.user_1) if relation.user_1 != request.user else get_avatar_url(relation.user_2),
                 }
             } for relation in friends_receive],
         })
@@ -241,7 +243,7 @@ class RelationView(APIView):
                             "uuid": str(request.user.uuid),
                             "display_name": request.user.publicuser.display_name,
                             "username": request.user.username,
-                            "avatar": request.user.publicuser.avatar.url if request.user.publicuser.avatar else None,
+                            "avatar": get_avatar_url(request.user),
                         }
                     }
                 }
@@ -274,7 +276,7 @@ class RelationView(APIView):
                         "uuid": str(request.user.uuid),
                         "display_name": request.user.publicuser.display_name,
                         "username": request.user.username,
-                        "avatar": request.user.publicuser.avatar.url if request.user.publicuser.avatar else None,
+                        "avatar": get_avatar_url(request.user),
                     }
                 }
             }
@@ -321,7 +323,7 @@ class RelationView(APIView):
                             "uuid": str(request.user.uuid),
                             "display_name": request.user.publicuser.display_name,
                             "username": request.user.username,
-                            "avatar": request.user.publicuser.avatar.url if request.user.publicuser.avatar else None,
+                            "avatar": get_avatar_url(request.user),
                         }
                     }
                 }
@@ -337,7 +339,7 @@ class RelationView(APIView):
             relation = UserRelation.objects.get(uuid=relation_uuid)
         except UserRelation.DoesNotExist:
             return Response({"error": "Relation not found"}, status=status.HTTP_404_NOT_FOUND)
-        if relation.status != 2:
+        if relation.status != 2 and relation.author != request.user:
             return Response({"error": "You can delete only accepted relations"}, status=status.HTTP_400_BAD_REQUEST)
         if relation.user_1 != request.user and relation.user_2 != request.user:
             return Response({"error": "You can only delete your own relations"}, status=status.HTTP_403_FORBIDDEN)
