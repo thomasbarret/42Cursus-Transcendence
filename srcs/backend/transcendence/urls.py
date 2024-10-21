@@ -33,4 +33,6 @@ urlpatterns = [
     path("api/oauth/42/callback/",OAuth42CallbackView.as_view(), name="oauth_42_callback"),
 
     path("api/chat/", include("chat.urls")),  # Include chat URLs
+
+    path("api/game/", include("game.urls")),  # Include game URLs
 ]
