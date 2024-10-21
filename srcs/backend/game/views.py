@@ -24,89 +24,80 @@ class CreateMatchView(APIView):
             match_player_1.display_name = request.user.publicuser.display_name
         match_player_1.save()
 
-        existing_match = Match.objects.filter(Q(player1=match_player_1) | Q(player2=match_player_1))
+        existing_match = Match.objects.filter(Q(player1=match_player_1) | Q(player2=match_player_1), status__in=[1, 2])
 
-        # delete all exist
+        if existing_match.exists():
+            return Response({
+                "uuid": existing_match.first().uuid,
+                "status": existing_match.first().status,
+                "player_1": existing_match.first().player1 if {
+                    "uuid": existing_match.first().player1.uuid,
+                    "display_name": existing_match.first().player1.display_name,
+                    "user": {
+                        "uuid": existing_match.first().player1.user.uuid,
+                        "display_name": existing_match().player1.user.publicuser.display_name if existing_match().player1.user.publicuser else None,
+                        "avatar": existing_match().player1.user.publicuser.avatar.url if existing_match().player1.user.publicuser.avatar else None,
+                    },
+                } else None,
+                "player_2": existing_match.first().player2 if {
+                    "uuid": existing_match.first().player2.uuid,
+                    "display_name": existing_match.first().player2.display_name,
+                    "user": {
+                        "uuid": existing_match.first().player2.user.uuid,
+                        "display_name": existing_match().player2.user.publicuser.display_name,
+                        "avatar": existing_match().player2.user.publicuser.avatar.url if existing_match().player2.user.publicuser.avatar else None,
+                    },
+                } else None,
+                "player1_score": existing_match.first().player1_score,
+                "player2_score": existing_match.first().player2_score,
+                "winner": existing_match.first().winner if {
+                    "uuid": existing_match.first().winner.uuid,
+                    "display_name": existing_match.first().winner.display_name,
+                    "user": {
+                        "uuid": existing_match.first().winner.user.uuid,
+                        "display_name": existing_match().winner.user.publicuser.display_name,
+                        "avatar": existing_match().winner.user.publicuser.avatar.url if existing_match().winner.user.publicuser.avatar else None,
+                    },
+                } else None,
+                "max_score": existing_match.first().max_score,
+                "start_date": existing_match.first().start_date,
+                "end_date": existing_match.first().end_date,
+                "created_at": existing_match.first().created_at,
+                "updated_at": existing_match.first().updated_at,
+            })
 
-        for match in existing_match:
-            match.delete()
+        match = Match.objects.create(
+            status=1,
+            player1=match_player_1,
+            player1_score=0,
+            player2_score=0,
+            max_score=5,
+        )
+
+        match.save()
 
         return Response({
-            "uuid": match_player_1.uuid,
+            "uuid": match.uuid,
+            "status": match.status,
+            "player_1": {
+                "uuid": match.player1.uuid,
+                "display_name": match.player1.display_name,
+                "user": {
+                    "uuid": match.player1.user.uuid,
+                    "display_name": match.player1.user.publicuser.display_name,
+                    "avatar": match.player1.user.publicuser.avatar.url if match.player1.user.publicuser.avatar else None,
+                },
+            },
+            "player_2": None,
+            "player1_score": match.player1_score,
+            "player2_score": match.player2_score,
+            "winner": None,
+            "max_score": match.max_score,
+            "start_date": match.start_date,
+            "end_date": match.end_date,
+            "created_at": match.created_at,
+            "updated_at": match.updated_at,
         })
-
-        # if existing_match.exists():
-        #     return Response({
-        #         "uuid": existing_match.first().uuid,
-        #         "status": existing_match.first().status,
-        #         "player_1": existing_match.first().player1 if {
-        #             "uuid": existing_match.first().player1.uuid,
-        #             "display_name": existing_match.first().player1.display_name,
-        #             "user": {
-        #                 "uuid": existing_match.first().player1.user.uuid,
-        #                 "display_name": existing_match().player1.user.publicuser.display_name,
-        #                 "avatar": existing_match().player1.user.publicuser.avatar.url if existing_match().player1.user.publicuser.avatar else None,
-        #             },
-        #         } else None,
-        #         "player_2": existing_match.first().player2 if {
-        #             "uuid": existing_match.first().player2.uuid,
-        #             "display_name": existing_match.first().player2.display_name,
-        #             "user": {
-        #                 "uuid": existing_match.first().player2.user.uuid,
-        #                 "display_name": existing_match().player2.user.publicuser.display_name,
-        #                 "avatar": existing_match().player2.user.publicuser.avatar.url if existing_match().player2.user.publicuser.avatar else None,
-        #             },
-        #         } else None,
-        #         "player1_score": existing_match.first().player1_score,
-        #         "player2_score": existing_match.first().player2_score,
-        #         "winner": existing_match.first().winner if {
-        #             "uuid": existing_match.first().winner.uuid,
-        #             "display_name": existing_match.first().winner.display_name,
-        #             "user": {
-        #                 "uuid": existing_match.first().winner.user.uuid,
-        #                 "display_name": existing_match().winner.user.publicuser.display_name,
-        #                 "avatar": existing_match().winner.user.publicuser.avatar.url if existing_match().winner.user.publicuser.avatar else None,
-        #             },
-        #         } else None,
-        #         "max_score": existing_match.first().max_score,
-        #         "start_date": existing_match.first().start_date,
-        #         "end_date": existing_match.first().end_date,
-        #         "created_at": existing_match.first().created_at,
-        #         "updated_at": existing_match.first().updated_at,
-        #     })
-        #
-        # match = Match.objects.create(
-        #     status=1,
-        #     player1=match_player_1,
-        #     player1_score=0,
-        #     player2_score=0,
-        #     max_score=5,
-        # )
-        #
-        # match.save()
-        #
-        # return Response({
-        #     "uuid": match.uuid,
-        #     "status": match.status,
-        #     "player_1": {
-        #         "uuid": match.player1.uuid,
-        #         "display_name": match.player1.display_name,
-        #         "user": {
-        #             "uuid": match.player1.user.uuid,
-        #             "display_name": match.player1.user.publicuser.display_name,
-        #             "avatar": match.player1.user.publicuser.avatar.url if match.player1.user.publicuser.avatar else None,
-        #         },
-        #     },
-        #     "player_2": None,
-        #     "player1_score": match.player1_score,
-        #     "player2_score": match.player2_score,
-        #     "winner": None,
-        #     "max_score": match.max_score,
-        #     "start_date": match.start_date,
-        #     "end_date": match.end_date,
-        #     "created_at": match.created_at,
-        #     "updated_at": match.updated_at,
-        # })
 
 class GetMatchView(APIView):
     authentication_classes = [TokenFromCookieAuthentication]

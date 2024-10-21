@@ -15,6 +15,7 @@ class MatchPlayer(models.Model):
         (1, "ACTIVE"),
         (2, "INACTIVE"),
     )
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     status = models.IntegerField(choices=status_type, default=1)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     display_name = models.CharField(max_length=10)
@@ -26,9 +27,8 @@ class Match(models.Model):
         (3, "FINISHED"),
         (4, "CANCELLED"),
     )
-
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    # status = models.IntegerField(choices=status_type, default=1)
+    status = models.IntegerField(choices=status_type, default=1)
     player1 = models.ForeignKey(MatchPlayer, on_delete=models.CASCADE, related_name='player1')
     player2 = models.ForeignKey(MatchPlayer, on_delete=models.CASCADE, related_name='player2', null=True, blank=True)
     player1_score = models.IntegerField()
