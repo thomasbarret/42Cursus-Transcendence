@@ -35,11 +35,29 @@ class ProfilView(APIView):
         if public_user is None:
             return Response({"error": "Authentication required for '@me'"}, status=status.HTTP_401_UNAUTHORIZED)
 
+        is_blocked = UserRelation.objects.filter(
+            Q(user_1=request.user, user_2=public_user.user, type=2) | Q(user_1=public_user.user, user_2=request.user, type=2)
+        ).exists()
+
+        is_friend = UserRelation.objects.filter(
+            Q(user_1=request.user, user_2=public_user.user, type=1, status=2) | Q(user_1=public_user.user, user_2=request.user, type=1, status=2)
+        ).exists()
+
+        friend_request_sent = UserRelation.objects.filter(
+            user_1=request.user, user_2=public_user.user, type=1, status=1
+        ).exists()
+
+
+
         return JsonResponse({
             'uuid': public_user.user.uuid,
             'display_name': public_user.display_name,
             'avatar': public_user.avatar.url if public_user.avatar else None,
             'status': public_user.status,
+
+            'is_blocked': is_blocked,
+            'is_friend': is_friend,
+            'friend_request_sent': friend_request_sent,
         })
 
     def post(self, request, user_uuid=None):
@@ -165,6 +183,8 @@ class RelationView(APIView):
         if user_2.user == request.user:
             return Response({"error": "You can't send a friend request to yourself"}, status=status.HTTP_400_BAD_REQUEST)
 
+        if type is None:
+            return Response({"error": "Type is required"}, status=status.HTTP_400_BAD_REQUEST)
 
         if type == 2:
             relation_already_exists = UserRelation.objects.filter(
@@ -217,15 +237,12 @@ class RelationView(APIView):
             )
             return Response({"message": "Friend request accepted"}, status=status.HTTP_200_OK)
 
-
-
-
         relation, created = UserRelation.objects.get_or_create(
             author=request.user,
             user_1=request.user,
             user_2=user_2.user,
+            defaults={'type': 1, 'status': 1}
         )
-
         if not created and relation.type == 1 and relation.status == 1:
             return Response({"error": "Friend request already sent"}, status=status.HTTP_400_BAD_REQUEST)
 
