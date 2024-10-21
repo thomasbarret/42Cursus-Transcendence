@@ -1,7 +1,7 @@
 import { profileCard, Toast } from "./components.js";
-import { a, h1, t } from "./framework.js";
+import { a, button, div, h1, t } from "./framework.js";
 import { checkLoggedIn, navigate } from "./main.js";
-import { activateDarkMode, toggleDarkMode } from "./storage.js";
+import { activateDarkMode, getCurrentUser, toggleDarkMode } from "./storage.js";
 // @ts-ignore
 import * as bootstrap from "bootstrap";
 export const BASE_URL = "/api";
@@ -10,15 +10,15 @@ export const navHandler = () => {
     navAuth.innerHTML = "";
     checkLoggedIn().then((loggedIn) => {
         if (loggedIn) {
-            const logoutButon = t("button", "Logout")
-                .cl("btn btn-primary")
+            const logoutButon = div(getCurrentUser().username, button("Logout")
+                .cl("btn btn-primary mx-2")
                 .onclick$(async (event) => {
                 await fetch(BASE_URL + "/auth/logout/", {
                     method: "POST",
                 });
                 navigate("/");
                 // navHandler();
-            });
+            })).cl("fw-bold");
             navAuth.appendChild(logoutButon);
         }
         else {

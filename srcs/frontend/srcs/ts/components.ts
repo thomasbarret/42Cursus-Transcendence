@@ -196,8 +196,6 @@ export const relationCard = (
 				return t("button", "Accept").cl("btn btn-sm btn-success");
 			case "friends":
 				return t("button", "Remove").cl("btn btn-sm btn-danger");
-			default:
-				return t("button", "Add Friend").cl("btn btn-sm btn-primary");
 		}
 	})().onclick$(callback);
 

@@ -13,37 +13,56 @@ export const friendsHandler = (route) => {
         friendsBody.textContent = "";
         const res = await fetch(BASE_URL + "/user/relation/@me");
         const data = await res.json();
+        const deleteRelation = async (relation) => {
+            return await fetch(BASE_URL + "/user/relation/@me", {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    uuid: relation.uuid,
+                }),
+            });
+        };
+        const acceptRelation = async (relation) => {
+            return await fetch(BASE_URL + "/user/relation/@me", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    uuid: relation.uuid,
+                    status: 2,
+                }),
+            });
+        };
         Object.entries(data).forEach(([type, relations]) => {
             let body = friendsBody;
+            let callback = deleteRelation;
             switch (type) {
                 case "blocked":
                     body = blockedBody;
+                    callback = deleteRelation;
                     break;
                 case "receive":
                     body = receivedBody;
+                    callback = acceptRelation;
                     break;
                 case "send":
                     body = sendBody;
+                    callback = deleteRelation;
                     break;
                 case "friends":
                     body = friendsBody;
+                    callback = deleteRelation;
                     break;
             }
             relations.forEach((relation) => {
                 const card = relationCard(relation.user, type, async () => {
-                    console.log("triggered value: ", relation.user.username);
-                    const res = await fetch(BASE_URL + "/user/relation/@me", {
-                        method: "DELETE",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({
-                            uuid: relation.uuid,
-                        }),
-                    });
+                    const res = await callback(relation);
                     const data = await res.json();
                     if (res.ok) {
-                        Toast("Successfully deleted relation!", "primary");
+                        Toast("Success: " + data["message"], "primary");
                     }
                     else {
                         Toast("Error occured: " + data["error"], "danger");

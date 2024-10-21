@@ -1,7 +1,7 @@
 import { profileCard, Toast } from "./components.js";
-import { a, div, h1, t } from "./framework.js";
+import { a, button, div, h1, h5, p, t } from "./framework.js";
 import { checkLoggedIn, navigate } from "./main.js";
-import { activateDarkMode, toggleDarkMode } from "./storage.js";
+import { activateDarkMode, getCurrentUser, toggleDarkMode } from "./storage.js";
 import { Routes } from "./types";
 
 // @ts-ignore
@@ -15,15 +15,18 @@ export const navHandler = () => {
 
 	checkLoggedIn().then((loggedIn) => {
 		if (loggedIn) {
-			const logoutButon = t("button", "Logout")
-				.cl("btn btn-primary")
-				.onclick$(async (event) => {
-					await fetch(BASE_URL + "/auth/logout/", {
-						method: "POST",
-					});
-					navigate("/");
-					// navHandler();
-				});
+			const logoutButon = div(
+				getCurrentUser().username,
+				button("Logout")
+					.cl("btn btn-primary mx-2")
+					.onclick$(async (event) => {
+						await fetch(BASE_URL + "/auth/logout/", {
+							method: "POST",
+						});
+						navigate("/");
+						// navHandler();
+					})
+			).cl("fw-bold");
 			navAuth.appendChild(logoutButon);
 		} else {
 			const loginButton = a("/login", "Login")
