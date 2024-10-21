@@ -55,7 +55,7 @@ export const messageHandler = (route) => {
             addFriend.classList.toggle("d-none", false);
         });
         const addMessageToChat = (message) => {
-            chatBody.appendChild(messageBox(message.content, formatChatDate(message.created_at), message.user.uuid === currentUser.uuid));
+            chatBody.appendChild(messageBox(message.content, formatChatDate(message.created_at), message.user.uuid === currentUser.uuid, message.user.uuid));
             chatBody.scrollTop = chatBody.scrollHeight;
         };
         document.addEventListener("messageEvent", async (event) => {
@@ -71,6 +71,10 @@ export const messageHandler = (route) => {
             addFriend.classList.toggle("d-none", true);
             messageInput.onsubmit = async (e) => {
                 e.preventDefault();
+                if (messageInputField.value.length > 1000) {
+                    Toast("You are limited to a maximum of 1000 characters per message.", "danger");
+                    return;
+                }
                 const content = Object.fromEntries(new FormData(messageInput)).input.toString();
                 if (content.length === 0)
                     return;
@@ -85,7 +89,7 @@ export const messageHandler = (route) => {
                 });
                 const message = await res.json();
                 if (res.ok) {
-                    messageInputField.value = "";
+                    messageInput.reset();
                 }
                 else
                     Toast("An error has occured: " + message, "danger");

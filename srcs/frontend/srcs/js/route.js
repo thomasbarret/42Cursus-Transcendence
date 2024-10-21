@@ -1,6 +1,6 @@
 import { loginHandler, signUpHandler } from "./auth.js";
 import { gameHandler } from "./game.js";
-import { aboutHandler, indexHandler, profileHandler } from "./handler.js";
+import { aboutHandler, indexHandler, profileHandler, settingsHandler, } from "./handler.js";
 import { messageHandler } from "./messages.js";
 const urlPageTitle = "nascent";
 export const routes = {
@@ -38,6 +38,13 @@ export const routes = {
         title: "Signup | " + urlPageTitle,
         description: "Signup Page",
         handler: signUpHandler,
+    },
+    "/settings": {
+        page: "/pages/settings.html",
+        title: "Settings | " + urlPageTitle,
+        description: "Settings Page",
+        handler: settingsHandler,
+        auth: true,
     },
     "/messages": {
         page: "/pages/messages.html",

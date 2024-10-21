@@ -141,6 +141,8 @@ export const connectWebSocket = () => {
 
 	socket.onclose = () => {
 		console.warn("WebSocket connection closed.");
+		// keep trying to reconnect for now
+		// socketReconnectTry++;
 		setTimeout(async () => {
 			if (getCurrentUser()) {
 				if (socketReconnectTry === 5) {

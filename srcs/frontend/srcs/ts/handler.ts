@@ -1,14 +1,11 @@
-import {
-	messageBox,
-	messageBoxLeft,
-	messageBoxRight,
-	Toast,
-	userListBox,
-} from "./components.js";
-import { a, div, h1, t } from "./framework.js";
-import { checkLoggedIn, navigate, urlRoute } from "./main.js";
-import { activateDarkMode, getCurrentUser, toggleDarkMode } from "./storage.js";
+import { Toast } from "./components.js";
+import { a, h1, t } from "./framework.js";
+import { checkLoggedIn, navigate } from "./main.js";
+import { activateDarkMode, toggleDarkMode } from "./storage.js";
 import { Routes } from "./types";
+
+// @ts-ignore
+import * as bootstrap from "bootstrap";
 
 export const BASE_URL = "/api";
 
@@ -85,43 +82,210 @@ export const profileHandler = (route: Routes, slug?: string) => {
 	const loseField = document.getElementById("lose-field");
 	const playedField = document.getElementById("played-field");
 	const addFriendField = document.getElementById("add-friend");
+	const pongGameData = document.getElementById("pong-game-data");
 	const avatarField = document.getElementById(
 		"avatar-field"
 	) as HTMLImageElement;
 
-	if (!slug) {
-		try {
-			const getProfile = async () => {
-				const req = await fetch(BASE_URL + "/user/@me", {
-					method: "GET",
-				});
+	try {
+		const getUserProfile = async () => {
+			const url = "/user/" + (slug ? slug : "@me");
+			const req = await fetch(BASE_URL + url, {
+				method: "GET",
+			});
 
-				if (req.ok) {
-					const data = await req.json();
-					usernameField.textContent = data.display_name;
-					uuidField.textContent = data.uuid;
-					const winTotal = Math.floor(Math.random() * 20);
-					const loseTotal = Math.floor(Math.random() * 20);
-					const playedTotal = winTotal + loseTotal;
+			if (req.ok) {
+				const data = await req.json();
+				usernameField.textContent = data.display_name;
+				uuidField.textContent = data.uuid;
+				const winTotal = Math.floor(Math.random() * 20);
+				const loseTotal = Math.floor(Math.random() * 20);
+				const playedTotal = winTotal + loseTotal;
 
-					winField.textContent = "Wins: " + winTotal.toString();
-					loseField.textContent = "Losses: " + loseTotal.toString();
-					playedField.textContent =
-						"Games Played: " + playedTotal.toString();
-				} else {
-					navigate("/login");
-				}
-			};
-			getProfile();
-		} catch (error) {
-			Toast("Network error", "danger");
-		}
-		addFriendField.remove();
-	} else {
-		usernameField.textContent = slug;
+				winField.textContent = "Wins: " + winTotal.toString();
+				loseField.textContent = "Losses: " + loseTotal.toString();
+				playedField.textContent =
+					"Games Played: " + playedTotal.toString();
+			} else {
+				usernameField.textContent = "User not found!";
+				addFriendField.remove();
+				pongGameData.remove();
+				Toast("User not found!", "danger");
+			}
+		};
+		getUserProfile();
+		if (!slug) addFriendField.remove();
+	} catch (error) {
+		Toast("Network error", "danger");
 	}
+};
 
-	// const entry = document.getElementById("entry");
-	// if (!slug) entry.appendChild(div("this is my own profile page"));
-	// else entry.appendChild(div("seeing profile for user: " + slug));
+export const settingsHandler = async (route: Routes) => {
+	console.log("settings route");
+
+	const enable2FAButton = document.getElementById("enable-two-factor");
+	const QRCodeElement = document.getElementById("qrcode");
+
+	const twoFactorCode = document.getElementById(
+		"two-factor-code"
+	) as HTMLInputElement;
+	const confirmButton = document.getElementById("two-factor-confirm");
+
+	const twoFactorModal = new bootstrap.Modal("#twoFactorAuthModal", {
+		keyboard: false,
+		backdrop: "static",
+	});
+
+	const currentUsername = document.getElementById("current-username");
+	const currentEmail = document.getElementById("current-email");
+	const twoFactorStatus = document.getElementById("two-factor-status");
+
+	const settignsForm = document.getElementById(
+		"settings-form"
+	) as HTMLFormElement;
+
+	const disable2FAButton = document.getElementById("disable-two-factor");
+	const updateSettings = async () => {
+		const res = await fetch(BASE_URL + "/auth/settings");
+		const data = await res.json();
+		if (res.ok) {
+			currentUsername.textContent = data.username;
+			currentEmail.textContent = data.email;
+			twoFactorStatus.textContent = data["2fa_enabled"];
+			if (data["2fa_enabled"]) {
+				twoFactorStatus.classList.toggle("text-success");
+				enable2FAButton.classList.toggle("d-none", true);
+				disable2FAButton.classList.toggle("d-none", false);
+			} else {
+				twoFactorStatus.classList.toggle("text-danger");
+				disable2FAButton.classList.toggle("d-none", true);
+				enable2FAButton.classList.toggle("d-none", false);
+			}
+		}
+	};
+	updateSettings();
+
+	const newPassword = document.getElementById(
+		"new-password"
+	) as HTMLInputElement;
+	const confirmPassword = document.getElementById(
+		"confirm-password"
+	) as HTMLInputElement;
+
+	const otpModal = new bootstrap.Modal("#disable-otp-modal", {
+		keyboard: false,
+		backdrop: "static",
+	});
+	const otpCode = document.getElementById(
+		"disable-otp-code"
+	) as HTMLInputElement;
+	const otpSubmit = document.getElementById("disable-otp-submit");
+
+	otpSubmit.addEventListener("click", async () => {
+		const res = await fetch(BASE_URL + "/auth/2fa/disable/", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({
+				token: otpCode.value,
+			}),
+		});
+
+		const json = await res.json();
+
+		if (res.ok) {
+			otpModal.hide();
+			Toast("Disabled 2FA authentification successfully!", "success");
+			updateSettings();
+		} else {
+			Toast("Failed to disable 2FA: " + json["error"], "danger");
+		}
+	});
+
+	disable2FAButton.addEventListener("click", () => {
+		otpModal.show();
+	});
+
+	settignsForm.addEventListener("submit", async (e) => {
+		e.preventDefault();
+
+		const data = Object.fromEntries(new FormData(settignsForm));
+		if (newPassword.value !== confirmPassword.value) {
+			Toast("New password and Confirm password don't match.", "warning");
+		} else {
+			const body = Object.fromEntries(
+				Object.entries(data).filter(
+					([_, value]) =>
+						typeof value === "string" && value.length > 0
+				)
+			);
+
+			const res = await fetch(BASE_URL + "/auth/settings", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify(body),
+			});
+
+			const json = await res.json();
+
+			if (res.ok) {
+				Toast("Settings updated successfully!", "success");
+				settignsForm.reset();
+				updateSettings();
+			} else {
+				Toast("Failed to update settings: " + json["error"], "danger");
+			}
+		}
+	});
+
+	confirmButton.addEventListener("click", async (e) => {
+		confirmButton.setAttribute("disabled", "");
+		confirmButton.innerHTML = `<span class="visually-hidden" role="status">Loading...</span>`;
+
+		const res = await fetch(BASE_URL + "/auth/2fa/confirm/", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({
+				token: twoFactorCode.value,
+			}),
+		});
+
+		const data = await res.json();
+
+		confirmButton.removeAttribute("disabled");
+		confirmButton.innerHTML = "Verify";
+		if (res.ok) {
+			Toast("Successfully added 2FA authentification!", "success");
+			twoFactorModal.hide();
+			updateSettings();
+		} else {
+			Toast("2FA: Invalid Token entered, try again.", "danger");
+		}
+	});
+
+	enable2FAButton.addEventListener("click", async (e) => {
+		QRCodeElement.textContent = "";
+		const res = await fetch(BASE_URL + "/auth/2fa/enable/", {
+			method: "POST",
+		});
+
+		const data = await res.json();
+
+		if (res.ok) {
+			// @ts-ignore
+			new QRCode(QRCodeElement, data.secret);
+
+			twoFactorModal.show();
+		} else {
+			Toast(
+				"Error occured when enabling 2FA, please try again later.",
+				"danger"
+			);
+		}
+	});
 };

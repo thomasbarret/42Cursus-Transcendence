@@ -23,13 +23,7 @@ export const setCurrentUser = (data: {
 	display_name: string;
 	uuid: string;
 }) => {
-	localStorage.setItem(
-		"user",
-		JSON.stringify({
-			user: data.display_name,
-			uuid: data.uuid,
-		})
-	);
+	localStorage.setItem("user", JSON.stringify(data));
 };
 
 export const getCurrentUser = () => {

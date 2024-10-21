@@ -1,7 +1,10 @@
-import { Toast, ToastComponent } from "./components.js";
+import { Toast } from "./components.js";
 import { BASE_URL } from "./handler.js";
 import { navigate } from "./main.js";
 import { Routes } from "./types.js";
+
+// @ts-ignore
+import * as bootstrap from "bootstrap";
 
 const auth = (url: string, body: Object) => {
 	return fetch(url, {
@@ -24,6 +27,15 @@ export const loginHandler = (route: Routes) => {
 
 	const submitButton = document.getElementById("submit-button");
 
+	const url = BASE_URL + "/auth/login/";
+
+	const otpModal = new bootstrap.Modal("#otpModal", {
+		keyboard: false,
+		backdrop: "static",
+	});
+	const otpCode = document.getElementById("otp-code") as HTMLInputElement;
+	const otpSubmit = document.getElementById("otp-submit");
+
 	loginForm.addEventListener("submit", async (event) => {
 		emailElement.classList.remove("is-invalid");
 		passwordElement.classList.remove("is-invalid");
@@ -40,11 +52,12 @@ export const loginHandler = (route: Routes) => {
 		const body = {
 			email: data.email,
 			password: data.password,
+			token: "",
 		};
 
-		const url = BASE_URL + "/auth/login/";
 		try {
 			const req = await auth(url, body);
+			const data = await req.json();
 
 			submitButton.removeAttribute("disabled");
 			submitButton.innerHTML = cpyButton;
@@ -53,8 +66,29 @@ export const loginHandler = (route: Routes) => {
 				Toast("Successfully logged in!", "success");
 				navigate("/profile", 500);
 			} else {
-				emailElement.classList.add("is-invalid");
-				passwordElement.classList.add("is-invalid");
+				if (data["require_2fa"] === true) {
+					otpModal.show();
+					otpSubmit.onclick = async () => {
+						body.token = otpCode.value;
+						const req = await auth(url, body);
+
+						if (req.ok) {
+							otpModal.hide();
+							Toast(
+								"Successfully validated 2FA token.",
+								"success"
+							);
+							navigate("/profile", 500);
+						} else
+							Toast(
+								"2FA Error: Bad Token, please try again.",
+								"danger"
+							);
+					};
+				} else {
+					emailElement.classList.add("is-invalid");
+					passwordElement.classList.add("is-invalid");
+				}
 			}
 		} catch (error) {
 			Toast("Network error occurred.", "danger");
@@ -122,9 +156,9 @@ export const signUpHandler = (route: Routes) => {
 				);
 				navigate("/login", 500);
 			} else {
-				if (json.error === "Username already exists")
+				if (json["error"] === "Username already exists")
 					usernameElement.classList.add("is-invalid");
-				else if (json.error === "Email already exists")
+				else if (json["error"] === "Email already exists")
 					emailElement.classList.add("is-invalid");
 				Toast("Failed to create account", "danger", 1000);
 			}
