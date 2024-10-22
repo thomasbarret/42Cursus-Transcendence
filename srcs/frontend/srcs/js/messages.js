@@ -7,6 +7,7 @@ import {
 import { BASE_URL } from "./handler.js";
 import { getCurrentUser } from "./storage.js";
 import { formatChatDate } from "./utils.js";
+// @ts-ignore
 export const messageHandler = (route) => {
 	const chatBody = document.getElementById("chat-body");
 	const chatTitle = document.getElementById("chat-title");
@@ -26,6 +27,7 @@ export const messageHandler = (route) => {
 		addFriend.addEventListener("submit", async (e) => {
 			e.preventDefault();
 			chatBody.innerHTML = "";
+			// @ts-ignore
 			const searchName = Object.fromEntries(new FormData(addFriend)).name;
 			const res = await fetch(
 				BASE_URL + "/user/search?query=" + searchName
@@ -37,6 +39,7 @@ export const messageHandler = (route) => {
 				console.log(users);
 				users.forEach((user) => {
 					chatBody.appendChild(
+						// @ts-ignore
 						userProfileCard(user, async (event) => {
 							const res = await fetch(BASE_URL + "/chat/@me", {
 								method: "POST",
@@ -51,6 +54,7 @@ export const messageHandler = (route) => {
 								const data = await res.json();
 								getMessages();
 								renderBody(data);
+								// @ts-ignore
 								searchFriendInputField.value = "";
 							} else
 								Toast(
@@ -62,6 +66,7 @@ export const messageHandler = (route) => {
 				});
 			}
 		});
+		// @ts-ignore
 		searchFriend.addEventListener("click", (event) => {
 			chatBody.innerHTML = "";
 			inputBar.classList.toggle("d-none", true);
@@ -80,9 +85,11 @@ export const messageHandler = (route) => {
 			chatBody.scrollTop = chatBody.scrollHeight;
 		};
 		document.addEventListener("messageEvent", async (event) => {
+			// @ts-ignore
 			const data = event.detail;
 			getMessages();
 			if (currentChat === data.channel_uuid)
+				// @ts-ignore
 				addMessageToChat(event.detail);
 		});
 		const renderBody = async (channel) => {
@@ -92,6 +99,7 @@ export const messageHandler = (route) => {
 			addFriend.classList.toggle("d-none", true);
 			messageInput.onsubmit = async (e) => {
 				e.preventDefault();
+				// @ts-ignore
 				if (messageInputField.value.length > 1000) {
 					Toast(
 						"You are limited to a maximum of 1000 characters per message.",
@@ -100,6 +108,7 @@ export const messageHandler = (route) => {
 					return;
 				}
 				const content = Object.fromEntries(
+					// @ts-ignore
 					new FormData(messageInput)
 				).input.toString();
 				if (content.length === 0) return;
@@ -114,6 +123,7 @@ export const messageHandler = (route) => {
 				});
 				const message = await res.json();
 				if (res.ok) {
+					// @ts-ignore
 					messageInput.reset();
 				} else {
 					Toast(
@@ -149,25 +159,10 @@ export const messageHandler = (route) => {
 			const res = await fetch(BASE_URL + "/chat/@me");
 			if (res.ok) {
 				const data = await res.json();
-				console.log("channel: ", data);
-				// if (
-				// 	allChannels.length === data.channels.length &&
-				// 	allChannels.every(
-				// 		(channel, index) =>
-				// 			channel["uuid"] === data.channels[index]["uuid"]
-				// 	)
-				// ) {
-				// 	console.log("entered this condition: ", data);
-				// 	return;
-				// }
 				userList.textContent = "";
 				data.channels.reverse().forEach((channel) => {
 					addChannel(channel);
 				});
-				// .sort(
-				// 	(a: string, b: string) =>
-				// 		new Date(b).getTime() - new Date(a).getTime()
-				// )
 			} else {
 				console.log("error occured", res);
 				Toast("Error occured during message fetch", "danger");
