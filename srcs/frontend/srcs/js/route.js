@@ -4,11 +4,11 @@ import { gameHandler } from "./game.js";
 import {
 	aboutHandler,
 	indexHandler,
-	playHandler,
 	profileHandler,
 	settingsHandler,
 } from "./handler.js";
 import { messageHandler } from "./messages.js";
+import { playHandler } from "./play.js";
 const urlPageTitle = "nascent";
 export const routes = {
 	404: {
