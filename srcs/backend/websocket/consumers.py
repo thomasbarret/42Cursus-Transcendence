@@ -11,8 +11,7 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
 
         if self.user and self.user.is_authenticated:
             print(f"User {self.user.uuid} {self.user.username} connected.")
-            self.user_id = self.user.uuid
-            self.group_name = f"user_{self.user_id}"
+            self.group_name = f"user_{self.user.uuid}"
             await self.channel_layer.group_add(self.group_name, self.channel_name)
             await self.accept()
             await self.update_user_status('online')
