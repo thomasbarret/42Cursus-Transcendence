@@ -1,0 +1,68 @@
+<div
+	class="d-flex flex-column justify-content-center align-items-center vh-100 w-100"
+>
+	<h1 class="mb-5">Pong Game Lobby</h1>
+	<div class="d-flex flex-column align-items-center w-75">
+		<a
+			href="/game"
+			data-router-navigation="true"
+			class="btn btn-primary btn-lg mb-4 w-50"
+			id="solo-mode"
+			>Play Solo - Training Mode</a
+		>
+		<button
+			type="button"
+			class="btn btn-warning btn-lg mb-4 w-50"
+			id="one-vs-one"
+		>
+			1 vs 1
+		</button>
+		<button
+			type="button"
+			class="btn btn-danger btn-lg w-50"
+			id="tournament-mode"
+		>
+			Tournament Mode
+		</button>
+	</div>
+</div>
+
+<div
+	class="modal fade"
+	id="matchmakingModal"
+	tabindex="-1"
+	aria-labelledby="matchmakingModalLabel"
+	aria-hidden="true"
+>
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title fs-3" id="matchmakingModalLabel">
+					Matchmaking...
+				</h5>
+				<button
+					type="button"
+					class="btn-close"
+					data-bs-dismiss="modal"
+					aria-label="Close"
+				></button>
+			</div>
+			<div class="modal-body text-center fs-4">
+				<div class="spinner-border text-primary mb-3" role="status">
+					<span class="visually-hidden">Loading...</span>
+				</div>
+				<p>Waiting for an opponent...</p>
+				<p id="waiting-time">Time waiting: <span>00:00</span></p>
+			</div>
+			<div class="modal-footer">
+				<button
+					type="button"
+					class="btn btn-secondary"
+					id="cancel-matchmaking"
+				>
+					Cancel
+				</button>
+			</div>
+		</div>
+	</div>
+</div>

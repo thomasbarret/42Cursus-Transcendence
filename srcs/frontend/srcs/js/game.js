@@ -1,19 +1,32 @@
 import { isDarkMode } from "./storage.js";
 let animFrame;
-const PADDLE_VELOCITY = 8 * 150;
-const BALL_VELOCITY = 3 * 150;
+const PADDLE_VELOCITY = 8 * 40;
+const BALL_VELOCITY = 3 * 175;
 const MAX_BALL_VELOCITY = BALL_VELOCITY * 2.5;
 const referenceWidth = 840;
 const referenceHeight = 500;
+
+const paddleSizes = {
+	width: 10,
+	height: 120,
+};
+
+const RADIUS = 10;
+
+const MAX_ANGLE_DEVIATION = 45;
+
 export const gameHandler = (route) => {
 	console.log("current route: ", route.description);
 	const gameBoard = document.getElementById("game-board");
+	// @ts-ignore
 	const ctx = gameBoard.getContext("2d");
 	if (!ctx) return false;
 	const scoreText = document.getElementById("score-text");
 	const resetButton = document.getElementById("reset-btn");
 	const scale = {
+		// @ts-ignore
 		x: gameBoard.width / referenceWidth,
+		// @ts-ignore
 		y: gameBoard.height / referenceHeight,
 	};
 	let deltaTime;
@@ -24,25 +37,42 @@ export const gameHandler = (route) => {
 		vy: BALL_VELOCITY / 2.5,
 		maxvX: MAX_BALL_VELOCITY,
 		maxvY: MAX_BALL_VELOCITY / 2.5,
-		radius: 15,
+		radius: RADIUS,
 		color: "white",
 		move(canvas, paddleLeft, paddleRight) {
+			const calculateImpactPoint = (paddle) => {
+				const impact = (this.y - paddle.y) / paddle.height;
+				const normalized = impact * 2 - 1;
+				const clampedImpact = Math.max(-1, Math.min(normalized, 1));
+
+				this.vx = -this.vx;
+				// const thetaBase = Math.atan2(this.vy, this.vx);
+
+				const thetaNew =
+					clampedImpact * (MAX_ANGLE_DEVIATION * (Math.PI / 180));
+
+				const speed = Math.sqrt(this.vx ** 2 + this.vy ** 2);
+				this.vx = Math.sign(this.vx) * speed * Math.cos(thetaNew);
+				this.vy = speed * Math.sin(thetaNew);
+			};
 			this.x += this.vx * deltaTime;
 			this.y += this.vy * deltaTime;
-			// if (this.x + this.radius >= canvas.width || this.x - this.radius <= 0) {
-			// 	if (this.vx > 0 && this.vx < this.maxvX) this.vx += 1;
-			// 	else if (this.vx < 0 && this.vx > -this.maxvX) this.vx -= 1;
-			// 	this.vx *= -1;
-			// }
+			// paddle right
 			if (
-				(this.x + this.radius >= paddleRight.x &&
-					this.y >= paddleRight.y &&
-					this.y <= paddleRight.y + paddleRight.height) ||
-				(this.x - this.radius <= paddleLeft.x + paddleLeft.width &&
-					this.y >= paddleLeft.y &&
-					this.y <= paddleLeft.y + paddleLeft.height)
+				this.x + this.radius >= paddleRight.x &&
+				this.y >= paddleRight.y &&
+				this.y <= paddleRight.y + paddleRight.height
 			) {
-				this.vx *= -1;
+				calculateImpactPoint(paddleRight);
+				return this;
+			}
+			// paddle left
+			if (
+				this.x - this.radius <= paddleLeft.x + paddleLeft.width &&
+				this.y >= paddleLeft.y &&
+				this.y <= paddleLeft.y + paddleLeft.height
+			) {
+				calculateImpactPoint(paddleLeft);
 				return this;
 			}
 			// if it touches up and down border:
@@ -50,9 +80,6 @@ export const gameHandler = (route) => {
 				this.x + this.radius >= canvas.width ||
 				this.x - this.radius <= 0
 			) {
-				// speed incrementation, no need to bother with this for now
-				// if (this.vx > 0 && this.vx < this.maxvX) this.vx += 1;
-				// else if (this.vx < 0 && this.vx > -this.maxvX) this.vx -= 1;
 				if (this.x + this.radius >= canvas.width) {
 					paddleLeft.points += 1;
 				} else if (this.x - this.radius <= 0) {
@@ -64,8 +91,6 @@ export const gameHandler = (route) => {
 				this.y + this.radius >= canvas.height ||
 				this.y - this.radius <= 0
 			) {
-				if (this.vy > 0 && this.vy < this.maxvY) this.vy += 1;
-				else if (this.vy < 0 && this.vy > -this.maxvY) this.vy -= 1;
 				this.vy *= -1;
 			}
 			return this;
@@ -96,8 +121,8 @@ export const gameHandler = (route) => {
 		x: 0,
 		y: 0,
 		vy: PADDLE_VELOCITY,
-		width: 15,
-		height: 150,
+		width: paddleSizes.width,
+		height: paddleSizes.height,
 		color: "white",
 		keys: {
 			up: false,
@@ -141,8 +166,8 @@ export const gameHandler = (route) => {
 		x: 0,
 		y: 0,
 		vy: PADDLE_VELOCITY,
-		width: 15,
-		height: 150,
+		width: paddleSizes.width,
+		height: paddleSizes.height,
 		color: "white",
 		keys: {
 			up: false,
@@ -203,6 +228,7 @@ export const gameHandler = (route) => {
 		// ctx.clearRect(0, 0, gameBoard.width, gameBoard.height);
 		if (transparent === false) ctx.fillStyle = color;
 		else ctx.fillStyle = tr;
+		// @ts-ignore
 		ctx.fillRect(0, 0, gameBoard.width, gameBoard.height);
 	};
 	const reset = () => {
@@ -236,9 +262,11 @@ export const gameHandler = (route) => {
 		paddleRight.points = 0;
 		reset();
 	});
+	// @ts-ignore
 	gameBoard.addEventListener("mouseover", (e) => {
 		animFrame = window.requestAnimationFrame(draw);
 	});
+	// @ts-ignore
 	gameBoard.addEventListener("mouseout", (e) => {
 		window.cancelAnimationFrame(animFrame);
 		// important: fixes issue that if mouse is out, it doesnt launch the ball at mach 10
