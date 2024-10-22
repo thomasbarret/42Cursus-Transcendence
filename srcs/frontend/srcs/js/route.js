@@ -4,6 +4,7 @@ import { gameHandler } from "./game.js";
 import {
 	aboutHandler,
 	indexHandler,
+	playHandler,
 	profileHandler,
 	settingsHandler,
 } from "./handler.js";
@@ -22,6 +23,12 @@ export const routes = {
 		handler: indexHandler,
 	},
 	"/play": {
+		page: "/pages/play.html",
+		title: "Play Pong | " + urlPageTitle,
+		description: "Lobby for the Pong game",
+		handler: playHandler,
+	},
+	"/game": {
 		page: "/pages/game.html",
 		title: "Pong Game | " + urlPageTitle,
 		description: "Pong Game",

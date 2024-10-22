@@ -14,6 +14,7 @@ export const navHandler = () => {
 				getCurrentUser().username,
 				button("Logout")
 					.cl("btn btn-primary mx-2")
+					// @ts-ignore
 					.onclick$(async (event) => {
 						await fetch(BASE_URL + "/auth/logout/", {
 							method: "POST",
@@ -42,6 +43,7 @@ export const mainHandler = () => {
 	});
 	activateDarkMode(toggle);
 };
+// @ts-ignore
 export const indexHandler = (route) => {
 	let entry = document.getElementById("entry");
 	let elements = t(
@@ -61,6 +63,7 @@ export const indexHandler = (route) => {
 export const aboutHandler = (route) => {
 	console.log("current route: ", route.description);
 };
+// @ts-ignore
 export const profileHandler = (route, slug) => {
 	console.log("current path slug: ", slug);
 	const profile = document.getElementById("profile");
@@ -109,6 +112,7 @@ export const profileHandler = (route, slug) => {
 		Toast("Network error", "danger");
 	}
 };
+// @ts-ignore
 export const settingsHandler = async (route) => {
 	console.log("settings route");
 	const enable2FAButton = document.getElementById("enable-two-factor");
@@ -158,6 +162,7 @@ export const settingsHandler = async (route) => {
 				"Content-Type": "application/json",
 			},
 			body: JSON.stringify({
+				// @ts-ignore
 				token: otpCode.value,
 			}),
 		});
@@ -175,7 +180,9 @@ export const settingsHandler = async (route) => {
 	});
 	settignsForm.addEventListener("submit", async (e) => {
 		e.preventDefault();
+		// @ts-ignore
 		const data = Object.fromEntries(new FormData(settignsForm));
+		// @ts-ignore
 		if (newPassword.value !== confirmPassword.value) {
 			Toast("New password and Confirm password don't match.", "warning");
 		} else {
@@ -195,6 +202,7 @@ export const settingsHandler = async (route) => {
 			const json = await res.json();
 			if (res.ok) {
 				Toast("Settings updated successfully!", "success");
+				// @ts-ignore
 				settignsForm.reset();
 				updateSettings();
 			} else {
@@ -202,6 +210,7 @@ export const settingsHandler = async (route) => {
 			}
 		}
 	});
+	// @ts-ignore
 	confirmButton.addEventListener("click", async (e) => {
 		confirmButton.setAttribute("disabled", "");
 		confirmButton.innerHTML = `<span class="visually-hidden" role="status">Loading...</span>`;
@@ -211,9 +220,11 @@ export const settingsHandler = async (route) => {
 				"Content-Type": "application/json",
 			},
 			body: JSON.stringify({
+				// @ts-ignore
 				token: twoFactorCode.value,
 			}),
 		});
+		// @ts-ignore
 		const data = await res.json();
 		confirmButton.removeAttribute("disabled");
 		confirmButton.innerHTML = "Verify";
@@ -225,6 +236,7 @@ export const settingsHandler = async (route) => {
 			Toast("2FA: Invalid Token entered, try again.", "danger");
 		}
 	});
+	// @ts-ignore
 	enable2FAButton.addEventListener("click", async (e) => {
 		QRCodeElement.textContent = "";
 		const res = await fetch(BASE_URL + "/auth/2fa/enable/", {
@@ -242,4 +254,39 @@ export const settingsHandler = async (route) => {
 			);
 		}
 	});
+};
+
+export const playHandler = (route) => {
+	const oneVsOne = document.getElementById("one-vs-one");
+	const waitingTime = document.getElementById("waiting-time");
+	const cancelMatchmaking = document.getElementById("cancel-matchmaking");
+	const matchmakingModal = new bootstrap.Modal("#matchmakingModal", {
+		keyboard: false,
+		backdrop: "static",
+	});
+
+	let timerId = 0;
+
+	oneVsOne.addEventListener("click", () => {
+		matchmakingModal.show();
+		let timePassed = 1;
+
+		timerId = setInterval(() => {
+			const minutes = Math.floor(timePassed / 60);
+			const seconds = timePassed % 60;
+			waitingTime.textContent = `Time waiting: ${String(minutes).padStart(
+				2,
+				"0"
+			)}:${String(seconds).padStart(2, "0")}`;
+			timePassed++;
+		}, 1000);
+	});
+
+	cancelMatchmaking.addEventListener("click", () => {
+		matchmakingModal.hide();
+		waitingTime.textContent = "Time waiting: 00:00";
+		clearInterval(timerId);
+	});
+
+	console.log("player handler");
 };

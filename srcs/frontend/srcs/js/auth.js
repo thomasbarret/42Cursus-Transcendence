@@ -15,6 +15,7 @@ const auth = (url, body) => {
 	});
 };
 
+// @ts-ignore
 export const loginHandler = (route) => {
 	const loginForm = document.getElementById("login-form");
 	const emailElement = document.getElementById("email-input");
@@ -38,6 +39,7 @@ export const loginHandler = (route) => {
 			<span role="status">Loading...</span>
 		`;
 		event.preventDefault();
+		// @ts-ignore
 		const data = Object.fromEntries(new FormData(loginForm));
 		const body = {
 			email: data.email,
@@ -56,6 +58,7 @@ export const loginHandler = (route) => {
 				if (data["require_2fa"] === true) {
 					otpModal.show();
 					otpSubmit.onclick = async () => {
+						// @ts-ignore
 						body.token = otpCode.value;
 						const req = await auth(url, body);
 						if (req.ok) {
@@ -83,6 +86,7 @@ export const loginHandler = (route) => {
 	});
 };
 
+// @ts-ignore
 export const signUpHandler = (route) => {
 	const signUpForm = document.getElementById("signup-form");
 	const usernameElement = document.getElementById("username-input");
@@ -100,6 +104,7 @@ export const signUpHandler = (route) => {
 	signUpForm.addEventListener("submit", async (event) => {
 		event.preventDefault();
 		reset();
+		// @ts-ignore
 		if (confirmPasswordElement.value !== passwordElement.value) {
 			confirmPasswordElement.classList.add("is-invalid");
 			passwordElement.classList.add("is-invalid");
@@ -108,6 +113,7 @@ export const signUpHandler = (route) => {
 			confirmPasswordElement.classList.remove("is-invalid");
 			passwordElement.classList.remove("is-invalid");
 		}
+		// @ts-ignore
 		const data = Object.fromEntries(new FormData(signUpForm));
 		const body = {
 			username: data.username,

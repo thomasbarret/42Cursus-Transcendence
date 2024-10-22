@@ -9,5 +9,5 @@
 		"moduleResolution": "Node",
 		"strictNullChecks": false
 	},
-	"include": ["srcs/ts/*", "srcs/js/*"]
+	"include": ["srcs/ts/*"]
 }

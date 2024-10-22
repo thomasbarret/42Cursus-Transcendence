@@ -8,12 +8,15 @@ const referenceHeight = 500;
 export const gameHandler = (route) => {
 	console.log("current route: ", route.description);
 	const gameBoard = document.getElementById("game-board");
+	// @ts-ignore
 	const ctx = gameBoard.getContext("2d");
 	if (!ctx) return false;
 	const scoreText = document.getElementById("score-text");
 	const resetButton = document.getElementById("reset-btn");
 	const scale = {
+		// @ts-ignore
 		x: gameBoard.width / referenceWidth,
+		// @ts-ignore
 		y: gameBoard.height / referenceHeight,
 	};
 	let deltaTime;
@@ -203,6 +206,7 @@ export const gameHandler = (route) => {
 		// ctx.clearRect(0, 0, gameBoard.width, gameBoard.height);
 		if (transparent === false) ctx.fillStyle = color;
 		else ctx.fillStyle = tr;
+		// @ts-ignore
 		ctx.fillRect(0, 0, gameBoard.width, gameBoard.height);
 	};
 	const reset = () => {
@@ -236,9 +240,11 @@ export const gameHandler = (route) => {
 		paddleRight.points = 0;
 		reset();
 	});
+	// @ts-ignore
 	gameBoard.addEventListener("mouseover", (e) => {
 		animFrame = window.requestAnimationFrame(draw);
 	});
+	// @ts-ignore
 	gameBoard.addEventListener("mouseout", (e) => {
 		window.cancelAnimationFrame(animFrame);
 		// important: fixes issue that if mouse is out, it doesnt launch the ball at mach 10
