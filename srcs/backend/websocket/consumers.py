@@ -1,6 +1,5 @@
 import json
 from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 
@@ -21,9 +20,75 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
             await self.close()
 
     async def disconnect(self, close_code):
-        if self.group_name:  # Vérifie si group_name est défini
+        if self.group_name:
+            from game.models import Match, MatchPlayer, Tournament
+            from django.db.models import Q
+
             await self.channel_layer.group_discard(self.group_name, self.channel_name)
             await self.update_user_status('offline')
+
+            # Utilisation correcte de database_sync_to_async pour les opérations sur la base de données
+            matchs = await database_sync_to_async(lambda: list(Match.objects.filter(
+                Q(status__in=[1, 2]) & (Q(player1__user=self.user) | Q(player2__user=self.user))
+            )))()
+
+
+            for match in matchs:
+                if match.status == 1:
+                    match.status = 4
+                    await database_sync_to_async(match.save)()
+                elif match.status == 2:
+                    match.status = 3
+
+                    winner = match.player1 if match.player1.user == self.user else match.player2
+                    match.winner = winner
+                    self.channel_layer.goup_send(
+                        f"user_{str(match.winner.user.uuid)}",
+                        {
+                            "type": "send_event",
+                            "event_name": "GAME_MATCH_OPPONENT_DISCONNECTED",
+                            "data": {
+                                "uuid": match.uuid,
+                                "status": match.status,
+                                "player_1": {
+                                    "uuid": match.player1.uuid,
+                                    "display_name": match.player1.display_name,
+                                    "user": {
+                                        "uuid": match.player1.user.uuid,
+                                        "username": match.player1.user.username,
+                                        "display_name": match.player1.user.publicuser.display_name,
+                                        "avatar": match.player1.user.publicuser.avatar.url if match.player1.user.publicuser.avatar else None,
+                                    },
+                                },
+                                "player_2": {
+                                    "uuid": match.player2.uuid,
+                                    "display_name": match.player2.display_name,
+                                    "user": {
+                                        "uuid": match.player2.user.uuid,
+                                        "username": match.player1.user.username,
+                                        "display_name": match.player2.user.publicuser.display_name,
+                                        "avatar": match.player2.user.publicuser.avatar.url if match.player2.user.publicuser.avatar else None,
+                                    },
+                                },
+                                "player1_score": match.player1_score,
+                                "player2_score": match.player2_score,
+                                "winner": {
+                                    "uuid": match.winner.uuid,
+                                    "display_name": match.winner.display_name,
+                                    "user": {
+                                        "uuid": match.winner.user.uuid,
+                                        "display_name": match.winner.user.publicuser.display_name,
+                                        "avatar": match.winner.user.publicuser.avatar.url if match.winner.user.publicuser.avatar else None,
+                                    },
+                                } if match.winner else None,
+                                "max_score": match.max_score,
+                                "start_date": match.start_date,
+                                "end_date": match.end_date,
+                                "created_at": match.created_at,
+                                "updated_at": match.updated_at,
+                            }
+                        }
+                    )
 
     async def receive(self, text_data):
         try :
@@ -37,10 +102,68 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
             event = text_data_json['event']
             data = text_data_json['data']
 
-            await self.send(text_data=json.dumps({
-                'event': 'RESPONSE_EVENT',
-                'data': {'message': f'Event {event} received.'}
-            }))
+            if event == 'GAME_MATCH_PADDLE_UPDATE':
+                match_uuid = data.get('uuid')
+                paddle_position = data.get('paddle_position')
+                user_uuid = data.get('user_uuid')
+
+                if not match_uuid or not paddle_position:
+                    return await self.send(text_data=json.dumps({
+                        'event': 'ERROR',
+                        'data': {'message': 'Match UUID and paddle position are required.'}
+                    }))
+
+                from game.models import Match
+                from django.db.models import Q
+
+                match = await database_sync_to_async(Match.objects.filter(uuid=match_uuid).first)()
+                if not match:
+                    return await self.send(text_data=json.dumps({
+                        'event': 'GAME_MATCH_NOT_FOUND',
+                        'data': {'message': 'Match not found.'}
+                    }))
+
+                if match.status != 2:
+                    return await self.send(text_data=json.dumps({
+                        'event': 'ERROR',
+                        'data': {'message': 'Match is not active.'}
+                    }))
+
+                if match.player1.user != self.user and match.player2.user != self.user:
+                    return await self.send(text_data=json.dumps({
+                        'event': 'ERROR',
+                        'data': {'message': 'You are not a player in this match.'}
+                    }))
+
+                player = match.player1 if match.player1.user == self.user else match.player2
+
+                self.channel_layer.group_send(
+                    f"user_{str(match.player1.user.uuid)}",
+                    {
+                        'type': 'send_event',
+                        'event_name': 'GAME_MATCH_PADDLE_UPDATE',
+                        'data': {
+                            'uuid': match.uuid,
+                            'player_uuid': player.uuid,
+                            'paddle_position': paddle_position,
+                        }
+                    }
+                )
+                self.channel_layer.group_send(
+                    f"user_{str(match.player2.user.uuid)}",
+                    {
+                        'type': 'send_event',
+                        'event_name': 'GAME_MATCH_PADDLE_UPDATE',
+                        'data': {
+                            'uuid': match.uuid,
+                            'player_uuid': player.uuid,
+                            'paddle_position': paddle_position,
+                        }
+                    }
+                )
+
+
+
         except json.JSONDecodeError:
             await self.send(text_data=json.dumps({
                 'event': 'ERROR',
