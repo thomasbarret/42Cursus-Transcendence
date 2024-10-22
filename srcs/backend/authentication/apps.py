@@ -1,7 +1,8 @@
 from django.apps import AppConfig
 from django.db.models.signals import post_migrate
 from django.dispatch import receiver
-from asgiref.sync import sync_to_async  # Utilise sync_to_async
+from asgiref.sync import sync_to_async, async_to_sync  # Utilise sync_to_async
+
 
 class AuthenticationConfig(AppConfig):
     name = 'authentication'
@@ -19,4 +20,5 @@ def set_all_users_offline(sender, **kwargs):
         for user in users:
             user.set_status('offline')
 
-    update_users_status()
+    # error quand on migrate
+    async_to_sync(update_users_status)()

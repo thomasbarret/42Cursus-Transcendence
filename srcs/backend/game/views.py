@@ -9,6 +9,8 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
 from django.db.models import Q
+from django.utils import timezone
+import random
 
 from .models import Match, MatchPlayer, balls_direction
 
@@ -20,7 +22,6 @@ class CreateMatchView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        match_player_1, created = MatchPlayer.objects.get_or_create(user=request.user)
         display_name = request.data.get('display_name')
 
         if request.user.publicuser.status == 'offline':
@@ -31,7 +32,7 @@ class CreateMatchView(APIView):
         if display_name is None:
             display_name = request.user.publicuser.display_name
 
-        match_player_1.display_name = display_name
+        match_player_1, created = MatchPlayer.objects.get_or_create(user=request.user, display_name=display_name)
         match_player_1.save()
 
         existing_match = Match.objects.filter(Q(player1=match_player_1) | Q(player2=match_player_1), status__in=[1, 2])
@@ -348,8 +349,7 @@ class JoinMatchView(APIView):
                 "error": "Match is not available",
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        match_player_2 = MatchPlayer.objects.get_or_create(user=request.user)
-        match_player_2.display_name = display_name
+        match_player_2, created = MatchPlayer.objects.get_or_create(user=request.user, display_name=display_name)
         match_player_2.save()
 
         if match.player1 == match_player_2:
