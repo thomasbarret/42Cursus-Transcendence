@@ -115,10 +115,70 @@ export const messageBoxLeft = (text, time, uuid) => {
 	);
 	return message;
 };
-export const messageBox = (text, time, current, uuid) => {
+
+export const matchInviteRight = (text, time) => {
+	const image = img("https://picsum.photos/45")
+		.attr("alt", "avatar 1")
+		.attr("style", "width: 30px; height: 30px")
+		.attr("class", "rounded-circle");
+	const content = div(
+		div(
+			h5("Play with me"),
+			button("Join Game").attr("class", "btn btn-warning rounded-2")
+		).cl(
+			"container justify-content-center text-center bg-success rounded-2 p-3"
+		),
+		p(time).attr(
+			"class",
+			"small me-3 mb-3 rounded-3 text-muted d-flex justify-content-end"
+		)
+	).cl("mx-2");
+	const message = div(content, image).attr(
+		"class",
+		"d-flex flex-row justify-content-end mb-3 pt-1"
+	);
+	return message;
+};
+
+export const matchInviteLeft = (text, time, uuid) => {
+	const image = img("https://picsum.photos/45")
+		.attr("alt", "avatar 1")
+		.attr("style", "width: 30px; height: 30px")
+		.attr("class", "rounded-circle")
+		.attr("role", "button")
+		.onclick$(() => goToProfile(uuid));
+
+	const content = div(
+		div(
+			h5("Play with me"),
+			button("Join Game").attr("class", "btn btn-warning rounded-2")
+		).cl(
+			"container justify-content-center text-center bg-success rounded-2 p-3"
+		),
+		p(time).attr(
+			"class",
+			"small ms-3 mb-3 rounded-3 text-muted d-flex justify-content-start"
+		)
+	).cl("mx-2");
+
+	const message = div(image, content).attr(
+		"class",
+		"d-flex flex-row justify-content-start mb-3"
+	);
+
+	return message;
+};
+
+export const messageBox = (content, time, current, uuid) => {
+	if (content.startsWith('{"game":')) {
+		return current
+			? matchInviteRight(content, time)
+			: matchInviteLeft(content, time, uuid);
+	}
+
 	return current
-		? messageBoxRight(text, time)
-		: messageBoxLeft(text, time, uuid);
+		? messageBoxRight(content, time)
+		: messageBoxLeft(content, time, uuid);
 };
 export const userProfileCard = (user, event) => {
 	const avatar = img("https://picsum.photos/80")
@@ -134,14 +194,6 @@ export const userProfileCard = (user, event) => {
 	const startChat = t("button", "Start Chat")
 		.cl("btn btn-outline-primary ms-auto")
 		.onclick$(event);
-	// const addFriend = t("button", "Add Friend")
-	// 	.cl("btn btn-success")
-	// 	.onclick$(() => {
-	// 		console.log("added me friend");
-	// 	});
-	// return div(avatar, content, div(addFriend, startChat).cl("ms-auto")).cl(
-	// 	"card mb-2 d-flex align-items-center p-3 flex-row w-100"
-	// );
 	return div(avatar, content, startChat).cl(
 		"card mb-2 d-flex align-items-center p-3 flex-row w-100"
 	);
