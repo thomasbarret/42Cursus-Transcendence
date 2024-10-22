@@ -1,12 +1,13 @@
 {
 	"compilerOptions": {
-		"outDir": "srcs/js",
+		"outDir": "srcs/bin",
 		"checkJs": true,
 		"allowJs": true,
 		"target": "ES2022",
 		"module": "ES2022",
 		"paths": {},
-		"moduleResolution": "Node"
+		"moduleResolution": "Node",
+		"strictNullChecks": false
 	},
-	"include": ["srcs/ts/*"]
+	"include": ["srcs/ts/*", "srcs/js/*"]
 }

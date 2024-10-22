@@ -1,6 +1,6 @@
 #!/bin/bash
 
-trap 'docker compose stop' SIGINT
+trap 'docker compose stop && exit' SIGINT
 
 if [ "$1" == "build" ]; then
 	build_flag="--build"
