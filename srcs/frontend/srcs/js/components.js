@@ -81,8 +81,7 @@ export const messageBoxRight = (text, time) => {
 		.attr("style", "width: 30px; height: 30px")
 		.attr("class", "rounded-circle");
 	const content = div(
-		p(text).attr(
-			"class",
+		p(text).cl(
 			"small p-2 me-3 mb-1 rounded-3 bg-primary text-white text-wrap text-break"
 		),
 		p(time).attr(
@@ -108,7 +107,7 @@ export const messageBoxLeft = (text, time, uuid) => {
 			"class",
 			"small p-2 ms-3 mb-1 rounded-3 bg-body-secondary text-body-primary text-wrap text-break"
 		),
-		p(time).attr("class", "small ms-3 mb-3 rounded-3 text-muted")
+		p(time).cl("small ms-3 mb-3 rounded-3 text-muted")
 	);
 	const message = div(image, content).attr(
 		"class",
@@ -117,7 +116,7 @@ export const messageBoxLeft = (text, time, uuid) => {
 	return message;
 };
 
-export const matchInviteRight = (time) => {
+export const matchInviteRight = (time, callback) => {
 	const image = img("https://picsum.photos/45")
 		.attr("alt", "avatar 1")
 		.attr("style", "width: 30px; height: 30px")
@@ -125,7 +124,9 @@ export const matchInviteRight = (time) => {
 	const content = div(
 		div(
 			h5("Play with me"),
-			button("Join Game").attr("class", "btn btn-warning rounded-2")
+			button("Join Game")
+				.cl("btn btn-warning rounded-2")
+				.onclick$(callback)
 		).cl(
 			"container justify-content-center text-center bg-success rounded-2 p-3"
 		),
@@ -141,7 +142,7 @@ export const matchInviteRight = (time) => {
 	return message;
 };
 
-export const matchInviteLeft = (time, uuid) => {
+export const matchInviteLeft = (time, uuid, callback) => {
 	const image = img("https://picsum.photos/45")
 		.attr("alt", "avatar 1")
 		.attr("style", "width: 30px; height: 30px")
@@ -152,7 +153,9 @@ export const matchInviteLeft = (time, uuid) => {
 	const content = div(
 		div(
 			h5("Play with me"),
-			button("Join Game").attr("class", "btn btn-warning rounded-2")
+			button("Join Game")
+				.cl("btn btn-warning rounded-2")
+				.onclick$(callback)
 		).cl(
 			"container justify-content-center text-center bg-success rounded-2 p-3"
 		),
@@ -175,11 +178,26 @@ export const messageBox = (content, time, current, uuid) => {
 		try {
 			const invite = JSON.parse(content);
 
-			const msg = current
-				? matchInviteRight(time)
-				: matchInviteLeft(time, uuid);
+			const callback = async () => {
+				const res = await fetch(BASE_URL + "/game/match/join", {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({
+						match_uuid: invite.game,
+					}),
+				});
 
-			return msg.onclick$(() => navigate("/lobby/" + invite.game));
+				const msg = await res.json();
+
+				if (res.ok) {
+					navigate("/lobby/" + invite.game);
+				} else Toast("Couldn't join lobby " + msg["error"], "danger");
+			};
+			return current
+				? matchInviteRight(time, callback)
+				: matchInviteLeft(time, uuid, callback);
 		} catch (e) {}
 	}
 
