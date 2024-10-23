@@ -1,7 +1,7 @@
 <div
-	class="d-flex flex-column justify-content-center align-items-center vh-100 w-100"
+	class="d-flex flex-column justify-content-center align-items-center flex-grow-1 w-100 overflow-hidden"
 >
-	<h1 class="mb-5">Pong Game Lobby</h1>
+	<h1 class="mb-5">Pong Game</h1>
 	<div class="d-flex flex-column align-items-center w-75">
 		<a
 			href="/game"
@@ -61,6 +61,56 @@
 					id="cancel-matchmaking"
 				>
 					Cancel
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Create or Join Game Modal -->
+<div
+	class="modal fade"
+	id="createJoinModal"
+	tabindex="-1"
+	aria-labelledby="createJoinModalLabel"
+	aria-hidden="true"
+>
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title fs-3" id="createJoinModalLabel">
+					Create or Join Game
+				</h5>
+				<button
+					type="button"
+					class="btn-close"
+					data-bs-dismiss="modal"
+					aria-label="Close"
+				></button>
+			</div>
+			<div class="modal-body text-center fs-4">
+				<button
+					type="button"
+					class="btn btn-primary btn-lg mb-4 w-100"
+					id="create-game"
+				>
+					Create Game
+				</button>
+				<button
+					type="button"
+					class="btn btn-success btn-lg w-100"
+					id="join-game"
+				>
+					Join Game
+				</button>
+			</div>
+			<div class="modal-footer">
+				<button
+					type="button"
+					class="btn btn-secondary"
+					data-bs-dismiss="modal"
+				>
+					Close
 				</button>
 			</div>
 		</div>

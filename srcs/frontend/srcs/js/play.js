@@ -1,17 +1,49 @@
 import * as bootstrap from "bootstrap";
+import { BASE_URL } from "./handler.js";
+import { Toast } from "./components.js";
+import { navigate } from "./main.js";
 
 export const playHandler = (route) => {
+	let timerId = 0;
+
+	const tournamentMode = document.getElementById("tournament-mode");
 	const oneVsOne = document.getElementById("one-vs-one");
 	const waitingTime = document.getElementById("waiting-time");
 	const cancelMatchmaking = document.getElementById("cancel-matchmaking");
+	const createGame = document.getElementById("create-game");
 	const matchmakingModal = new bootstrap.Modal("#matchmakingModal", {
 		keyboard: false,
 		backdrop: "static",
 	});
 
-	let timerId = 0;
+	const createJoinModal = new bootstrap.Modal("#createJoinModal", {
+		keyboard: false,
+		backdrop: "static",
+	});
 
 	oneVsOne.addEventListener("click", () => {
+		createJoinModal.show();
+	});
+
+	createGame.addEventListener("click", async () => {
+		const res = await fetch(BASE_URL + "/game/match/create", {
+			method: "POST",
+		});
+
+		const data = await res.json();
+
+		if (res.ok) {
+			createJoinModal.hide();
+			Toast("Created lobby: " + data["uuid"], "primary");
+			navigate("/play/" + data["uuid"]);
+		} else {
+			Toast("Error occured: " + data["error"], "danger");
+		}
+
+		console.log(data);
+	});
+
+	tournamentMode.addEventListener("click", () => {
 		matchmakingModal.show();
 		let timePassed = 1;
 
@@ -31,6 +63,5 @@ export const playHandler = (route) => {
 		waitingTime.textContent = "Time waiting: 00:00";
 		clearInterval(timerId);
 	});
-
 	console.log("player handler");
 };
