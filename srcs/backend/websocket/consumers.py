@@ -104,6 +104,7 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
             if event == 'GAME_MATCH_PADDLE_UPDATE':
                 match_uuid = data.get('uuid')
                 paddle_position = data.get('paddle_position')
+                ball_position = data.get('ball_position')
                 user_uuid = data.get('user_uuid')
 
                 if not match_uuid or not paddle_position:
@@ -145,6 +146,8 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
                             'uuid': match.uuid,
                             'player_uuid': player.uuid,
                             'paddle_position': paddle_position,
+                            'ball_position': ball_position,
+
                         }
                     }
                 )
@@ -157,6 +160,7 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
                             'uuid': match.uuid,
                             'player_uuid': player.uuid,
                             'paddle_position': paddle_position,
+                            'ball_position': ball_position,
                         }
                     }
                 )
