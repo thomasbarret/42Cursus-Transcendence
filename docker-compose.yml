@@ -12,6 +12,7 @@ services:
       - django
     volumes:
       - ./srcs/frontend/srcs:/usr/share/nginx/html
+      - media:/media
     restart: unless-stopped
 
   django:
@@ -20,6 +21,8 @@ services:
     depends_on:
       - redis
       - postgres
+    volumes:
+      - media:/app/avatars
     build:
       context: srcs/backend
       dockerfile: "Dockerfile"
@@ -56,4 +59,4 @@ networks:
 
 volumes:
   db:
-  backend:
+  media:
