@@ -1,5 +1,7 @@
 from django.db import models
 from authentication.models import User
+from chat.models import Channel
+
 
 import uuid
 
@@ -59,7 +61,7 @@ class Tournament(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     players = models.ManyToManyField(MatchPlayer, related_name='tournaments')
-    chat = models.OneToOneField('chat.Channel', on_delete=models.CASCADE, null=True, blank=True)
+    chat = models.OneToOneField(Channel, on_delete=models.CASCADE, null=True, blank=True)
 
 # Nouveau modèle pour les rounds
 class TournamentRound(models.Model):

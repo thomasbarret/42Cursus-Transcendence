@@ -371,9 +371,6 @@ class JoinMatchView(APIView):
             "updated_at": match.updated_at.isoformat(),
         }
 
-
-
-        print(match.player1.user.uuid)
         async_to_sync(channel_layer.group_send)(
             f"user_{str(match.player1.user.uuid)}",
             {
