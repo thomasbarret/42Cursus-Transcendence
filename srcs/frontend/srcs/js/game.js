@@ -1,11 +1,17 @@
 import { socket } from "./socket.js";
 import { getCurrentUser, isDarkMode } from "./storage.js";
-let animFrame;
+export let animFrame;
 const PADDLE_VELOCITY = 8 * 40;
 const BALL_VELOCITY = 3 * 175;
 const MAX_BALL_VELOCITY = BALL_VELOCITY * 2.5;
 const referenceWidth = 840;
 const referenceHeight = 500;
+
+const DIRECTION = {
+	IDLE: 0,
+	UP: 1,
+	DOWN: 2,
+};
 
 const paddleSizes = {
 	width: 10,
@@ -124,9 +130,8 @@ export const gameHandler = (_, matchData) => {
 		width: paddleSizes.width,
 		height: paddleSizes.height,
 		color: "white",
+		direction: DIRECTION.IDLE,
 		keys: {
-			up: false,
-			down: false,
 			upKey: "w",
 			downKey: "s",
 			altUpKey: "ArrowUp",
@@ -147,27 +152,51 @@ export const gameHandler = (_, matchData) => {
 			return this;
 		},
 		move(canvas) {
-			if (this.y + this.height >= canvas.height) this.keys.down = false;
-			else if (this.y <= 0) this.keys.up = false;
-			if (this.keys.up) this.y -= this.vy * deltaTime;
-			if (this.keys.down) this.y += this.vy * deltaTime;
+			if (this.direction === DIRECTION.IDLE) return this;
+			if (this.y + this.height >= canvas.height)
+				this.y = canvas.height - this.height;
+			else if (this.y <= 0) this.y = 0;
+			if (this.direction === DIRECTION.UP) this.y -= this.vy * deltaTime;
+			if (this.direction === DIRECTION.DOWN)
+				this.y += this.vy * deltaTime;
 			return this;
 		},
 		keyHandler(event, value, multiplayer) {
-			if (multiplayer) {
+			if (value === false) this.direction = DIRECTION.IDLE;
+			else if (multiplayer) {
 				if (
-					event.key === this.keys.upKey ||
-					event.key === this.keys.altUpKey
-				)
-					this.keys.up = value;
+					this.direction !== DIRECTION.UP &&
+					(event.key === this.keys.upKey ||
+						event.key === this.keys.altUpKey)
+				) {
+					event.preventDefault();
+					this.direction = DIRECTION.UP;
+				}
 				if (
-					event.key === this.keys.downKey ||
-					event.key === this.keys.altDownKey
-				)
-					this.keys.down = value;
+					this.direction !== DIRECTION.DOWN &&
+					(event.key === this.keys.downKey ||
+						event.key === this.keys.altDownKey)
+				) {
+					event.preventDefault();
+					this.direction = DIRECTION.DOWN;
+				}
 			} else {
-				if (event.key === this.keys.upKey) this.keys.up = value;
-				if (event.key === this.keys.downKey) this.keys.down = value;
+				if (
+					this.direction !== DIRECTION.UP &&
+					event.key === this.keys.upKey
+				) {
+					event.preventDefault();
+					this.direction = DIRECTION.UP;
+					console.log("CHANGED DIRECTION KEY: ", this.direction);
+				}
+				if (
+					this.direction !== DIRECTION.DOWN &&
+					event.key === this.keys.downKey
+				) {
+					event.preventDefault();
+					this.direction = DIRECTION.DOWN;
+					console.log("CHANGED DIRECTION KEY: ", this.direction);
+				}
 			}
 			return this;
 		},
@@ -184,9 +213,8 @@ export const gameHandler = (_, matchData) => {
 		width: paddleSizes.width,
 		height: paddleSizes.height,
 		color: "white",
+		direction: DIRECTION.IDLE,
 		keys: {
-			up: false,
-			down: false,
 			upKey: "ArrowUp",
 			downKey: "ArrowDown",
 			altUpKey: "w",
@@ -207,36 +235,49 @@ export const gameHandler = (_, matchData) => {
 			return this;
 		},
 		move(canvas) {
-			if (this.y + this.height >= canvas.height) this.keys.down = false;
-			else if (this.y <= 0) this.keys.up = false;
-			if (this.keys.up) this.y -= this.vy * deltaTime;
-			if (this.keys.down) this.y += this.vy * deltaTime;
+			if (this.direction === DIRECTION.IDLE) return this;
+			if (this.y + this.height >= canvas.height)
+				this.y = canvas.height - this.height;
+			else if (this.y <= 0) this.y = 0;
+			if (this.direction === DIRECTION.UP) this.y -= this.vy * deltaTime;
+			if (this.direction === DIRECTION.DOWN)
+				this.y += this.vy * deltaTime;
 			return this;
 		},
 		keyHandler(event, value, multiplayer) {
-			if (multiplayer) {
+			if (value === false) this.direction = DIRECTION.IDLE;
+			else if (multiplayer) {
 				if (
-					event.key === this.keys.upKey ||
-					event.key === this.keys.altUpKey
+					this.direction !== DIRECTION.UP &&
+					(event.key === this.keys.upKey ||
+						event.key === this.keys.altUpKey)
 				) {
 					event.preventDefault();
-					this.keys.up = value;
+					this.direction = DIRECTION.UP;
 				}
 				if (
-					event.key === this.keys.downKey ||
-					event.key === this.keys.altDownKey
+					this.direction !== DIRECTION.DOWN &&
+					(event.key === this.keys.downKey ||
+						event.key === this.keys.altDownKey)
 				) {
 					event.preventDefault();
-					this.keys.down = value;
+					this.direction = DIRECTION.DOWN;
 				}
-			}
-			if (event.key == this.keys.upKey) {
-				event.preventDefault();
-				this.keys.up = value;
-			}
-			if (event.key == this.keys.downKey) {
-				event.preventDefault();
-				this.keys.down = value;
+			} else {
+				if (
+					this.direction !== DIRECTION.UP &&
+					event.key === this.keys.upKey
+				) {
+					event.preventDefault();
+					this.direction = DIRECTION.UP;
+				}
+				if (
+					this.direction !== DIRECTION.DOWN &&
+					event.key === this.keys.downKey
+				) {
+					event.preventDefault();
+					this.direction = DIRECTION.DOWN;
+				}
 			}
 			return this;
 		},
@@ -295,23 +336,23 @@ export const gameHandler = (_, matchData) => {
 			} else ball.draw(ctx);
 			paddleLeft.draw(ctx).move(gameBoard);
 			paddleRight.draw(ctx).move(gameBoard);
-			if (matchData) {
-				const current =
-					user.uuid === matchData.player_1.user.uuid
-						? paddleLeft
-						: paddleRight;
-				if (socket.readyState === WebSocket.OPEN) {
-					socket.send(
-						JSON.stringify({
-							event: "GAME_MATCH_PADDLE_UPDATE",
-							data: {
-								uuid: matchData.uuid,
-								paddle_position: current.y,
-							},
-						})
-					);
-				}
-			}
+			// if (matchData) {
+			// 	const current =
+			// 		user.uuid === matchData.player_1.user.uuid
+			// 			? paddleLeft
+			// 			: paddleRight;
+			// 	if (socket.readyState === WebSocket.OPEN) {
+			// 		socket.send(
+			// 			JSON.stringify({
+			// 				event: "GAME_MATCH_PADDLE_UPDATE",
+			// 				data: {
+			// 					uuid: matchData.uuid,
+			// 					paddle_position: current.y,
+			// 				},
+			// 			})
+			// 		);
+			// 	}
+			// }
 		}
 		animFrame = window.requestAnimationFrame(draw);
 	};
@@ -330,6 +371,15 @@ export const gameHandler = (_, matchData) => {
 	// 	// important: fixes issue that if mouse is out, it doesnt launch the ball at mach 10
 	// 	lastTime = 0;
 	// });
+	document.addEventListener("paddleEvent", (e) => {
+		// @ts-ignore
+		const data = e.detail;
+
+		if (data.player_uuid === matchData.player_1.uuid)
+			paddleLeft.y = data.paddle_position;
+		else paddleRight.y = data.paddle_position;
+	});
+
 	document.addEventListener("keydown", (e) => {
 		if (matchData) {
 			if (user.uuid === matchData.player_1.user.uuid)

@@ -41,7 +41,7 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
 
                     winner = match.player1 if match.player1.user == self.user else match.player2
                     match.winner = winner
-                    self.channel_layer.goup_send(
+                    self.channel_layer.group_send(
                         f"user_{str(match.winner.user.uuid)}",
                         {
                             "type": "send_event",
@@ -137,28 +137,28 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
 
                 player = match.player1 if match.player1.user == self.user else match.player2
 
-                self.channel_layer.group_send(
+                await self.channel_layer.group_send(
                     f"user_{str(match.player1.user.uuid)}",
                     {
                         'type': 'send_event',
                         'event_name': 'GAME_MATCH_PADDLE_UPDATE',
                         'data': {
-                            'uuid': match.uuid,
-                            'player_uuid': player.uuid,
+                            'uuid': str(match.uuid),
+                            'player_uuid': str(player.uuid),
                             'paddle_position': paddle_position,
                             'ball_position': ball_position,
 
                         }
                     }
                 )
-                self.channel_layer.group_send(
+                await self.channel_layer.group_send(
                     f"user_{str(match.player2.user.uuid)}",
                     {
                         'type': 'send_event',
                         'event_name': 'GAME_MATCH_PADDLE_UPDATE',
                         'data': {
-                            'uuid': match.uuid,
-                            'player_uuid': player.uuid,
+                            'uuid': str(match.uuid),
+                            'player_uuid': str(player.uuid),
                             'paddle_position': paddle_position,
                             'ball_position': ball_position,
                         }
