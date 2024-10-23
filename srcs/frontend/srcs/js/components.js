@@ -117,7 +117,7 @@ export const messageBoxLeft = (text, time, uuid) => {
 	return message;
 };
 
-export const matchInviteRight = (text, time) => {
+export const matchInviteRight = (time) => {
 	const image = img("https://picsum.photos/45")
 		.attr("alt", "avatar 1")
 		.attr("style", "width: 30px; height: 30px")
@@ -141,7 +141,7 @@ export const matchInviteRight = (text, time) => {
 	return message;
 };
 
-export const matchInviteLeft = (text, time, uuid) => {
+export const matchInviteLeft = (time, uuid) => {
 	const image = img("https://picsum.photos/45")
 		.attr("alt", "avatar 1")
 		.attr("style", "width: 30px; height: 30px")
@@ -172,9 +172,15 @@ export const matchInviteLeft = (text, time, uuid) => {
 
 export const messageBox = (content, time, current, uuid) => {
 	if (content.startsWith('{"game":')) {
-		return current
-			? matchInviteRight(content, time)
-			: matchInviteLeft(content, time, uuid);
+		try {
+			const invite = JSON.parse(content);
+
+			const msg = current
+				? matchInviteRight(time)
+				: matchInviteLeft(time, uuid);
+
+			return msg.onclick$(() => navigate("/lobby/" + invite.game));
+		} catch (e) {}
 	}
 
 	return current
