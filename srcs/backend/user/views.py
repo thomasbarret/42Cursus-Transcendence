@@ -11,6 +11,7 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
 from .models import UserRelation
+from game.models import Match, MatchPlayer
 from django.db.models import Q
 
 def get_avatar_url(user):
@@ -37,14 +38,32 @@ class ProfilView(APIView):
         if public_user is None:
             return Response({"error": "Authentication required for '@me'"}, status=status.HTTP_401_UNAUTHORIZED)
 
+        player = MatchPlayer.objects.filter(user=public_user.user).first()
 
-        if user_uuid == '@me':
+        match_wins = 0
+        match_loses = 0
+        match_count = 0
+
+        if player is not None:
+            match_wins = Match.objects.filter(winner=player).count()
+            match_loses = Match.objects.filter(
+                (Q(player1=player, winner=None) | Q(player2=player, winner=None)) & ~Q(winner=player, status__in=[1, 4])
+            ).count()
+            match_count = Match.objects.filter(
+                (Q(player1=player) | Q(player2=player)) & Q(status__in=[2, 3])
+            ).count()
+
+        if user_uuid is None:
             return JsonResponse({
                 'uuid': public_user.user.uuid,
                 'username': public_user.user.username,
                 'display_name': public_user.display_name,
                 'avatar': get_avatar_url(public_user.user),
                 'status': public_user.status,
+
+                'match_wins': match_wins,
+                'match_loses': match_loses,
+                'match_count': match_count,
             })
 
 
@@ -68,9 +87,14 @@ class ProfilView(APIView):
             'username': public_user.user.username,
             'avatar': get_avatar_url(public_user.user),
             'status': public_user.status,
+
             'is_blocked': is_blocked,
             'is_friend': is_friend,
             'friend_request_sent': friend_request_sent,
+
+            'match_wins': match_wins,
+            'match_loses': match_loses,
+            'match_count': match_count,
         })
 
     def post(self, request, user_uuid=None):
