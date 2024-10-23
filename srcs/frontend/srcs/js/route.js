@@ -8,7 +8,7 @@ import {
 	settingsHandler,
 } from "./handler.js";
 import { messageHandler } from "./messages.js";
-import { playHandler } from "./play.js";
+import { lobbyHandler, playHandler } from "./play.js";
 const urlPageTitle = "nascent";
 export const routes = {
 	404: {
@@ -25,8 +25,16 @@ export const routes = {
 	"/play": {
 		page: "/pages/play.html",
 		title: "Play Pong | " + urlPageTitle,
-		description: "Lobby for the Pong game",
+		description: "Pong Game Mode Selector",
 		handler: playHandler,
+	},
+	"/lobby": {
+		page: "/pages/lobby.html",
+		title: "Lobby | " + urlPageTitle,
+		description: "Lobby for the Pong game",
+		handler: lobbyHandler,
+		slug: true,
+		no_slug_fallback: "/play",
 	},
 	"/game": {
 		page: "/pages/game.html",
