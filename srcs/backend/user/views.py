@@ -370,4 +370,67 @@ class RelationView(APIView):
         relation.delete()
         return Response({"message": "Relation deleted"}, status=status.HTTP_200_OK)
 
+class ProfilMatchView(APIView):
+    authentication_classes = [TokenFromCookieAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get_public_user(self, user_uuid=None):
+        if user_uuid is None or user_uuid == '@me':
+            if self.request.user.is_authenticated:
+                return self.request.user.publicuser
+            else:
+                return None
+        return get_object_or_404(PublicUser, user__uuid=user_uuid)
+
+    def get(self, request, user_uuid=None):
+        public_user = self.get_public_user(user_uuid)
+
+        if public_user is None:
+            return Response({"error": "Authentication required for '@me'"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        user = public_user.user
+        player = MatchPlayer.objects.filter(user=user).first()
+
+        if player is None:
+            return Response({"error": "Player not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        matches = Match.objects.filter(
+            Q(player1=player) | Q(player2=player)
+        ).order_by('-start_date')
+
+        return JsonResponse({
+            'matches': [{
+                'uuid': match.uuid,
+                'tournament': None,
+                'player1': {
+                    'uuid': match.player1.user.uuid,
+                    'user': {
+                        'uuid': match.player1.user.uuid,
+                        'username': match.player1.user.username,
+                        'display_name': match.player1.display_name,
+                        'avatar': get_avatar_url(match.player1.user),
+                    }
+                },
+                'player2': {
+                    'uuid': match.player2.user.uuid,
+                    'user': {
+                        'uuid': match.player2.user.uuid,
+                        'username': match.player2.user.username,
+                        'display_name': match.player2.display_name,
+                        'avatar': get_avatar_url(match.player2.user),
+                    }
+                } if match.player2 is not None else None,
+                'player1_score': match.player1_score,
+                'player2_score': match.player2_score,
+                'winner': {
+                    'uuid': match.winner.user.uuid,
+                    'username': match.winner.user.username,
+                    'display_name': match.winner.display_name,
+                    'avatar': get_avatar_url(match.winner.user),
+                } if match.winner is not None else None,
+                'status': match.status,
+                'start_date': match.start_date,
+            } for match in matches]
+        })
+
 
