@@ -16,13 +16,12 @@ const RADIUS = 10;
 const MAX_ANGLE_DEVIATION = 45;
 
 export const gameHandler = (route) => {
-	console.log("current route: ", route.description);
 	const gameBoard = document.getElementById("game-board");
 	// @ts-ignore
 	const ctx = gameBoard.getContext("2d");
 	if (!ctx) return false;
 	const scoreText = document.getElementById("score-text");
-	const resetButton = document.getElementById("reset-btn");
+	// const resetButton = document.getElementById("reset-btn");
 	const scale = {
 		// @ts-ignore
 		x: gameBoard.width / referenceWidth,
@@ -257,11 +256,11 @@ export const gameHandler = (route) => {
 		paddleRight.draw(ctx).move(gameBoard);
 		animFrame = window.requestAnimationFrame(draw);
 	};
-	resetButton.addEventListener("click", () => {
-		paddleLeft.points = 0;
-		paddleRight.points = 0;
-		reset();
-	});
+	// resetButton.addEventListener("click", () => {
+	// 	paddleLeft.points = 0;
+	// 	paddleRight.points = 0;
+	// 	reset();
+	// });
 	// @ts-ignore
 	gameBoard.addEventListener("mouseover", (e) => {
 		animFrame = window.requestAnimationFrame(draw);
