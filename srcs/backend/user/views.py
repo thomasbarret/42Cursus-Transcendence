@@ -86,8 +86,8 @@ class ProfilView(APIView):
             public_user.display_name = request.data['display_name']
 
         # TODO this is not developed yet
-        # if 'avatar' in request.FILES:
-        #     public_user.avatar = request.FILES['avatar']
+        if 'avatar' in request.data:
+            public_user.avatar = request.data['avatar']
 
         public_user.save()
 
