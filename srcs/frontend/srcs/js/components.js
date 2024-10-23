@@ -281,3 +281,20 @@ export const inviteBoxCard = (user) => {
 		button("Invite").cl("btn btn-sm btn-primary")
 	).cl("d-flex align-items-center mb-2");
 };
+
+export const currentPlayerCard = (user) => {
+	return div(
+		div(
+			img("https://picsum.photos/30")
+				.attr("alt", "avatar")
+				.cl("rounded-circle me-2")
+				.attr("style", "width: 30px; height: 30px"),
+			div(
+				span(user.display_name).cl("fw-bold fs-5"),
+				t("small", user.user.uuid).cl("text-muted")
+			).cl("d-flex flex-column")
+		).cl("d-flex align-items-center")
+	).cl(
+		"d-flex flex-column align-items-start mb-2 p-2 bg-primary-subtle rounded"
+	);
+};

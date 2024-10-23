@@ -1,6 +1,6 @@
 import * as bootstrap from "bootstrap";
 import { BASE_URL } from "./handler.js";
-import { inviteBoxCard, Toast } from "./components.js";
+import { currentPlayerCard, inviteBoxCard, Toast } from "./components.js";
 import { navigate } from "./main.js";
 
 export const playHandler = (route) => {
@@ -69,8 +69,10 @@ export const playHandler = (route) => {
 export const lobbyHandler = (route, slug) => {
 	console.log(slug);
 	const inviteBox = document.getElementById("invite-box");
+	const currentPlayers = document.getElementById("current-players");
 
 	const getFriendsList = async () => {
+		inviteBox.textContent = "";
 		const res = await fetch(BASE_URL + "/user/relation/@me");
 		const data = await res.json();
 
@@ -87,10 +89,17 @@ export const lobbyHandler = (route, slug) => {
 	};
 
 	const getMatchData = async () => {
+		currentPlayers.textContent = "";
 		const res = await fetch(BASE_URL + "/game/match/" + slug);
 		const data = await res.json();
 
 		console.log("match: ", data);
+		if (res.ok) {
+			if (data["player_1"])
+				currentPlayers.appendChild(currentPlayerCard(data["player_1"]));
+			if (data["player_2"])
+				currentPlayers.appendChild(currentPlayerCard(data["player_2"]));
+		}
 	};
 
 	getFriendsList();
