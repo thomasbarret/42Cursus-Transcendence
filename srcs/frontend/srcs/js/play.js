@@ -1,6 +1,6 @@
 import * as bootstrap from "bootstrap";
 import { BASE_URL } from "./handler.js";
-import { Toast } from "./components.js";
+import { inviteBoxCard, Toast } from "./components.js";
 import { navigate } from "./main.js";
 
 export const playHandler = (route) => {
@@ -35,7 +35,7 @@ export const playHandler = (route) => {
 		if (res.ok) {
 			createJoinModal.hide();
 			Toast("Created lobby: " + data["uuid"], "primary");
-			navigate("/play/" + data["uuid"]);
+			navigate("/lobby/" + data["uuid"]);
 		} else {
 			Toast("Error occured: " + data["error"], "danger");
 		}
@@ -64,4 +64,35 @@ export const playHandler = (route) => {
 		clearInterval(timerId);
 	});
 	console.log("player handler");
+};
+
+export const lobbyHandler = (route, slug) => {
+	console.log(slug);
+	const inviteBox = document.getElementById("invite-box");
+
+	const getFriendsList = async () => {
+		const res = await fetch(BASE_URL + "/user/relation/@me");
+		const data = await res.json();
+
+		if (res.ok) {
+			console.log("friends: ", data);
+			const fragment = document.createDocumentFragment();
+			data["friends"].forEach((friend) => {
+				fragment.appendChild(inviteBoxCard(friend.user));
+			});
+			inviteBox.appendChild(fragment);
+		} else {
+			Toast("Error occured: " + data["error"], "danger");
+		}
+	};
+
+	const getMatchData = async () => {
+		const res = await fetch(BASE_URL + "/game/match/" + slug);
+		const data = await res.json();
+
+		console.log("match: ", data);
+	};
+
+	getFriendsList();
+	getMatchData();
 };

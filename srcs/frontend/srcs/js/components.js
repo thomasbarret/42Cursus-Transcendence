@@ -270,3 +270,14 @@ export const profileCard = (user, callback) => {
 		).cl("mt-4")
 	).cl("card-body text-center");
 };
+
+export const inviteBoxCard = (user) => {
+	return div(
+		img("https://picsum.photos/30")
+			.attr("alt", "avatar")
+			.cl("rounded-circle me-2")
+			.attr("style", "width: 30px; height: 30px"),
+		span(user.display_name).cl("flex-grow-1"),
+		button("Invite").cl("btn btn-sm btn-primary")
+	).cl("d-flex align-items-center mb-2");
+};
