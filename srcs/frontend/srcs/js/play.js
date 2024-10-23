@@ -2,6 +2,7 @@ import * as bootstrap from "bootstrap";
 import { BASE_URL } from "./handler.js";
 import { currentPlayerCard, inviteBoxCard, Toast } from "./components.js";
 import { navigate } from "./main.js";
+import { gameHandler } from "./game.js";
 
 export const playHandler = (route) => {
 	let timerId = 0;
@@ -78,6 +79,7 @@ export const lobbyHandler = (route, slug) => {
 
 		console.log("match: ", matchData);
 		if (res.ok) {
+			if (matchData["status"] === 2) gameHandler(matchData);
 			if (matchData["player_1"])
 				currentPlayers.appendChild(
 					currentPlayerCard(matchData["player_1"])

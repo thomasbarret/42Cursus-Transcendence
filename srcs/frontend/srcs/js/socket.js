@@ -67,7 +67,8 @@ export const connectWebSocket = () => {
 				break;
 			case "GAME_START_MATCH":
 				gameStartMatch(data.data);
-				gameHandler();
+				// TODO: update here once you know what GAME_START_MATCH exactly gives
+				// gameHandler();
 				break;
 		}
 	};

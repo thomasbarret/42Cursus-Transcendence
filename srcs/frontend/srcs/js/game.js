@@ -1,4 +1,4 @@
-import { isDarkMode } from "./storage.js";
+import { getCurrentUser, isDarkMode } from "./storage.js";
 let animFrame;
 const PADDLE_VELOCITY = 8 * 40;
 const BALL_VELOCITY = 3 * 175;
@@ -15,7 +15,7 @@ const RADIUS = 10;
 
 const MAX_ANGLE_DEVIATION = 45;
 
-export const gameHandler = (route) => {
+export const gameHandler = (matchData) => {
 	const gameBoard = document.getElementById("game-board");
 	// @ts-ignore
 	const ctx = gameBoard.getContext("2d");
@@ -128,6 +128,8 @@ export const gameHandler = (route) => {
 			down: false,
 			upKey: "w",
 			downKey: "s",
+			altUpKey: "ArrowUp",
+			altDownKey: "ArrowDown",
 		},
 		points: 0,
 		init(canvas, scale) {
@@ -150,9 +152,22 @@ export const gameHandler = (route) => {
 			if (this.keys.down) this.y += this.vy * deltaTime;
 			return this;
 		},
-		keyHandler(event, value) {
-			if (event.key == this.keys.upKey) this.keys.up = value;
-			if (event.key == this.keys.downKey) this.keys.down = value;
+		keyHandler(event, value, multiplayer) {
+			if (multiplayer) {
+				if (
+					event.key === this.keys.upKey ||
+					event.key === this.keys.altUpKey
+				)
+					this.keys.up = value;
+				if (
+					event.key === this.keys.downKey ||
+					event.key === this.keys.altDownKey
+				)
+					this.keys.down = value;
+			} else {
+				if (event.key === this.keys.upKey) this.keys.up = value;
+				if (event.key === this.keys.downKey) this.keys.down = value;
+			}
 			return this;
 		},
 		reset(canvas) {
@@ -173,6 +188,8 @@ export const gameHandler = (route) => {
 			down: false,
 			upKey: "ArrowUp",
 			downKey: "ArrowDown",
+			altUpKey: "w",
+			altDownKey: "s",
 		},
 		points: 0,
 		init(canvas, scale) {
@@ -195,7 +212,23 @@ export const gameHandler = (route) => {
 			if (this.keys.down) this.y += this.vy * deltaTime;
 			return this;
 		},
-		keyHandler(event, value) {
+		keyHandler(event, value, multiplayer) {
+			if (multiplayer) {
+				if (
+					event.key === this.keys.upKey ||
+					event.key === this.keys.altUpKey
+				) {
+					event.preventDefault();
+					this.keys.up = value;
+				}
+				if (
+					event.key === this.keys.downKey ||
+					event.key === this.keys.altDownKey
+				) {
+					event.preventDefault();
+					this.keys.down = value;
+				}
+			}
 			if (event.key == this.keys.upKey) {
 				event.preventDefault();
 				this.keys.up = value;
@@ -240,7 +273,7 @@ export const gameHandler = (route) => {
 		ball.reset(gameBoard);
 		setTimeout(() => {
 			ballActive = true;
-		}, 500);
+		}, 1500);
 	};
 	let lastTime = 0;
 	const draw = (timestamp) => {
@@ -262,22 +295,37 @@ export const gameHandler = (route) => {
 	// 	reset();
 	// });
 	// @ts-ignore
-	gameBoard.addEventListener("mouseover", (e) => {
-		animFrame = window.requestAnimationFrame(draw);
-	});
+	// gameBoard.addEventListener("mouseover", (e) => {
+	// 	animFrame = window.requestAnimationFrame(draw);
+	// });
 	// @ts-ignore
-	gameBoard.addEventListener("mouseout", (e) => {
-		window.cancelAnimationFrame(animFrame);
-		// important: fixes issue that if mouse is out, it doesnt launch the ball at mach 10
-		lastTime = 0;
-	});
+	// gameBoard.addEventListener("mouseout", (e) => {
+	// 	window.cancelAnimationFrame(animFrame);
+	// 	// important: fixes issue that if mouse is out, it doesnt launch the ball at mach 10
+	// 	lastTime = 0;
+	// });
+	const user = getCurrentUser();
 	document.addEventListener("keydown", (e) => {
-		paddleLeft.keyHandler(e, true);
-		paddleRight.keyHandler(e, true);
+		if (matchData) {
+			if (user.uuid === matchData.player_1.user.uuid)
+				paddleLeft.keyHandler(e, true, true);
+			else if (user.uuid === matchData.player_2.user.uuid)
+				paddleRight.keyHandler(e, true, true);
+		} else {
+			paddleLeft.keyHandler(e, true);
+			paddleRight.keyHandler(e, true);
+		}
 	});
 	document.addEventListener("keyup", (e) => {
-		paddleLeft.keyHandler(e, false);
-		paddleRight.keyHandler(e, false);
+		if (matchData) {
+			if (user.uuid === matchData.player_1.user.uuid)
+				paddleLeft.keyHandler(e, false, true);
+			else if (user.uuid === matchData.player_2.user.uuid)
+				paddleRight.keyHandler(e, false, true);
+		} else {
+			paddleLeft.keyHandler(e, false);
+			paddleRight.keyHandler(e, false);
+		}
 	});
 	document.addEventListener("theme", () => {
 		color = isDarkMode() ? "rgb(0 0 0)" : "rgb(255 255 255)";
@@ -289,4 +337,5 @@ export const gameHandler = (route) => {
 	ball.init(gameBoard, scale).draw(ctx);
 	paddleLeft.init(gameBoard, scale).draw(ctx);
 	paddleRight.init(gameBoard, scale).draw(ctx);
+	animFrame = window.requestAnimationFrame(draw);
 };
