@@ -75,8 +75,9 @@ const locationHandler = async () => {
 		navigate(route.no_slug_fallback);
 		return;
 	}
-	// here sending every slugs to the middleware
-	if (route.middleware) route.middleware(route, paths);
+	if (route.middleware) {
+		if (!(await route.middleware(route, paths[1]))) return;
+	}
 	if (route.auth) {
 		if (!(await checkLoggedIn())) {
 			navigate("/login");

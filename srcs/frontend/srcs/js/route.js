@@ -8,6 +8,7 @@ import {
 	settingsHandler,
 } from "./handler.js";
 import { messageHandler } from "./messages.js";
+import { lobbyMiddleware } from "./middleware.js";
 import { lobbyHandler, playHandler } from "./play.js";
 const urlPageTitle = "nascent";
 export const routes = {
@@ -35,6 +36,7 @@ export const routes = {
 		handler: lobbyHandler,
 		slug: true,
 		no_slug_fallback: "/play",
+		middleware: lobbyMiddleware,
 	},
 	"/game": {
 		page: "/pages/game.html",
