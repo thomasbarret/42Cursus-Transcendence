@@ -1,3 +1,4 @@
+import { socket } from "./socket.js";
 import { getCurrentUser, isDarkMode } from "./storage.js";
 let animFrame;
 const PADDLE_VELOCITY = 8 * 40;
@@ -15,7 +16,7 @@ const RADIUS = 10;
 
 const MAX_ANGLE_DEVIATION = 45;
 
-export const gameHandler = (matchData) => {
+export const gameHandler = (_, matchData) => {
 	const gameBoard = document.getElementById("game-board");
 	// @ts-ignore
 	const ctx = gameBoard.getContext("2d");
@@ -250,7 +251,7 @@ export const gameHandler = (matchData) => {
 	let tr;
 	const setColor = () => {
 		color = isDarkMode() ? "rgb(0 0 0)" : "rgb(255 255 255)";
-		tr = isDarkMode() ? "rgb(0 0 0 / 10%)" : "rgb(255 255 255 / 10%)";
+		tr = isDarkMode() ? "rgb(0 0 0 / 15%)" : "rgb(255 255 255 / 15%)";
 		const elColor = isDarkMode() ? "white" : "black";
 		paddleLeft.color = elColor;
 		paddleRight.color = elColor;
@@ -276,17 +277,42 @@ export const gameHandler = (matchData) => {
 		}, 1500);
 	};
 	let lastTime = 0;
+	let fpsInterval = 1000 / 45;
+	const user = getCurrentUser();
 	const draw = (timestamp) => {
 		if (!lastTime) lastTime = timestamp;
-		deltaTime = (timestamp - lastTime) / 1000;
-		lastTime = timestamp;
-		clear();
-		if (ballActive) {
-			if (!ball.draw(ctx).move(gameBoard, paddleLeft, paddleRight))
-				reset();
-		} else ball.draw(ctx);
-		paddleLeft.draw(ctx).move(gameBoard);
-		paddleRight.draw(ctx).move(gameBoard);
+		const elapsed = timestamp - lastTime;
+
+		if (elapsed > fpsInterval) {
+			lastTime = timestamp - (elapsed % fpsInterval);
+			deltaTime = elapsed / 1000;
+			clear();
+			// deltaTime = (timestamp - lastTime) / 1000;
+			// lastTime = timestamp;
+			if (ballActive) {
+				if (!ball.draw(ctx).move(gameBoard, paddleLeft, paddleRight))
+					reset();
+			} else ball.draw(ctx);
+			paddleLeft.draw(ctx).move(gameBoard);
+			paddleRight.draw(ctx).move(gameBoard);
+			if (matchData) {
+				const current =
+					user.uuid === matchData.player_1.user.uuid
+						? paddleLeft
+						: paddleRight;
+				if (socket.readyState === WebSocket.OPEN) {
+					socket.send(
+						JSON.stringify({
+							event: "GAME_MATCH_PADDLE_UPDATE",
+							data: {
+								uuid: matchData.uuid,
+								paddle_position: current.y,
+							},
+						})
+					);
+				}
+			}
+		}
 		animFrame = window.requestAnimationFrame(draw);
 	};
 	// resetButton.addEventListener("click", () => {
@@ -304,7 +330,6 @@ export const gameHandler = (matchData) => {
 	// 	// important: fixes issue that if mouse is out, it doesnt launch the ball at mach 10
 	// 	lastTime = 0;
 	// });
-	const user = getCurrentUser();
 	document.addEventListener("keydown", (e) => {
 		if (matchData) {
 			if (user.uuid === matchData.player_1.user.uuid)

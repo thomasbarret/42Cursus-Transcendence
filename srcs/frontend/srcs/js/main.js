@@ -63,7 +63,7 @@ const locationHandler = async () => {
 	if (currentLocation.length == 0) {
 		currentLocation = "/";
 	}
-	if (currentLocation.slice(-1) === "/")
+	if (currentLocation.length > 1 && currentLocation.slice(-1) === "/")
 		currentLocation = currentLocation.slice(0, -1);
 	const paths = currentLocation.split("/").filter((el) => el != "");
 	if (paths.length > 1) {

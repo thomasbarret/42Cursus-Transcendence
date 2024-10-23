@@ -116,7 +116,7 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
                 from game.models import Match
                 from django.db.models import Q
 
-                match = await database_sync_to_async(Match.objects.filter(uuid=match_uuid).first)()
+                match = await database_sync_to_async(Match.objects.filter(uuid=match_uuid).select_related('player1__user', 'player2__user').first)()
                 if not match:
                     return await self.send(text_data=json.dumps({
                         'event': 'GAME_MATCH_NOT_FOUND',

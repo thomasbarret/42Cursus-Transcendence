@@ -2,6 +2,9 @@ import { Toast } from "./components.js";
 import { gameHandler } from "./game.js";
 import { navigate } from "./main.js";
 import { getCurrentUser } from "./storage.js";
+/**
+ * @type {WebSocket}
+ */
 export let socket;
 export let socketReconnectTry = 0;
 
@@ -67,8 +70,7 @@ export const connectWebSocket = () => {
 				break;
 			case "GAME_START_MATCH":
 				gameStartMatch(data.data);
-				// TODO: update here once you know what GAME_START_MATCH exactly gives
-				// gameHandler();
+				gameHandler(false, data.data);
 				break;
 		}
 	};

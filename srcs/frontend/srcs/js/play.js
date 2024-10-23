@@ -79,7 +79,7 @@ export const lobbyHandler = (route, slug) => {
 
 		console.log("match: ", matchData);
 		if (res.ok) {
-			if (matchData["status"] === 2) gameHandler(matchData);
+			if (matchData["status"] === 2) gameHandler(false, matchData);
 			if (matchData["player_1"])
 				currentPlayers.appendChild(
 					currentPlayerCard(matchData["player_1"])
