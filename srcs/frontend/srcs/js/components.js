@@ -16,6 +16,7 @@ import {
 import * as bootstrap from "bootstrap";
 import { getCurrentUser } from "./storage.js";
 import { navigate } from "./main.js";
+import { BASE_URL } from "./handler.js";
 export const goToProfile = (uuid) => navigate("/profile/" + uuid);
 export const ToastComponent = (value, level) => {
 	return div(
@@ -116,7 +117,7 @@ export const messageBoxLeft = (text, time, uuid) => {
 	return message;
 };
 
-export const matchInviteRight = (text, time) => {
+export const matchInviteRight = (time) => {
 	const image = img("https://picsum.photos/45")
 		.attr("alt", "avatar 1")
 		.attr("style", "width: 30px; height: 30px")
@@ -140,7 +141,7 @@ export const matchInviteRight = (text, time) => {
 	return message;
 };
 
-export const matchInviteLeft = (text, time, uuid) => {
+export const matchInviteLeft = (time, uuid) => {
 	const image = img("https://picsum.photos/45")
 		.attr("alt", "avatar 1")
 		.attr("style", "width: 30px; height: 30px")
@@ -171,9 +172,15 @@ export const matchInviteLeft = (text, time, uuid) => {
 
 export const messageBox = (content, time, current, uuid) => {
 	if (content.startsWith('{"game":')) {
-		return current
-			? matchInviteRight(content, time)
-			: matchInviteLeft(content, time, uuid);
+		try {
+			const invite = JSON.parse(content);
+
+			const msg = current
+				? matchInviteRight(time)
+				: matchInviteLeft(time, uuid);
+
+			return msg.onclick$(() => navigate("/lobby/" + invite.game));
+		} catch (e) {}
 	}
 
 	return current
@@ -269,4 +276,71 @@ export const profileCard = (user, callback) => {
 			).cl("list-group list-group-flish mt-3")
 		).cl("mt-4")
 	).cl("card-body text-center");
+};
+
+export const inviteBoxCard = (user, matchId, update) => {
+	return div(
+		img("https://picsum.photos/30")
+			.attr("alt", "avatar")
+			.cl("rounded-circle me-2")
+			.attr("style", "width: 30px; height: 30px"),
+		span(user.display_name).cl("flex-grow-1"),
+		button("Invite")
+			.cl("btn btn-sm btn-primary")
+			.onclick$(async () => {
+				const res = await fetch(BASE_URL + "/chat/@me", {
+					method: "POST",
+					body: JSON.stringify({
+						receiver_uuid: user.uuid,
+					}),
+					headers: {
+						"Content-Type": "application/json",
+					},
+				});
+
+				const channel = await res.json();
+
+				const invite = {
+					game: matchId,
+				};
+
+				if (res.ok) {
+					const msg = await fetch(
+						BASE_URL + "/chat/" + channel.uuid,
+						{
+							method: "POST",
+							body: JSON.stringify({
+								content: JSON.stringify(invite),
+							}),
+							headers: {
+								"Content-Type": "application/json",
+							},
+						}
+					);
+					const message = await msg.json();
+					if (msg.ok) {
+						Toast("Sent invite successfully!", "success");
+					} else
+						Toast("Error occured: " + message["error"], "danger");
+				} else Toast("Error occured: " + channel["error"], "danger");
+				update();
+			})
+	).cl("d-flex align-items-center mb-2");
+};
+
+export const currentPlayerCard = (user) => {
+	return div(
+		div(
+			img("https://picsum.photos/30")
+				.attr("alt", "avatar")
+				.cl("rounded-circle me-2")
+				.attr("style", "width: 30px; height: 30px"),
+			div(
+				span(user.display_name).cl("fw-bold fs-5"),
+				t("small", user.user.uuid).cl("text-muted")
+			).cl("d-flex flex-column")
+		).cl("d-flex align-items-center")
+	).cl(
+		"d-flex flex-column align-items-start mb-2 p-2 bg-primary-subtle rounded"
+	);
 };

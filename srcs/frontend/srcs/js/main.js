@@ -44,6 +44,18 @@ export const checkLoggedIn = async () => {
 		return false;
 	}
 };
+export const navigate = (path, delay) => {
+	let url = window.location.origin;
+	if (path.length !== 0) url += path;
+	if (delay) {
+		setTimeout(() => {
+			urlRoute(url);
+		}, delay);
+	} else {
+		urlRoute(url);
+	}
+};
+
 // create a function that handles the url location
 const locationHandler = async () => {
 	navHandler();
@@ -51,12 +63,21 @@ const locationHandler = async () => {
 	if (currentLocation.length == 0) {
 		currentLocation = "/";
 	}
+	if (currentLocation.slice(-1) === "/")
+		currentLocation = currentLocation.slice(0, -1);
 	const paths = currentLocation.split("/").filter((el) => el != "");
 	if (paths.length > 1) {
 		currentLocation = "/" + paths[0];
 	}
 	let route = routes[currentLocation] || routes["404"];
 	if (!route.slug && paths.length > 1) route = routes["404"];
+	else if (route.slug && route.no_slug_fallback && paths.length === 1) {
+		navigate(route.no_slug_fallback);
+		return;
+	}
+	if (route.middleware) {
+		if (!(await route.middleware(route, paths[1]))) return;
+	}
 	if (route.auth) {
 		if (!(await checkLoggedIn())) {
 			navigate("/login");
@@ -77,16 +98,5 @@ locationHandler();
 document.addEventListener("DOMContentLoaded", () => {
 	mainHandler();
 });
-export const navigate = (path, delay) => {
-	let url = window.location.origin;
-	if (path.length !== 0) url += path;
-	if (delay) {
-		setTimeout(() => {
-			urlRoute(url);
-		}, delay);
-	} else {
-		urlRoute(url);
-	}
-};
 removeCurrentUser();
 connectWebSocket();
