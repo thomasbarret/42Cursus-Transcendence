@@ -8,9 +8,9 @@ const referenceWidth = 840;
 const referenceHeight = 500;
 
 const DIRECTION = {
-	IDLE: 0,
-	UP: 1,
-	DOWN: 2,
+	IDLE: 1,
+	UP: 2,
+	DOWN: 3,
 };
 
 const paddleSizes = {
@@ -123,6 +123,22 @@ export const gameHandler = (_, matchData) => {
 			return this;
 		},
 	};
+
+	const user = getCurrentUser();
+	const sendPaddleDirection = (direction) => {
+		if (socket.readyState === WebSocket.OPEN) {
+			socket.send(
+				JSON.stringify({
+					event: "GAME_MATCH_PADDLE_UPDATE",
+					data: {
+						uuid: matchData.uuid,
+						paddle_position: direction,
+					},
+				})
+			);
+		}
+	};
+
 	const paddleLeft = {
 		x: 0,
 		y: 0,
@@ -162,8 +178,10 @@ export const gameHandler = (_, matchData) => {
 			return this;
 		},
 		keyHandler(event, value, multiplayer) {
-			if (value === false) this.direction = DIRECTION.IDLE;
-			else if (multiplayer) {
+			if (this.direction !== DIRECTION.IDLE && value === false) {
+				this.direction = DIRECTION.IDLE;
+				if (multiplayer) sendPaddleDirection(this.direction);
+			} else if (multiplayer) {
 				if (
 					this.direction !== DIRECTION.UP &&
 					(event.key === this.keys.upKey ||
@@ -171,6 +189,7 @@ export const gameHandler = (_, matchData) => {
 				) {
 					event.preventDefault();
 					this.direction = DIRECTION.UP;
+					sendPaddleDirection(this.direction);
 				}
 				if (
 					this.direction !== DIRECTION.DOWN &&
@@ -179,6 +198,7 @@ export const gameHandler = (_, matchData) => {
 				) {
 					event.preventDefault();
 					this.direction = DIRECTION.DOWN;
+					sendPaddleDirection(this.direction);
 				}
 			} else {
 				if (
@@ -245,8 +265,10 @@ export const gameHandler = (_, matchData) => {
 			return this;
 		},
 		keyHandler(event, value, multiplayer) {
-			if (value === false) this.direction = DIRECTION.IDLE;
-			else if (multiplayer) {
+			if (this.direction !== DIRECTION.IDLE && value === false) {
+				this.direction = DIRECTION.IDLE;
+				if (multiplayer) sendPaddleDirection(this.direction);
+			} else if (multiplayer) {
 				if (
 					this.direction !== DIRECTION.UP &&
 					(event.key === this.keys.upKey ||
@@ -254,6 +276,7 @@ export const gameHandler = (_, matchData) => {
 				) {
 					event.preventDefault();
 					this.direction = DIRECTION.UP;
+					sendPaddleDirection(this.direction);
 				}
 				if (
 					this.direction !== DIRECTION.DOWN &&
@@ -262,6 +285,7 @@ export const gameHandler = (_, matchData) => {
 				) {
 					event.preventDefault();
 					this.direction = DIRECTION.DOWN;
+					sendPaddleDirection(this.direction);
 				}
 			} else {
 				if (
@@ -319,7 +343,6 @@ export const gameHandler = (_, matchData) => {
 	};
 	let lastTime = 0;
 	let fpsInterval = 1000 / 45;
-	const user = getCurrentUser();
 	const draw = (timestamp) => {
 		if (!lastTime) lastTime = timestamp;
 		const elapsed = timestamp - lastTime;
@@ -375,9 +398,12 @@ export const gameHandler = (_, matchData) => {
 		// @ts-ignore
 		const data = e.detail;
 
-		if (data.player_uuid === matchData.player_1.uuid)
-			paddleLeft.y = data.paddle_position;
-		else paddleRight.y = data.paddle_position;
+		const current =
+			data.player_uuid === matchData.player_1.uuid
+				? paddleLeft
+				: paddleRight;
+
+		current.direction = data.paddle_position;
 	});
 
 	document.addEventListener("keydown", (e) => {
