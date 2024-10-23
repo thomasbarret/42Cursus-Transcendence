@@ -16,6 +16,7 @@ import {
 import * as bootstrap from "bootstrap";
 import { getCurrentUser } from "./storage.js";
 import { navigate } from "./main.js";
+import { BASE_URL } from "./handler.js";
 export const goToProfile = (uuid) => navigate("/profile/" + uuid);
 export const ToastComponent = (value, level) => {
 	return div(
@@ -271,14 +272,53 @@ export const profileCard = (user, callback) => {
 	).cl("card-body text-center");
 };
 
-export const inviteBoxCard = (user) => {
+export const inviteBoxCard = (user, matchId, update) => {
 	return div(
 		img("https://picsum.photos/30")
 			.attr("alt", "avatar")
 			.cl("rounded-circle me-2")
 			.attr("style", "width: 30px; height: 30px"),
 		span(user.display_name).cl("flex-grow-1"),
-		button("Invite").cl("btn btn-sm btn-primary")
+		button("Invite")
+			.cl("btn btn-sm btn-primary")
+			.onclick$(async () => {
+				const res = await fetch(BASE_URL + "/chat/@me", {
+					method: "POST",
+					body: JSON.stringify({
+						receiver_uuid: user.uuid,
+					}),
+					headers: {
+						"Content-Type": "application/json",
+					},
+				});
+
+				const channel = await res.json();
+
+				const invite = {
+					game: matchId,
+				};
+
+				if (res.ok) {
+					const msg = await fetch(
+						BASE_URL + "/chat/" + channel.uuid,
+						{
+							method: "POST",
+							body: JSON.stringify({
+								content: JSON.stringify(invite),
+							}),
+							headers: {
+								"Content-Type": "application/json",
+							},
+						}
+					);
+					const message = await msg.json();
+					if (msg.ok) {
+						Toast("Sent invite successfully!", "success");
+					} else
+						Toast("Error occured: " + message["error"], "danger");
+				} else Toast("Error occured: " + channel["error"], "danger");
+				update();
+			})
 	).cl("d-flex align-items-center mb-2");
 };
 

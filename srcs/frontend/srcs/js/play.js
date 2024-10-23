@@ -71,6 +71,25 @@ export const lobbyHandler = (route, slug) => {
 	const inviteBox = document.getElementById("invite-box");
 	const currentPlayers = document.getElementById("current-players");
 
+	const getMatchData = async () => {
+		currentPlayers.textContent = "";
+		const res = await fetch(BASE_URL + "/game/match/" + slug);
+		const matchData = await res.json();
+
+		console.log("match: ", matchData);
+		if (res.ok) {
+			if (matchData["player_1"])
+				currentPlayers.appendChild(
+					currentPlayerCard(matchData["player_1"])
+				);
+			if (matchData["player_2"])
+				currentPlayers.appendChild(
+					currentPlayerCard(matchData["player_2"])
+				);
+		} else
+			Toast("Match couldn't be found, please try again later.", "danger");
+	};
+
 	const getFriendsList = async () => {
 		inviteBox.textContent = "";
 		const res = await fetch(BASE_URL + "/user/relation/@me");
@@ -80,7 +99,9 @@ export const lobbyHandler = (route, slug) => {
 			console.log("friends: ", data);
 			const fragment = document.createDocumentFragment();
 			data["friends"].forEach((friend) => {
-				fragment.appendChild(inviteBoxCard(friend.user));
+				fragment.appendChild(
+					inviteBoxCard(friend.user, slug, getFriendsList)
+				);
 			});
 			inviteBox.appendChild(fragment);
 		} else {
@@ -88,20 +109,6 @@ export const lobbyHandler = (route, slug) => {
 		}
 	};
 
-	const getMatchData = async () => {
-		currentPlayers.textContent = "";
-		const res = await fetch(BASE_URL + "/game/match/" + slug);
-		const data = await res.json();
-
-		console.log("match: ", data);
-		if (res.ok) {
-			if (data["player_1"])
-				currentPlayers.appendChild(currentPlayerCard(data["player_1"]));
-			if (data["player_2"])
-				currentPlayers.appendChild(currentPlayerCard(data["player_2"]));
-		}
-	};
-
-	getFriendsList();
 	getMatchData();
+	getFriendsList();
 };
