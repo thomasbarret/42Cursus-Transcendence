@@ -1,6 +1,11 @@
+import { eventEmitter } from "./eventemitter.js";
 import { socket } from "./socket.js";
 import { getCurrentUser, isDarkMode } from "./storage.js";
 export let animFrame;
+export let matchUpdateInterval;
+export let keyUpListener;
+export let keyDownListener;
+
 const PADDLE_VELOCITY = 8 * 40;
 const BALL_VELOCITY = 3 * 175;
 const MAX_BALL_VELOCITY = BALL_VELOCITY * 2.5;
@@ -60,6 +65,7 @@ export const gameHandler = (_, matchData) => {
 				const speed = Math.sqrt(this.vx ** 2 + this.vy ** 2);
 				this.vx = Math.sign(this.vx) * speed * Math.cos(thetaNew);
 				this.vy = speed * Math.sin(thetaNew);
+				sendBallData();
 			};
 			this.x += this.vx * deltaTime;
 			this.y += this.vy * deltaTime;
@@ -125,15 +131,18 @@ export const gameHandler = (_, matchData) => {
 	};
 
 	const user = getCurrentUser();
-	const sendPaddleDirection = (direction) => {
+	const sendPaddleDirection = (direction, ball_position) => {
 		if (socket.readyState === WebSocket.OPEN) {
+			const data = {
+				uuid: matchData.uuid,
+				paddle_position: direction,
+				ball_position: ball_position,
+			};
+			if (!ball_position) delete data.ball_position;
 			socket.send(
 				JSON.stringify({
 					event: "GAME_MATCH_PADDLE_UPDATE",
-					data: {
-						uuid: matchData.uuid,
-						paddle_position: direction,
-					},
+					data: data,
 				})
 			);
 		}
@@ -316,14 +325,13 @@ export const gameHandler = (_, matchData) => {
 	let tr;
 	const setColor = () => {
 		color = isDarkMode() ? "rgb(0 0 0)" : "rgb(255 255 255)";
-		tr = isDarkMode() ? "rgb(0 0 0 / 15%)" : "rgb(255 255 255 / 15%)";
+		tr = isDarkMode() ? "rgb(0 0 0 / 8%)" : "rgb(255 255 255 / 8%)";
 		const elColor = isDarkMode() ? "white" : "black";
 		paddleLeft.color = elColor;
 		paddleRight.color = elColor;
 		ball.color = elColor;
 	};
 	const clear = (transparent) => {
-		// ctx.clearRect(0, 0, gameBoard.width, gameBoard.height);
 		if (transparent === false) ctx.fillStyle = color;
 		else ctx.fillStyle = tr;
 		// @ts-ignore
@@ -337,48 +345,52 @@ export const gameHandler = (_, matchData) => {
 				paddleLeft.points + " : " + paddleRight.points;
 		ballActive = false;
 		ball.reset(gameBoard);
+		sendBallData();
 		setTimeout(() => {
 			ballActive = true;
 		}, 1500);
 	};
+
+	let lastExecutionTime = 0;
+
+	const sendBallData = () => {
+		const now = Date.now();
+		const throttleInterval = 1000 / 15;
+
+		if (now - lastExecutionTime >= throttleInterval) {
+			lastExecutionTime = now;
+			if (matchData && matchData.player_1.user.uuid === user.uuid) {
+				sendPaddleDirection(paddleLeft.direction, {
+					x: ball.x,
+					y: ball.y,
+					vx: ball.vx,
+					vy: ball.vy,
+					left_score: paddleLeft.points,
+					right_score: paddleRight.points,
+				});
+			}
+		}
+	};
 	let lastTime = 0;
-	let fpsInterval = 1000 / 45;
+	// let fpsInterval = 1000 / 45;
 	const draw = (timestamp) => {
 		if (!lastTime) lastTime = timestamp;
-		const elapsed = timestamp - lastTime;
+		clear();
+		deltaTime = (timestamp - lastTime) / 1000;
+		lastTime = timestamp;
 
-		if (elapsed > fpsInterval) {
-			lastTime = timestamp - (elapsed % fpsInterval);
-			deltaTime = elapsed / 1000;
-			clear();
-			// deltaTime = (timestamp - lastTime) / 1000;
-			// lastTime = timestamp;
-			if (ballActive) {
-				if (!ball.draw(ctx).move(gameBoard, paddleLeft, paddleRight))
-					reset();
-			} else ball.draw(ctx);
-			paddleLeft.draw(ctx).move(gameBoard);
-			paddleRight.draw(ctx).move(gameBoard);
-			// if (matchData) {
-			// 	const current =
-			// 		user.uuid === matchData.player_1.user.uuid
-			// 			? paddleLeft
-			// 			: paddleRight;
-			// 	if (socket.readyState === WebSocket.OPEN) {
-			// 		socket.send(
-			// 			JSON.stringify({
-			// 				event: "GAME_MATCH_PADDLE_UPDATE",
-			// 				data: {
-			// 					uuid: matchData.uuid,
-			// 					paddle_position: current.y,
-			// 				},
-			// 			})
-			// 		);
-			// 	}
-			// }
-		}
+		if (ballActive) {
+			if (!ball.draw(ctx).move(gameBoard, paddleLeft, paddleRight))
+				reset();
+		} else ball.draw(ctx);
+
+		paddleLeft.draw(ctx).move(gameBoard);
+		paddleRight.draw(ctx).move(gameBoard);
 		animFrame = window.requestAnimationFrame(draw);
 	};
+	matchUpdateInterval = setInterval(() => {
+		sendBallData();
+	}, 500);
 	// resetButton.addEventListener("click", () => {
 	// 	paddleLeft.points = 0;
 	// 	paddleRight.points = 0;
@@ -394,40 +406,52 @@ export const gameHandler = (_, matchData) => {
 	// 	// important: fixes issue that if mouse is out, it doesnt launch the ball at mach 10
 	// 	lastTime = 0;
 	// });
-	document.addEventListener("paddleEvent", (e) => {
-		// @ts-ignore
-		const data = e.detail;
 
+	eventEmitter.on("GAME_MATCH_PADDLE_UPDATE", (data) => {
 		const current =
 			data.player_uuid === matchData.player_1.uuid
 				? paddleLeft
 				: paddleRight;
 
 		current.direction = data.paddle_position;
+		if (data.ball_position) {
+			ball.x = data.ball_position.x;
+			ball.y = data.ball_position.y;
+			ball.vx = data.ball_position.vx;
+			ball.vy = data.ball_position.vy;
+			paddleLeft.points = data.ball_position.left_score;
+			paddleRight.points = data.ball_position.right_score;
+		}
 	});
 
-	document.addEventListener("keydown", (e) => {
-		if (matchData) {
-			if (user.uuid === matchData.player_1.user.uuid)
-				paddleLeft.keyHandler(e, true, true);
-			else if (user.uuid === matchData.player_2.user.uuid)
-				paddleRight.keyHandler(e, true, true);
-		} else {
-			paddleLeft.keyHandler(e, true);
-			paddleRight.keyHandler(e, true);
-		}
-	});
-	document.addEventListener("keyup", (e) => {
-		if (matchData) {
-			if (user.uuid === matchData.player_1.user.uuid)
-				paddleLeft.keyHandler(e, false, true);
-			else if (user.uuid === matchData.player_2.user.uuid)
-				paddleRight.keyHandler(e, false, true);
-		} else {
-			paddleLeft.keyHandler(e, false);
-			paddleRight.keyHandler(e, false);
-		}
-	});
+	document.addEventListener(
+		"keydown",
+		(keyDownListener = (e) => {
+			if (matchData) {
+				if (user.uuid === matchData.player_1.user.uuid)
+					paddleLeft.keyHandler(e, true, true);
+				else if (user.uuid === matchData.player_2.user.uuid)
+					paddleRight.keyHandler(e, true, true);
+			} else {
+				paddleLeft.keyHandler(e, true);
+				paddleRight.keyHandler(e, true);
+			}
+		})
+	);
+	document.addEventListener(
+		"keyup",
+		(keyUpListener = (e) => {
+			if (matchData) {
+				if (user.uuid === matchData.player_1.user.uuid)
+					paddleLeft.keyHandler(e, false, true);
+				else if (user.uuid === matchData.player_2.user.uuid)
+					paddleRight.keyHandler(e, false, true);
+			} else {
+				paddleLeft.keyHandler(e, false);
+				paddleRight.keyHandler(e, false);
+			}
+		})
+	);
 	document.addEventListener("theme", () => {
 		color = isDarkMode() ? "rgb(0 0 0)" : "rgb(255 255 255)";
 		tr = isDarkMode() ? "rgb(0 0 0 / 10%)" : "rgb(255 255 255 / 10%)";

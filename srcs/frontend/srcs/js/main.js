@@ -1,4 +1,10 @@
-import { animFrame } from "./game.js";
+import { eventEmitter } from "./eventemitter.js";
+import {
+	animFrame,
+	keyDownListener,
+	keyUpListener,
+	matchUpdateInterval,
+} from "./game.js";
 import { BASE_URL, mainHandler, navHandler } from "./handler.js";
 import { routes } from "./route.js";
 import { closeWebSocket, connectWebSocket } from "./socket.js";
@@ -60,6 +66,10 @@ export const navigate = (path, delay) => {
 // create a function that handles the url location
 const locationHandler = async () => {
 	navHandler();
+	eventEmitter.clear();
+	document.removeEventListener("keyup", keyUpListener);
+	document.removeEventListener("keydown", keyDownListener);
+	clearInterval(matchUpdateInterval);
 
 	window.cancelAnimationFrame(animFrame);
 	let currentLocation = window.location.pathname;
