@@ -1,3 +1,4 @@
+import { animFrame } from "./game.js";
 import { BASE_URL, mainHandler, navHandler } from "./handler.js";
 import { routes } from "./route.js";
 import { closeWebSocket, connectWebSocket } from "./socket.js";
@@ -59,11 +60,13 @@ export const navigate = (path, delay) => {
 // create a function that handles the url location
 const locationHandler = async () => {
 	navHandler();
+
+	window.cancelAnimationFrame(animFrame);
 	let currentLocation = window.location.pathname;
 	if (currentLocation.length == 0) {
 		currentLocation = "/";
 	}
-	if (currentLocation.slice(-1) === "/")
+	if (currentLocation.length > 1 && currentLocation.slice(-1) === "/")
 		currentLocation = currentLocation.slice(0, -1);
 	const paths = currentLocation.split("/").filter((el) => el != "");
 	if (paths.length > 1) {

@@ -1,7 +1,18 @@
 import { Toast } from "./components.js";
+import { gameHandler } from "./game.js";
+import { navigate } from "./main.js";
 import { getCurrentUser } from "./storage.js";
+/**
+ * @type {WebSocket}
+ */
 export let socket;
 export let socketReconnectTry = 0;
+
+export const gameStartMatch = (data) => {
+	const gameUrl = "/lobby/" + data.uuid;
+	if (window.location.pathname !== gameUrl) navigate(gameUrl);
+};
+
 export const closeWebSocket = () => {
 	if (
 		(socket && socket.readyState === WebSocket.OPEN) ||
@@ -51,11 +62,21 @@ export const connectWebSocket = () => {
 		const data = JSON.parse(event.data);
 		console.log("received socket message: ", data);
 		switch (data.event) {
+			case "GAME_MATCH_PADDLE_UPDATE":
+				const paddleEvent = new CustomEvent("paddleEvent", {
+					detail: data.data,
+				});
+				document.dispatchEvent(paddleEvent);
+				break;
 			case "DIRECT_MESSAGE_CREATE":
 				const messageEvent = new CustomEvent("messageEvent", {
 					detail: data.data,
 				});
 				document.dispatchEvent(messageEvent);
+				break;
+			case "GAME_START_MATCH":
+				gameStartMatch(data.data);
+				gameHandler(false, data.data);
 				break;
 		}
 	};

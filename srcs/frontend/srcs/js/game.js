@@ -1,10 +1,17 @@
-import { isDarkMode } from "./storage.js";
-let animFrame;
+import { socket } from "./socket.js";
+import { getCurrentUser, isDarkMode } from "./storage.js";
+export let animFrame;
 const PADDLE_VELOCITY = 8 * 40;
 const BALL_VELOCITY = 3 * 175;
 const MAX_BALL_VELOCITY = BALL_VELOCITY * 2.5;
 const referenceWidth = 840;
 const referenceHeight = 500;
+
+const DIRECTION = {
+	IDLE: 1,
+	UP: 2,
+	DOWN: 3,
+};
 
 const paddleSizes = {
 	width: 10,
@@ -15,14 +22,13 @@ const RADIUS = 10;
 
 const MAX_ANGLE_DEVIATION = 45;
 
-export const gameHandler = (route) => {
-	console.log("current route: ", route.description);
+export const gameHandler = (_, matchData) => {
 	const gameBoard = document.getElementById("game-board");
 	// @ts-ignore
 	const ctx = gameBoard.getContext("2d");
 	if (!ctx) return false;
 	const scoreText = document.getElementById("score-text");
-	const resetButton = document.getElementById("reset-btn");
+	// const resetButton = document.getElementById("reset-btn");
 	const scale = {
 		// @ts-ignore
 		x: gameBoard.width / referenceWidth,
@@ -117,6 +123,22 @@ export const gameHandler = (route) => {
 			return this;
 		},
 	};
+
+	const user = getCurrentUser();
+	const sendPaddleDirection = (direction) => {
+		if (socket.readyState === WebSocket.OPEN) {
+			socket.send(
+				JSON.stringify({
+					event: "GAME_MATCH_PADDLE_UPDATE",
+					data: {
+						uuid: matchData.uuid,
+						paddle_position: direction,
+					},
+				})
+			);
+		}
+	};
+
 	const paddleLeft = {
 		x: 0,
 		y: 0,
@@ -124,11 +146,12 @@ export const gameHandler = (route) => {
 		width: paddleSizes.width,
 		height: paddleSizes.height,
 		color: "white",
+		direction: DIRECTION.IDLE,
 		keys: {
-			up: false,
-			down: false,
 			upKey: "w",
 			downKey: "s",
+			altUpKey: "ArrowUp",
+			altDownKey: "ArrowDown",
 		},
 		points: 0,
 		init(canvas, scale) {
@@ -145,15 +168,56 @@ export const gameHandler = (route) => {
 			return this;
 		},
 		move(canvas) {
-			if (this.y + this.height >= canvas.height) this.keys.down = false;
-			else if (this.y <= 0) this.keys.up = false;
-			if (this.keys.up) this.y -= this.vy * deltaTime;
-			if (this.keys.down) this.y += this.vy * deltaTime;
+			if (this.direction === DIRECTION.IDLE) return this;
+			if (this.y + this.height >= canvas.height)
+				this.y = canvas.height - this.height;
+			else if (this.y <= 0) this.y = 0;
+			if (this.direction === DIRECTION.UP) this.y -= this.vy * deltaTime;
+			if (this.direction === DIRECTION.DOWN)
+				this.y += this.vy * deltaTime;
 			return this;
 		},
-		keyHandler(event, value) {
-			if (event.key == this.keys.upKey) this.keys.up = value;
-			if (event.key == this.keys.downKey) this.keys.down = value;
+		keyHandler(event, value, multiplayer) {
+			if (this.direction !== DIRECTION.IDLE && value === false) {
+				this.direction = DIRECTION.IDLE;
+				if (multiplayer) sendPaddleDirection(this.direction);
+			} else if (multiplayer) {
+				if (
+					this.direction !== DIRECTION.UP &&
+					(event.key === this.keys.upKey ||
+						event.key === this.keys.altUpKey)
+				) {
+					event.preventDefault();
+					this.direction = DIRECTION.UP;
+					sendPaddleDirection(this.direction);
+				}
+				if (
+					this.direction !== DIRECTION.DOWN &&
+					(event.key === this.keys.downKey ||
+						event.key === this.keys.altDownKey)
+				) {
+					event.preventDefault();
+					this.direction = DIRECTION.DOWN;
+					sendPaddleDirection(this.direction);
+				}
+			} else {
+				if (
+					this.direction !== DIRECTION.UP &&
+					event.key === this.keys.upKey
+				) {
+					event.preventDefault();
+					this.direction = DIRECTION.UP;
+					console.log("CHANGED DIRECTION KEY: ", this.direction);
+				}
+				if (
+					this.direction !== DIRECTION.DOWN &&
+					event.key === this.keys.downKey
+				) {
+					event.preventDefault();
+					this.direction = DIRECTION.DOWN;
+					console.log("CHANGED DIRECTION KEY: ", this.direction);
+				}
+			}
 			return this;
 		},
 		reset(canvas) {
@@ -169,11 +233,12 @@ export const gameHandler = (route) => {
 		width: paddleSizes.width,
 		height: paddleSizes.height,
 		color: "white",
+		direction: DIRECTION.IDLE,
 		keys: {
-			up: false,
-			down: false,
 			upKey: "ArrowUp",
 			downKey: "ArrowDown",
+			altUpKey: "w",
+			altDownKey: "s",
 		},
 		points: 0,
 		init(canvas, scale) {
@@ -190,20 +255,53 @@ export const gameHandler = (route) => {
 			return this;
 		},
 		move(canvas) {
-			if (this.y + this.height >= canvas.height) this.keys.down = false;
-			else if (this.y <= 0) this.keys.up = false;
-			if (this.keys.up) this.y -= this.vy * deltaTime;
-			if (this.keys.down) this.y += this.vy * deltaTime;
+			if (this.direction === DIRECTION.IDLE) return this;
+			if (this.y + this.height >= canvas.height)
+				this.y = canvas.height - this.height;
+			else if (this.y <= 0) this.y = 0;
+			if (this.direction === DIRECTION.UP) this.y -= this.vy * deltaTime;
+			if (this.direction === DIRECTION.DOWN)
+				this.y += this.vy * deltaTime;
 			return this;
 		},
-		keyHandler(event, value) {
-			if (event.key == this.keys.upKey) {
-				event.preventDefault();
-				this.keys.up = value;
-			}
-			if (event.key == this.keys.downKey) {
-				event.preventDefault();
-				this.keys.down = value;
+		keyHandler(event, value, multiplayer) {
+			if (this.direction !== DIRECTION.IDLE && value === false) {
+				this.direction = DIRECTION.IDLE;
+				if (multiplayer) sendPaddleDirection(this.direction);
+			} else if (multiplayer) {
+				if (
+					this.direction !== DIRECTION.UP &&
+					(event.key === this.keys.upKey ||
+						event.key === this.keys.altUpKey)
+				) {
+					event.preventDefault();
+					this.direction = DIRECTION.UP;
+					sendPaddleDirection(this.direction);
+				}
+				if (
+					this.direction !== DIRECTION.DOWN &&
+					(event.key === this.keys.downKey ||
+						event.key === this.keys.altDownKey)
+				) {
+					event.preventDefault();
+					this.direction = DIRECTION.DOWN;
+					sendPaddleDirection(this.direction);
+				}
+			} else {
+				if (
+					this.direction !== DIRECTION.UP &&
+					event.key === this.keys.upKey
+				) {
+					event.preventDefault();
+					this.direction = DIRECTION.UP;
+				}
+				if (
+					this.direction !== DIRECTION.DOWN &&
+					event.key === this.keys.downKey
+				) {
+					event.preventDefault();
+					this.direction = DIRECTION.DOWN;
+				}
 			}
 			return this;
 		},
@@ -218,7 +316,7 @@ export const gameHandler = (route) => {
 	let tr;
 	const setColor = () => {
 		color = isDarkMode() ? "rgb(0 0 0)" : "rgb(255 255 255)";
-		tr = isDarkMode() ? "rgb(0 0 0 / 10%)" : "rgb(255 255 255 / 10%)";
+		tr = isDarkMode() ? "rgb(0 0 0 / 15%)" : "rgb(255 255 255 / 15%)";
 		const elColor = isDarkMode() ? "white" : "black";
 		paddleLeft.color = elColor;
 		paddleRight.color = elColor;
@@ -241,44 +339,94 @@ export const gameHandler = (route) => {
 		ball.reset(gameBoard);
 		setTimeout(() => {
 			ballActive = true;
-		}, 500);
+		}, 1500);
 	};
 	let lastTime = 0;
+	let fpsInterval = 1000 / 45;
 	const draw = (timestamp) => {
 		if (!lastTime) lastTime = timestamp;
-		deltaTime = (timestamp - lastTime) / 1000;
-		lastTime = timestamp;
-		clear();
-		if (ballActive) {
-			if (!ball.draw(ctx).move(gameBoard, paddleLeft, paddleRight))
-				reset();
-		} else ball.draw(ctx);
-		paddleLeft.draw(ctx).move(gameBoard);
-		paddleRight.draw(ctx).move(gameBoard);
+		const elapsed = timestamp - lastTime;
+
+		if (elapsed > fpsInterval) {
+			lastTime = timestamp - (elapsed % fpsInterval);
+			deltaTime = elapsed / 1000;
+			clear();
+			// deltaTime = (timestamp - lastTime) / 1000;
+			// lastTime = timestamp;
+			if (ballActive) {
+				if (!ball.draw(ctx).move(gameBoard, paddleLeft, paddleRight))
+					reset();
+			} else ball.draw(ctx);
+			paddleLeft.draw(ctx).move(gameBoard);
+			paddleRight.draw(ctx).move(gameBoard);
+			// if (matchData) {
+			// 	const current =
+			// 		user.uuid === matchData.player_1.user.uuid
+			// 			? paddleLeft
+			// 			: paddleRight;
+			// 	if (socket.readyState === WebSocket.OPEN) {
+			// 		socket.send(
+			// 			JSON.stringify({
+			// 				event: "GAME_MATCH_PADDLE_UPDATE",
+			// 				data: {
+			// 					uuid: matchData.uuid,
+			// 					paddle_position: current.y,
+			// 				},
+			// 			})
+			// 		);
+			// 	}
+			// }
+		}
 		animFrame = window.requestAnimationFrame(draw);
 	};
-	resetButton.addEventListener("click", () => {
-		paddleLeft.points = 0;
-		paddleRight.points = 0;
-		reset();
-	});
+	// resetButton.addEventListener("click", () => {
+	// 	paddleLeft.points = 0;
+	// 	paddleRight.points = 0;
+	// 	reset();
+	// });
 	// @ts-ignore
-	gameBoard.addEventListener("mouseover", (e) => {
-		animFrame = window.requestAnimationFrame(draw);
-	});
+	// gameBoard.addEventListener("mouseover", (e) => {
+	// 	animFrame = window.requestAnimationFrame(draw);
+	// });
 	// @ts-ignore
-	gameBoard.addEventListener("mouseout", (e) => {
-		window.cancelAnimationFrame(animFrame);
-		// important: fixes issue that if mouse is out, it doesnt launch the ball at mach 10
-		lastTime = 0;
+	// gameBoard.addEventListener("mouseout", (e) => {
+	// 	window.cancelAnimationFrame(animFrame);
+	// 	// important: fixes issue that if mouse is out, it doesnt launch the ball at mach 10
+	// 	lastTime = 0;
+	// });
+	document.addEventListener("paddleEvent", (e) => {
+		// @ts-ignore
+		const data = e.detail;
+
+		const current =
+			data.player_uuid === matchData.player_1.uuid
+				? paddleLeft
+				: paddleRight;
+
+		current.direction = data.paddle_position;
 	});
+
 	document.addEventListener("keydown", (e) => {
-		paddleLeft.keyHandler(e, true);
-		paddleRight.keyHandler(e, true);
+		if (matchData) {
+			if (user.uuid === matchData.player_1.user.uuid)
+				paddleLeft.keyHandler(e, true, true);
+			else if (user.uuid === matchData.player_2.user.uuid)
+				paddleRight.keyHandler(e, true, true);
+		} else {
+			paddleLeft.keyHandler(e, true);
+			paddleRight.keyHandler(e, true);
+		}
 	});
 	document.addEventListener("keyup", (e) => {
-		paddleLeft.keyHandler(e, false);
-		paddleRight.keyHandler(e, false);
+		if (matchData) {
+			if (user.uuid === matchData.player_1.user.uuid)
+				paddleLeft.keyHandler(e, false, true);
+			else if (user.uuid === matchData.player_2.user.uuid)
+				paddleRight.keyHandler(e, false, true);
+		} else {
+			paddleLeft.keyHandler(e, false);
+			paddleRight.keyHandler(e, false);
+		}
 	});
 	document.addEventListener("theme", () => {
 		color = isDarkMode() ? "rgb(0 0 0)" : "rgb(255 255 255)";
@@ -290,4 +438,5 @@ export const gameHandler = (route) => {
 	ball.init(gameBoard, scale).draw(ctx);
 	paddleLeft.init(gameBoard, scale).draw(ctx);
 	paddleRight.init(gameBoard, scale).draw(ctx);
+	animFrame = window.requestAnimationFrame(draw);
 };
