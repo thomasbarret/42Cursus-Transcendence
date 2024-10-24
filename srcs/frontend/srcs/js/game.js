@@ -351,16 +351,24 @@ export const gameHandler = (_, matchData) => {
 		}, 1500);
 	};
 
+	let lastExecutionTime = 0;
+
 	const sendBallData = () => {
-		if (matchData && matchData.player_1.user.uuid === user.uuid) {
-			sendPaddleDirection(paddleLeft.direction, {
-				x: ball.x,
-				y: ball.y,
-				vx: ball.vx,
-				vy: ball.vy,
-				left_score: paddleLeft.points,
-				right_score: paddleRight.points,
-			});
+		const now = Date.now();
+		const throttleInterval = 1000 / 15;
+
+		if (now - lastExecutionTime >= throttleInterval) {
+			lastExecutionTime = now;
+			if (matchData && matchData.player_1.user.uuid === user.uuid) {
+				sendPaddleDirection(paddleLeft.direction, {
+					x: ball.x,
+					y: ball.y,
+					vx: ball.vx,
+					vy: ball.vy,
+					left_score: paddleLeft.points,
+					right_score: paddleRight.points,
+				});
+			}
 		}
 	};
 	let lastTime = 0;
