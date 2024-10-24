@@ -108,9 +108,8 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
 
             if event.startswith('GAME_'):
                 match_uuid = data.get('uuid')
-                paddle_position = data.get('paddle_position')
-                ball_position = data.get('ball_position')
-                user_uuid = data.get('user_uuid')
+                state = data.get('state')
+                # user_uuid = data.get('user_uuid')
 
                 if not match_uuid:
                     return await self.send(text_data=json.dumps({
@@ -146,12 +145,11 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
                     f"user_{str(match.player1.user.uuid)}",
                     {
                         'type': 'send_event',
-                        'event_name': 'GAME_MATCH_PADDLE_UPDATE',
+                        'event_name': event,
                         'data': {
                             'uuid': str(match.uuid),
                             'player_uuid': str(player.uuid),
-                            'paddle_position': paddle_position,
-                            'ball_position': ball_position,
+                            'state': state,
                         }
                     }
                 )
@@ -159,12 +157,11 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
                     f"user_{str(match.player2.user.uuid)}",
                     {
                         'type': 'send_event',
-                        'event_name': 'GAME_MATCH_PADDLE_UPDATE',
+                        'event_name': event,
                         'data': {
                             'uuid': str(match.uuid),
                             'player_uuid': str(player.uuid),
-                            'paddle_position': paddle_position,
-                            'ball_position': ball_position,
+                            'state': state,
                         }
                     }
                 )

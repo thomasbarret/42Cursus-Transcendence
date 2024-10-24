@@ -62,15 +62,9 @@ export const connectWebSocket = () => {
 	socket.onmessage = (event) => {
 		const data = JSON.parse(event.data);
 		console.log("received socket message: ", data);
-		switch (data.event) {
-			case "GAME_MATCH_PADDLE_UPDATE":
-			case "DIRECT_MESSAGE_CREATE":
-				eventEmitter.emit(data.event, data.data);
-				break;
-			case "GAME_START_MATCH":
-				gameStartMatch(data.data);
-				gameHandler(false, data.data);
-				break;
-		}
+		if (data.event === "GAME_START_MATCH") {
+			gameStartMatch(data.data);
+			gameHandler(false, data.data);
+		} else eventEmitter.emit(data.event, data.data);
 	};
 };

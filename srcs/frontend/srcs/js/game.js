@@ -131,18 +131,15 @@ export const gameHandler = (_, matchData) => {
 	};
 
 	const user = getCurrentUser();
-	const sendPaddleDirection = (direction, ball_position) => {
+	const sendMatchData = (event, state) => {
 		if (socket.readyState === WebSocket.OPEN) {
-			const data = {
-				uuid: matchData.uuid,
-				paddle_position: direction,
-				ball_position: ball_position,
-			};
-			if (!ball_position) delete data.ball_position;
 			socket.send(
 				JSON.stringify({
-					event: "GAME_MATCH_PADDLE_UPDATE",
-					data: data,
+					event: event,
+					data: {
+						uuid: matchData.uuid,
+						state: state,
+					},
 				})
 			);
 		}
@@ -189,7 +186,8 @@ export const gameHandler = (_, matchData) => {
 		keyHandler(event, value) {
 			if (this.direction !== DIRECTION.IDLE && value === false) {
 				this.direction = DIRECTION.IDLE;
-				if (matchData) sendPaddleDirection(this.direction);
+				if (matchData)
+					sendMatchData("GAME_MATCH_PADDLE_UPDATE", this.direction);
 			} else if (matchData) {
 				if (
 					event.key === this.keys.upKey ||
@@ -198,7 +196,10 @@ export const gameHandler = (_, matchData) => {
 					event.preventDefault();
 					if (this.direction !== DIRECTION.UP) {
 						this.direction = DIRECTION.UP;
-						sendPaddleDirection(this.direction);
+						sendMatchData(
+							"GAME_MATCH_PADDLE_UPDATE",
+							this.direction
+						);
 					}
 				}
 				if (
@@ -208,7 +209,10 @@ export const gameHandler = (_, matchData) => {
 					event.preventDefault();
 					if (this.direction !== DIRECTION.DOWN) {
 						this.direction = DIRECTION.DOWN;
-						sendPaddleDirection(this.direction);
+						sendMatchData(
+							"GAME_MATCH_PADDLE_UPDATE",
+							this.direction
+						);
 					}
 				}
 			} else {
@@ -275,7 +279,8 @@ export const gameHandler = (_, matchData) => {
 		keyHandler(event, value) {
 			if (this.direction !== DIRECTION.IDLE && value === false) {
 				this.direction = DIRECTION.IDLE;
-				if (matchData) sendPaddleDirection(this.direction);
+				if (matchData)
+					sendMatchData("GAME_MATCH_PADDLE_UPDATE", this.direction);
 			} else if (matchData) {
 				if (
 					event.key === this.keys.upKey ||
@@ -284,7 +289,10 @@ export const gameHandler = (_, matchData) => {
 					event.preventDefault();
 					if (this.direction !== DIRECTION.UP) {
 						this.direction = DIRECTION.UP;
-						sendPaddleDirection(this.direction);
+						sendMatchData(
+							"GAME_MATCH_PADDLE_UPDATE",
+							this.direction
+						);
 					}
 				}
 				if (
@@ -294,7 +302,10 @@ export const gameHandler = (_, matchData) => {
 					event.preventDefault();
 					if (this.direction !== DIRECTION.DOWN) {
 						this.direction = DIRECTION.DOWN;
-						sendPaddleDirection(this.direction);
+						sendMatchData(
+							"GAME_MATCH_PADDLE_UPDATE",
+							this.direction
+						);
 					}
 				}
 			} else {
@@ -353,21 +364,45 @@ export const gameHandler = (_, matchData) => {
 	const sendBallData = () => {
 		if (matchData && matchData.player_1.user.uuid === user.uuid) {
 			const now = Date.now();
-			const throttleInterval = 1000 / 8;
+			const throttleInterval = 1000 / 10;
 
 			if (now - lastExecutionTime >= throttleInterval) {
 				lastExecutionTime = now;
-				sendPaddleDirection(paddleLeft.direction, {
+				sendMatchData("GAME_MATCH_STATE_UPDATE", {
 					x: ball.x,
 					y: ball.y,
 					vx: ball.vx,
 					vy: ball.vy,
 					left_score: paddleLeft.points,
 					right_score: paddleRight.points,
+					left_paddle: paddleLeft.y,
+					right_paddle: paddleRight.y,
 				});
 			}
 		}
 	};
+	if (matchData) {
+		eventEmitter.on("GAME_MATCH_STATE_UPDATE", (data) => {
+			ball.x = data.state.x;
+			ball.y = data.state.y;
+			ball.vx = data.state.vx;
+			ball.vy = data.state.vy;
+			paddleLeft.points = data.state.left_score;
+			paddleRight.points = data.state.right_score;
+			paddleLeft.y = data.state.left_paddle;
+			paddleRight.y = data.state.right_paddle;
+		});
+
+		eventEmitter.on("GAME_MATCH_PADDLE_UPDATE", (data) => {
+			const player =
+				data.player_uuid === matchData.player_1.uuid
+					? paddleLeft
+					: paddleRight;
+
+			player.direction = data.state;
+		});
+	}
+
 	let lastTime = 0;
 	// let fpsInterval = 1000 / 45;
 	const draw = (timestamp) => {
@@ -388,24 +423,6 @@ export const gameHandler = (_, matchData) => {
 	matchUpdateInterval = setInterval(() => {
 		sendBallData();
 	}, 500);
-	if (matchData) {
-		eventEmitter.on("GAME_MATCH_PADDLE_UPDATE", (data) => {
-			const current =
-				data.player_uuid === matchData.player_1.uuid
-					? paddleLeft
-					: paddleRight;
-
-			current.direction = data.paddle_position;
-			if (data.ball_position) {
-				ball.x = data.ball_position.x;
-				ball.y = data.ball_position.y;
-				ball.vx = data.ball_position.vx;
-				ball.vy = data.ball_position.vy;
-				paddleLeft.points = data.ball_position.left_score;
-				paddleRight.points = data.ball_position.right_score;
-			}
-		});
-	}
 
 	document.addEventListener(
 		"keydown",
