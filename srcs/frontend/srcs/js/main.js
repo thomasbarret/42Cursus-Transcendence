@@ -20,7 +20,17 @@ document.addEventListener("click", (e) => {
 	e.preventDefault();
 	urlRoute(e);
 });
+
+const clear = () => {
+	eventEmitter.clear();
+	document.removeEventListener("keyup", keyUpListener);
+	document.removeEventListener("keydown", keyDownListener);
+	clearInterval(matchUpdateInterval);
+	window.cancelAnimationFrame(animFrame);
+};
+
 export const urlRoute = (event) => {
+	clear();
 	let newLocation = undefined;
 	if (typeof event === "string") {
 		newLocation = event;
@@ -66,12 +76,7 @@ export const navigate = (path, delay) => {
 // create a function that handles the url location
 const locationHandler = async () => {
 	navHandler();
-	eventEmitter.clear();
-	document.removeEventListener("keyup", keyUpListener);
-	document.removeEventListener("keydown", keyDownListener);
-	clearInterval(matchUpdateInterval);
 
-	window.cancelAnimationFrame(animFrame);
 	let currentLocation = window.location.pathname;
 	if (currentLocation.length == 0) {
 		currentLocation = "/";

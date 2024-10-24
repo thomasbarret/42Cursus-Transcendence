@@ -136,18 +136,16 @@ export const gameHandler = (_, matchData) => {
 
 	const user = getCurrentUser();
 	const sendMatchData = (event, state) => {
-		if (matchData) {
-			if (socket.readyState === WebSocket.OPEN) {
-				socket.send(
-					JSON.stringify({
-						event: event,
-						data: {
-							uuid: matchData.uuid,
-							state: state,
-						},
-					})
-				);
-			}
+		if (matchData && socket.readyState === WebSocket.OPEN) {
+			socket.send(
+				JSON.stringify({
+					event: event,
+					data: {
+						uuid: matchData.uuid,
+						state: state,
+					},
+				})
+			);
 		}
 	};
 
@@ -395,6 +393,12 @@ export const gameHandler = (_, matchData) => {
 		y: ball.y,
 		left: paddleLeft.y,
 		right: paddleRight.y,
+		reset() {
+			this.x = ball.x;
+			this.y = ball.y;
+			this.left = paddleLeft.y;
+			this.right = paddleRight.y;
+		},
 	};
 
 	if (matchData) {
@@ -423,21 +427,32 @@ export const gameHandler = (_, matchData) => {
 			paddleRight.points = data.state.right_score;
 			reset();
 		});
+
+		eventEmitter.on("GAME_MATCH_PAUSE_EVENT", (data) => {
+			if (data.state === "hidden") {
+				lastTime = 0;
+				target.reset();
+				window.cancelAnimationFrame(animFrame);
+			} else {
+				animFrame = window.requestAnimationFrame(draw);
+			}
+		});
 	}
 
 	let lastTime = 0;
-	// let fpsInterval = 1000 / 45;
 
 	const lerp = (start, end, factor) => start + (end - start) * factor;
 
 	const draw = (timestamp) => {
-		if (!lastTime) lastTime = timestamp;
+		if (lastTime === 0) lastTime = timestamp;
 
-		ball.x = lerp(ball.x, target.x, 0.09);
-		ball.y = lerp(ball.y, target.y, 0.09);
+		if (matchData) {
+			ball.x = lerp(ball.x, target.x, 0.09);
+			ball.y = lerp(ball.y, target.y, 0.09);
 
-		paddleLeft.y = lerp(paddleLeft.y, target.left, 0.07);
-		paddleRight.y = lerp(paddleRight.y, target.right, 0.07);
+			paddleLeft.y = lerp(paddleLeft.y, target.left, 0.07);
+			paddleRight.y = lerp(paddleRight.y, target.right, 0.07);
+		}
 
 		clear();
 		deltaTime = (timestamp - lastTime) / 1000;
@@ -446,10 +461,7 @@ export const gameHandler = (_, matchData) => {
 		if (ballActive) {
 			if (!ball.draw(ctx).move(gameBoard, paddleLeft, paddleRight)) {
 				reset();
-				target.x = ball.x;
-				target.y = ball.y;
-				target.left = paddleLeft.y;
-				target.right = paddleRight.y;
+				target.reset();
 			}
 		} else ball.draw(ctx);
 
@@ -457,6 +469,11 @@ export const gameHandler = (_, matchData) => {
 		paddleRight.draw(ctx).move(gameBoard);
 		animFrame = window.requestAnimationFrame(draw);
 	};
+
+	document.addEventListener("visibilitychange", (event) => {
+		sendMatchData("GAME_MATCH_PAUSE_EVENT", document.visibilityState);
+	});
+
 	document.addEventListener(
 		"keydown",
 		(keyDownListener = (e) => {
@@ -490,6 +507,7 @@ export const gameHandler = (_, matchData) => {
 		tr = isDarkMode() ? "rgb(0 0 0 / 10%)" : "rgb(255 255 255 / 10%)";
 		setColor();
 	});
+
 	setColor();
 	clear(false);
 	ball.init(gameBoard, scale).draw(ctx);

@@ -61,10 +61,15 @@ export const connectWebSocket = () => {
 	};
 	socket.onmessage = (event) => {
 		const data = JSON.parse(event.data);
-		console.log("received socket message: ", data);
+		if (
+			data.event !== "GAME_MATCH_STATE_UPDATE" &&
+			data.event !== "GAME_MATCH_PADDLE_UPDATE"
+		)
+			console.log("received socket message: ", data);
 		if (data.event === "GAME_START_MATCH") {
 			gameStartMatch(data.data);
 			gameHandler(false, data.data);
+			// sendSocket && sendSocket("GAME_MATCH_PAUSE_EVENT", "hidden");
 		} else eventEmitter.emit(data.event, data.data);
 	};
 };
