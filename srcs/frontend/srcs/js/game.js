@@ -1,3 +1,4 @@
+import { eventEmitter } from "./eventemitter.js";
 import { socket } from "./socket.js";
 import { getCurrentUser, isDarkMode } from "./storage.js";
 export let animFrame;
@@ -125,15 +126,18 @@ export const gameHandler = (_, matchData) => {
 	};
 
 	const user = getCurrentUser();
-	const sendPaddleDirection = (direction) => {
+	const sendPaddleDirection = (direction, ball_position) => {
 		if (socket.readyState === WebSocket.OPEN) {
+			const data = {
+				uuid: matchData.uuid,
+				paddle_position: direction,
+				ball_position: ball_position,
+			};
+			if (!ball_position) delete data.ball_position;
 			socket.send(
 				JSON.stringify({
 					event: "GAME_MATCH_PADDLE_UPDATE",
-					data: {
-						uuid: matchData.uuid,
-						paddle_position: direction,
-					},
+					data: data,
 				})
 			);
 		}
@@ -359,26 +363,19 @@ export const gameHandler = (_, matchData) => {
 			} else ball.draw(ctx);
 			paddleLeft.draw(ctx).move(gameBoard);
 			paddleRight.draw(ctx).move(gameBoard);
-			// if (matchData) {
-			// 	const current =
-			// 		user.uuid === matchData.player_1.user.uuid
-			// 			? paddleLeft
-			// 			: paddleRight;
-			// 	if (socket.readyState === WebSocket.OPEN) {
-			// 		socket.send(
-			// 			JSON.stringify({
-			// 				event: "GAME_MATCH_PADDLE_UPDATE",
-			// 				data: {
-			// 					uuid: matchData.uuid,
-			// 					paddle_position: current.y,
-			// 				},
-			// 			})
-			// 		);
-			// 	}
-			// }
 		}
 		animFrame = window.requestAnimationFrame(draw);
 	};
+	if (matchData && matchData.player_1.user.uuid === user.uuid) {
+		setInterval(() => {
+			sendPaddleDirection(paddleLeft.direction, {
+				x: ball.x,
+				y: ball.y,
+				vx: ball.vx,
+				vy: ball.vy,
+			});
+		}, 200);
+	}
 	// resetButton.addEventListener("click", () => {
 	// 	paddleLeft.points = 0;
 	// 	paddleRight.points = 0;
@@ -394,16 +391,20 @@ export const gameHandler = (_, matchData) => {
 	// 	// important: fixes issue that if mouse is out, it doesnt launch the ball at mach 10
 	// 	lastTime = 0;
 	// });
-	document.addEventListener("paddleEvent", (e) => {
-		// @ts-ignore
-		const data = e.detail;
 
+	eventEmitter.on("GAME_MATCH_PADDLE_UPDATE", (data) => {
 		const current =
 			data.player_uuid === matchData.player_1.uuid
 				? paddleLeft
 				: paddleRight;
 
 		current.direction = data.paddle_position;
+		if (data.ball_position) {
+			ball.x = data.ball_position.x;
+			ball.y = data.ball_position.y;
+			ball.vx = data.ball_position.vx;
+			ball.vy = data.ball_position.vy;
+		}
 	});
 
 	document.addEventListener("keydown", (e) => {

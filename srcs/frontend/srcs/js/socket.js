@@ -64,12 +64,6 @@ export const connectWebSocket = () => {
 		console.log("received socket message: ", data);
 		switch (data.event) {
 			case "GAME_MATCH_PADDLE_UPDATE":
-				const paddleEvent = new CustomEvent("paddleEvent", {
-					detail: data.data,
-				});
-				document.dispatchEvent(paddleEvent);
-
-				break;
 			case "DIRECT_MESSAGE_CREATE":
 				eventEmitter.emit(data.event, data.data);
 				break;
