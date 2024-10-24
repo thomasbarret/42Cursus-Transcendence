@@ -186,11 +186,11 @@ export const gameHandler = (_, matchData) => {
 				this.y += this.vy * deltaTime;
 			return this;
 		},
-		keyHandler(event, value, multiplayer) {
+		keyHandler(event, value) {
 			if (this.direction !== DIRECTION.IDLE && value === false) {
 				this.direction = DIRECTION.IDLE;
-				if (multiplayer) sendPaddleDirection(this.direction);
-			} else if (multiplayer) {
+				if (matchData) sendPaddleDirection(this.direction);
+			} else if (matchData) {
 				if (
 					event.key === this.keys.upKey ||
 					event.key === this.keys.altUpKey
@@ -272,11 +272,11 @@ export const gameHandler = (_, matchData) => {
 				this.y += this.vy * deltaTime;
 			return this;
 		},
-		keyHandler(event, value, multiplayer) {
+		keyHandler(event, value) {
 			if (this.direction !== DIRECTION.IDLE && value === false) {
 				this.direction = DIRECTION.IDLE;
-				if (multiplayer) sendPaddleDirection(this.direction);
-			} else if (multiplayer) {
+				if (matchData) sendPaddleDirection(this.direction);
+			} else if (matchData) {
 				if (
 					event.key === this.keys.upKey ||
 					event.key === this.keys.altUpKey
@@ -351,12 +351,12 @@ export const gameHandler = (_, matchData) => {
 	let lastExecutionTime = 0;
 
 	const sendBallData = () => {
-		const now = Date.now();
-		const throttleInterval = 1000 / 15;
+		if (matchData && matchData.player_1.user.uuid === user.uuid) {
+			const now = Date.now();
+			const throttleInterval = 1000 / 8;
 
-		if (now - lastExecutionTime >= throttleInterval) {
-			lastExecutionTime = now;
-			if (matchData && matchData.player_1.user.uuid === user.uuid) {
+			if (now - lastExecutionTime >= throttleInterval) {
+				lastExecutionTime = now;
 				sendPaddleDirection(paddleLeft.direction, {
 					x: ball.x,
 					y: ball.y,
@@ -388,47 +388,33 @@ export const gameHandler = (_, matchData) => {
 	matchUpdateInterval = setInterval(() => {
 		sendBallData();
 	}, 500);
-	// resetButton.addEventListener("click", () => {
-	// 	paddleLeft.points = 0;
-	// 	paddleRight.points = 0;
-	// 	reset();
-	// });
-	// @ts-ignore
-	// gameBoard.addEventListener("mouseover", (e) => {
-	// 	animFrame = window.requestAnimationFrame(draw);
-	// });
-	// @ts-ignore
-	// gameBoard.addEventListener("mouseout", (e) => {
-	// 	window.cancelAnimationFrame(animFrame);
-	// 	// important: fixes issue that if mouse is out, it doesnt launch the ball at mach 10
-	// 	lastTime = 0;
-	// });
+	if (matchData) {
+		eventEmitter.on("GAME_MATCH_PADDLE_UPDATE", (data) => {
+			const current =
+				data.player_uuid === matchData.player_1.uuid
+					? paddleLeft
+					: paddleRight;
 
-	eventEmitter.on("GAME_MATCH_PADDLE_UPDATE", (data) => {
-		const current =
-			data.player_uuid === matchData.player_1.uuid
-				? paddleLeft
-				: paddleRight;
-
-		current.direction = data.paddle_position;
-		if (data.ball_position) {
-			ball.x = data.ball_position.x;
-			ball.y = data.ball_position.y;
-			ball.vx = data.ball_position.vx;
-			ball.vy = data.ball_position.vy;
-			paddleLeft.points = data.ball_position.left_score;
-			paddleRight.points = data.ball_position.right_score;
-		}
-	});
+			current.direction = data.paddle_position;
+			if (data.ball_position) {
+				ball.x = data.ball_position.x;
+				ball.y = data.ball_position.y;
+				ball.vx = data.ball_position.vx;
+				ball.vy = data.ball_position.vy;
+				paddleLeft.points = data.ball_position.left_score;
+				paddleRight.points = data.ball_position.right_score;
+			}
+		});
+	}
 
 	document.addEventListener(
 		"keydown",
 		(keyDownListener = (e) => {
 			if (matchData) {
 				if (user.uuid === matchData.player_1.user.uuid)
-					paddleLeft.keyHandler(e, true, true);
+					paddleLeft.keyHandler(e, true);
 				else if (user.uuid === matchData.player_2.user.uuid)
-					paddleRight.keyHandler(e, true, true);
+					paddleRight.keyHandler(e, true);
 			} else {
 				paddleLeft.keyHandler(e, true);
 				paddleRight.keyHandler(e, true);
@@ -440,9 +426,9 @@ export const gameHandler = (_, matchData) => {
 		(keyUpListener = (e) => {
 			if (matchData) {
 				if (user.uuid === matchData.player_1.user.uuid)
-					paddleLeft.keyHandler(e, false, true);
+					paddleLeft.keyHandler(e, false);
 				else if (user.uuid === matchData.player_2.user.uuid)
-					paddleRight.keyHandler(e, false, true);
+					paddleRight.keyHandler(e, false);
 			} else {
 				paddleLeft.keyHandler(e, false);
 				paddleRight.keyHandler(e, false);
