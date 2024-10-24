@@ -8,13 +8,10 @@ else
 	build_flag=""
 fi
 
-docker compose up -d $build_flag
-
-docker compose up -d
-
-docker compose exec django python manage.py makemigrations
-docker compose exec django python manage.py migrate
+# docker compose up postgres -d $build_flag
 
 #docker compose exec django python manage.py migrate game zero
 
-docker compose logs --follow
+docker compose up $build_flag
+
+# docker compose logs --follow

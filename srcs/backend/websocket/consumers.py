@@ -29,7 +29,7 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
             # Utilisation correcte de database_sync_to_async pour les opérations sur la base de données
             matchs = await database_sync_to_async(lambda: list(Match.objects.filter(
                 Q(status__in=[1, 2]) & (Q(player1__user=self.user) | Q(player2__user=self.user))
-            )))()
+            ).select_related("player1__user__publicuser", "player2__user__publicuser")))()
 
 
             for match in matchs:
@@ -41,29 +41,29 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
 
                     winner = match.player1 if match.player1.user == self.user else match.player2
                     match.winner = winner
-                    self.channel_layer.group_send(
+                    await self.channel_layer.group_send(
                         f"user_{str(match.winner.user.uuid)}",
                         {
                             "type": "send_event",
                             "event_name": "GAME_MATCH_OPPONENT_DISCONNECTED",
                             "data": {
-                                "uuid": match.uuid,
+                                "uuid": str(match.uuid),
                                 "status": match.status,
                                 "player_1": {
-                                    "uuid": match.player1.uuid,
+                                    "uuid": str(match.player1.uuid),
                                     "display_name": match.player1.display_name,
                                     "user": {
-                                        "uuid": match.player1.user.uuid,
+                                        "uuid": str(match.player1.user.uuid),
                                         "username": match.player1.user.username,
                                         "display_name": match.player1.user.publicuser.display_name,
                                         "avatar": match.player1.user.publicuser.avatar.url if match.player1.user.publicuser.avatar else None,
                                     },
                                 },
                                 "player_2": {
-                                    "uuid": match.player2.uuid,
+                                    "uuid": str(match.player2.uuid),
                                     "display_name": match.player2.display_name,
                                     "user": {
-                                        "uuid": match.player2.user.uuid,
+                                        "uuid": str(match.player2.user.uuid),
                                         "username": match.player1.user.username,
                                         "display_name": match.player2.user.publicuser.display_name,
                                         "avatar": match.player2.user.publicuser.avatar.url if match.player2.user.publicuser.avatar else None,
@@ -72,19 +72,19 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
                                 "player1_score": match.player1_score,
                                 "player2_score": match.player2_score,
                                 "winner": {
-                                    "uuid": match.winner.uuid,
+                                    "uuid": str(match.winner.uuid),
                                     "display_name": match.winner.display_name,
                                     "user": {
-                                        "uuid": match.winner.user.uuid,
+                                        "uuid": str(match.winner.user.uuid),
                                         "display_name": match.winner.user.publicuser.display_name,
                                         "avatar": match.winner.user.publicuser.avatar.url if match.winner.user.publicuser.avatar else None,
                                     },
                                 } if match.winner else None,
                                 "max_score": match.max_score,
-                                "start_date": match.start_date,
-                                "end_date": match.end_date,
-                                "created_at": match.created_at,
-                                "updated_at": match.updated_at,
+                                "start_date": match.start_date.isoformat() if match.start_date else None,
+                                "end_date": match.end_date.isoformat() if match.end_date else None,
+                                "created_at": match.created_at.isoformat(),
+                                "updated_at": match.updated_at.isoformat() if match.updated_at else None,
                             }
                         }
                     )
