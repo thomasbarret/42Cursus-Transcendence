@@ -97,6 +97,10 @@ export const gameHandler = (_, matchData) => {
 				} else if (this.x - this.radius <= 0) {
 					paddleRight.points += 1;
 				}
+				sendMatchData("GAME_MATCH_SCORE_UPDATE", {
+					left_score: paddleLeft.points,
+					right_score: paddleRight.points,
+				});
 				return false;
 			}
 			if (
@@ -132,16 +136,18 @@ export const gameHandler = (_, matchData) => {
 
 	const user = getCurrentUser();
 	const sendMatchData = (event, state) => {
-		if (socket.readyState === WebSocket.OPEN) {
-			socket.send(
-				JSON.stringify({
-					event: event,
-					data: {
-						uuid: matchData.uuid,
-						state: state,
-					},
-				})
-			);
+		if (matchData) {
+			if (socket.readyState === WebSocket.OPEN) {
+				socket.send(
+					JSON.stringify({
+						event: event,
+						data: {
+							uuid: matchData.uuid,
+							state: state,
+						},
+					})
+				);
+			}
 		}
 	};
 
@@ -353,7 +359,6 @@ export const gameHandler = (_, matchData) => {
 				paddleLeft.points + " : " + paddleRight.points;
 		ballActive = false;
 		ball.reset(gameBoard);
-		sendBallData();
 		setTimeout(() => {
 			ballActive = true;
 		}, 1500);
@@ -364,7 +369,7 @@ export const gameHandler = (_, matchData) => {
 	const sendBallData = () => {
 		if (matchData && matchData.player_1.user.uuid === user.uuid) {
 			const now = Date.now();
-			const throttleInterval = 1000 / 10;
+			const throttleInterval = 1000 / 30;
 
 			if (now - lastExecutionTime >= throttleInterval) {
 				lastExecutionTime = now;
@@ -381,6 +386,9 @@ export const gameHandler = (_, matchData) => {
 			}
 		}
 	};
+	matchUpdateInterval = setInterval(() => {
+		sendBallData();
+	}, 1000 / 10);
 	if (matchData) {
 		eventEmitter.on("GAME_MATCH_STATE_UPDATE", (data) => {
 			ball.x = data.state.x;
@@ -401,6 +409,12 @@ export const gameHandler = (_, matchData) => {
 
 			player.direction = data.state;
 		});
+
+		eventEmitter.on("GAME_MATCH_SCORE_UPDATE", (data) => {
+			paddleLeft.points = data.state.left_score;
+			paddleRight.points = data.state.right_score;
+			reset();
+		});
 	}
 
 	let lastTime = 0;
@@ -420,10 +434,6 @@ export const gameHandler = (_, matchData) => {
 		paddleRight.draw(ctx).move(gameBoard);
 		animFrame = window.requestAnimationFrame(draw);
 	};
-	matchUpdateInterval = setInterval(() => {
-		sendBallData();
-	}, 500);
-
 	document.addEventListener(
 		"keydown",
 		(keyDownListener = (e) => {
