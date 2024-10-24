@@ -97,6 +97,10 @@ export const gameHandler = (_, matchData) => {
 				} else if (this.x - this.radius <= 0) {
 					paddleRight.points += 1;
 				}
+				sendMatchData("GAME_MATCH_SCORE_UPDATE", {
+					left_score: paddleLeft.points,
+					right_score: paddleRight.points,
+				});
 				return false;
 			}
 			if (
@@ -131,18 +135,15 @@ export const gameHandler = (_, matchData) => {
 	};
 
 	const user = getCurrentUser();
-	const sendPaddleDirection = (direction, ball_position) => {
-		if (socket.readyState === WebSocket.OPEN) {
-			const data = {
-				uuid: matchData.uuid,
-				paddle_position: direction,
-				ball_position: ball_position,
-			};
-			if (!ball_position) delete data.ball_position;
+	const sendMatchData = (event, state) => {
+		if (matchData && socket.readyState === WebSocket.OPEN) {
 			socket.send(
 				JSON.stringify({
-					event: "GAME_MATCH_PADDLE_UPDATE",
-					data: data,
+					event: event,
+					data: {
+						uuid: matchData.uuid,
+						state: state,
+					},
 				})
 			);
 		}
@@ -186,11 +187,12 @@ export const gameHandler = (_, matchData) => {
 				this.y += this.vy * deltaTime;
 			return this;
 		},
-		keyHandler(event, value, multiplayer) {
+		keyHandler(event, value) {
 			if (this.direction !== DIRECTION.IDLE && value === false) {
 				this.direction = DIRECTION.IDLE;
-				if (multiplayer) sendPaddleDirection(this.direction);
-			} else if (multiplayer) {
+				if (matchData)
+					sendMatchData("GAME_MATCH_PADDLE_UPDATE", this.direction);
+			} else if (matchData) {
 				if (
 					event.key === this.keys.upKey ||
 					event.key === this.keys.altUpKey
@@ -198,7 +200,10 @@ export const gameHandler = (_, matchData) => {
 					event.preventDefault();
 					if (this.direction !== DIRECTION.UP) {
 						this.direction = DIRECTION.UP;
-						sendPaddleDirection(this.direction);
+						sendMatchData(
+							"GAME_MATCH_PADDLE_UPDATE",
+							this.direction
+						);
 					}
 				}
 				if (
@@ -208,7 +213,10 @@ export const gameHandler = (_, matchData) => {
 					event.preventDefault();
 					if (this.direction !== DIRECTION.DOWN) {
 						this.direction = DIRECTION.DOWN;
-						sendPaddleDirection(this.direction);
+						sendMatchData(
+							"GAME_MATCH_PADDLE_UPDATE",
+							this.direction
+						);
 					}
 				}
 			} else {
@@ -272,11 +280,12 @@ export const gameHandler = (_, matchData) => {
 				this.y += this.vy * deltaTime;
 			return this;
 		},
-		keyHandler(event, value, multiplayer) {
+		keyHandler(event, value) {
 			if (this.direction !== DIRECTION.IDLE && value === false) {
 				this.direction = DIRECTION.IDLE;
-				if (multiplayer) sendPaddleDirection(this.direction);
-			} else if (multiplayer) {
+				if (matchData)
+					sendMatchData("GAME_MATCH_PADDLE_UPDATE", this.direction);
+			} else if (matchData) {
 				if (
 					event.key === this.keys.upKey ||
 					event.key === this.keys.altUpKey
@@ -284,7 +293,10 @@ export const gameHandler = (_, matchData) => {
 					event.preventDefault();
 					if (this.direction !== DIRECTION.UP) {
 						this.direction = DIRECTION.UP;
-						sendPaddleDirection(this.direction);
+						sendMatchData(
+							"GAME_MATCH_PADDLE_UPDATE",
+							this.direction
+						);
 					}
 				}
 				if (
@@ -294,7 +306,10 @@ export const gameHandler = (_, matchData) => {
 					event.preventDefault();
 					if (this.direction !== DIRECTION.DOWN) {
 						this.direction = DIRECTION.DOWN;
-						sendPaddleDirection(this.direction);
+						sendMatchData(
+							"GAME_MATCH_PADDLE_UPDATE",
+							this.direction
+						);
 					}
 				}
 			} else {
@@ -322,7 +337,7 @@ export const gameHandler = (_, matchData) => {
 	let tr;
 	const setColor = () => {
 		color = isDarkMode() ? "rgb(0 0 0)" : "rgb(255 255 255)";
-		tr = isDarkMode() ? "rgb(0 0 0 / 8%)" : "rgb(255 255 255 / 8%)";
+		tr = isDarkMode() ? "rgb(0 0 0 / 10%)" : "rgb(255 255 255 / 10%)";
 		const elColor = isDarkMode() ? "white" : "black";
 		paddleLeft.color = elColor;
 		paddleRight.color = elColor;
@@ -342,7 +357,6 @@ export const gameHandler = (_, matchData) => {
 				paddleLeft.points + " : " + paddleRight.points;
 		ballActive = false;
 		ball.reset(gameBoard);
-		sendBallData();
 		setTimeout(() => {
 			ballActive = true;
 		}, 1500);
@@ -351,74 +365,113 @@ export const gameHandler = (_, matchData) => {
 	let lastExecutionTime = 0;
 
 	const sendBallData = () => {
-		const now = Date.now();
-		const throttleInterval = 1000 / 15;
+		if (matchData && matchData.player_1.user.uuid === user.uuid) {
+			const now = Date.now();
+			const throttleInterval = 1000 / 30;
 
-		if (now - lastExecutionTime >= throttleInterval) {
-			lastExecutionTime = now;
-			if (matchData && matchData.player_1.user.uuid === user.uuid) {
-				sendPaddleDirection(paddleLeft.direction, {
+			if (now - lastExecutionTime >= throttleInterval) {
+				lastExecutionTime = now;
+				sendMatchData("GAME_MATCH_STATE_UPDATE", {
 					x: ball.x,
 					y: ball.y,
 					vx: ball.vx,
 					vy: ball.vy,
 					left_score: paddleLeft.points,
 					right_score: paddleRight.points,
+					left_paddle: paddleLeft.y,
+					right_paddle: paddleRight.y,
 				});
 			}
 		}
 	};
+	matchUpdateInterval = setInterval(() => {
+		sendBallData();
+	}, 1000 / 15);
+
+	const target = {
+		x: ball.x,
+		y: ball.y,
+		left: paddleLeft.y,
+		right: paddleRight.y,
+		reset() {
+			this.x = ball.x;
+			this.y = ball.y;
+			this.left = paddleLeft.y;
+			this.right = paddleRight.y;
+		},
+	};
+
+	if (matchData) {
+		eventEmitter.on("GAME_MATCH_STATE_UPDATE", (data) => {
+			target.x = data.state.x;
+			target.y = data.state.y;
+			ball.vx = data.state.vx;
+			ball.vy = data.state.vy;
+			paddleLeft.points = data.state.left_score;
+			paddleRight.points = data.state.right_score;
+			target.left = data.state.left_paddle;
+			target.right = data.state.right_paddle;
+		});
+
+		eventEmitter.on("GAME_MATCH_PADDLE_UPDATE", (data) => {
+			const player =
+				data.player_uuid === matchData.player_1.uuid
+					? paddleLeft
+					: paddleRight;
+
+			player.direction = data.state;
+		});
+
+		eventEmitter.on("GAME_MATCH_SCORE_UPDATE", (data) => {
+			paddleLeft.points = data.state.left_score;
+			paddleRight.points = data.state.right_score;
+			reset();
+		});
+
+		eventEmitter.on("GAME_MATCH_PAUSE_EVENT", (data) => {
+			if (data.state === "hidden") {
+				lastTime = 0;
+				target.reset();
+				window.cancelAnimationFrame(animFrame);
+			} else {
+				animFrame = window.requestAnimationFrame(draw);
+			}
+		});
+	}
+
 	let lastTime = 0;
-	// let fpsInterval = 1000 / 45;
+
+	const lerp = (start, end, factor) => start + (end - start) * factor;
+
 	const draw = (timestamp) => {
-		if (!lastTime) lastTime = timestamp;
+		if (lastTime === 0) lastTime = timestamp;
+
+		if (matchData) {
+			ball.x = lerp(ball.x, target.x, 0.09);
+			ball.y = lerp(ball.y, target.y, 0.09);
+
+			paddleLeft.y = lerp(paddleLeft.y, target.left, 0.07);
+			paddleRight.y = lerp(paddleRight.y, target.right, 0.07);
+		}
+
 		clear();
 		deltaTime = (timestamp - lastTime) / 1000;
 		lastTime = timestamp;
 
 		if (ballActive) {
-			if (!ball.draw(ctx).move(gameBoard, paddleLeft, paddleRight))
+			if (!ball.draw(ctx).move(gameBoard, paddleLeft, paddleRight)) {
 				reset();
+				target.reset();
+			}
 		} else ball.draw(ctx);
 
 		paddleLeft.draw(ctx).move(gameBoard);
 		paddleRight.draw(ctx).move(gameBoard);
 		animFrame = window.requestAnimationFrame(draw);
 	};
-	matchUpdateInterval = setInterval(() => {
-		sendBallData();
-	}, 500);
-	// resetButton.addEventListener("click", () => {
-	// 	paddleLeft.points = 0;
-	// 	paddleRight.points = 0;
-	// 	reset();
-	// });
-	// @ts-ignore
-	// gameBoard.addEventListener("mouseover", (e) => {
-	// 	animFrame = window.requestAnimationFrame(draw);
-	// });
-	// @ts-ignore
-	// gameBoard.addEventListener("mouseout", (e) => {
-	// 	window.cancelAnimationFrame(animFrame);
-	// 	// important: fixes issue that if mouse is out, it doesnt launch the ball at mach 10
-	// 	lastTime = 0;
-	// });
 
-	eventEmitter.on("GAME_MATCH_PADDLE_UPDATE", (data) => {
-		const current =
-			data.player_uuid === matchData.player_1.uuid
-				? paddleLeft
-				: paddleRight;
-
-		current.direction = data.paddle_position;
-		if (data.ball_position) {
-			ball.x = data.ball_position.x;
-			ball.y = data.ball_position.y;
-			ball.vx = data.ball_position.vx;
-			ball.vy = data.ball_position.vy;
-			paddleLeft.points = data.ball_position.left_score;
-			paddleRight.points = data.ball_position.right_score;
-		}
+	document.addEventListener("visibilitychange", (event) => {
+		sendMatchData("GAME_MATCH_PAUSE_EVENT", document.visibilityState);
 	});
 
 	document.addEventListener(
@@ -426,9 +479,9 @@ export const gameHandler = (_, matchData) => {
 		(keyDownListener = (e) => {
 			if (matchData) {
 				if (user.uuid === matchData.player_1.user.uuid)
-					paddleLeft.keyHandler(e, true, true);
+					paddleLeft.keyHandler(e, true);
 				else if (user.uuid === matchData.player_2.user.uuid)
-					paddleRight.keyHandler(e, true, true);
+					paddleRight.keyHandler(e, true);
 			} else {
 				paddleLeft.keyHandler(e, true);
 				paddleRight.keyHandler(e, true);
@@ -440,9 +493,9 @@ export const gameHandler = (_, matchData) => {
 		(keyUpListener = (e) => {
 			if (matchData) {
 				if (user.uuid === matchData.player_1.user.uuid)
-					paddleLeft.keyHandler(e, false, true);
+					paddleLeft.keyHandler(e, false);
 				else if (user.uuid === matchData.player_2.user.uuid)
-					paddleRight.keyHandler(e, false, true);
+					paddleRight.keyHandler(e, false);
 			} else {
 				paddleLeft.keyHandler(e, false);
 				paddleRight.keyHandler(e, false);
@@ -454,6 +507,7 @@ export const gameHandler = (_, matchData) => {
 		tr = isDarkMode() ? "rgb(0 0 0 / 10%)" : "rgb(255 255 255 / 10%)";
 		setColor();
 	});
+
 	setColor();
 	clear(false);
 	ball.init(gameBoard, scale).draw(ctx);
