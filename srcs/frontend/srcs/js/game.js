@@ -339,7 +339,7 @@ export const gameHandler = (_, matchData) => {
 	let tr;
 	const setColor = () => {
 		color = isDarkMode() ? "rgb(0 0 0)" : "rgb(255 255 255)";
-		tr = isDarkMode() ? "rgb(0 0 0 / 8%)" : "rgb(255 255 255 / 8%)";
+		tr = isDarkMode() ? "rgb(0 0 0 / 10%)" : "rgb(255 255 255 / 10%)";
 		const elColor = isDarkMode() ? "white" : "black";
 		paddleLeft.color = elColor;
 		paddleRight.color = elColor;
@@ -388,17 +388,25 @@ export const gameHandler = (_, matchData) => {
 	};
 	matchUpdateInterval = setInterval(() => {
 		sendBallData();
-	}, 1000 / 10);
+	}, 1000 / 15);
+
+	const target = {
+		x: ball.x,
+		y: ball.y,
+		left: paddleLeft.y,
+		right: paddleRight.y,
+	};
+
 	if (matchData) {
 		eventEmitter.on("GAME_MATCH_STATE_UPDATE", (data) => {
-			ball.x = data.state.x;
-			ball.y = data.state.y;
+			target.x = data.state.x;
+			target.y = data.state.y;
 			ball.vx = data.state.vx;
 			ball.vy = data.state.vy;
 			paddleLeft.points = data.state.left_score;
 			paddleRight.points = data.state.right_score;
-			paddleLeft.y = data.state.left_paddle;
-			paddleRight.y = data.state.right_paddle;
+			target.left = data.state.left_paddle;
+			target.right = data.state.right_paddle;
 		});
 
 		eventEmitter.on("GAME_MATCH_PADDLE_UPDATE", (data) => {
@@ -419,15 +427,30 @@ export const gameHandler = (_, matchData) => {
 
 	let lastTime = 0;
 	// let fpsInterval = 1000 / 45;
+
+	const lerp = (start, end, factor) => start + (end - start) * factor;
+
 	const draw = (timestamp) => {
 		if (!lastTime) lastTime = timestamp;
+
+		ball.x = lerp(ball.x, target.x, 0.09);
+		ball.y = lerp(ball.y, target.y, 0.09);
+
+		paddleLeft.y = lerp(paddleLeft.y, target.left, 0.07);
+		paddleRight.y = lerp(paddleRight.y, target.right, 0.07);
+
 		clear();
 		deltaTime = (timestamp - lastTime) / 1000;
 		lastTime = timestamp;
 
 		if (ballActive) {
-			if (!ball.draw(ctx).move(gameBoard, paddleLeft, paddleRight))
+			if (!ball.draw(ctx).move(gameBoard, paddleLeft, paddleRight)) {
 				reset();
+				target.x = ball.x;
+				target.y = ball.y;
+				target.left = paddleLeft.y;
+				target.right = paddleRight.y;
+			}
 		} else ball.draw(ctx);
 
 		paddleLeft.draw(ctx).move(gameBoard);
