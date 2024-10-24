@@ -2,6 +2,10 @@ import { eventEmitter } from "./eventemitter.js";
 import { socket } from "./socket.js";
 import { getCurrentUser, isDarkMode } from "./storage.js";
 export let animFrame;
+export let matchUpdateInterval;
+export let keyUpListener;
+export let keyDownListener;
+
 const PADDLE_VELOCITY = 8 * 40;
 const BALL_VELOCITY = 3 * 175;
 const MAX_BALL_VELOCITY = BALL_VELOCITY * 2.5;
@@ -376,7 +380,7 @@ export const gameHandler = (_, matchData) => {
 		paddleRight.draw(ctx).move(gameBoard);
 		animFrame = window.requestAnimationFrame(draw);
 	};
-	setInterval(() => {
+	matchUpdateInterval = setInterval(() => {
 		sendBallData();
 	}, 500);
 	// resetButton.addEventListener("click", () => {
@@ -412,28 +416,34 @@ export const gameHandler = (_, matchData) => {
 		}
 	});
 
-	document.addEventListener("keydown", (e) => {
-		if (matchData) {
-			if (user.uuid === matchData.player_1.user.uuid)
-				paddleLeft.keyHandler(e, true, true);
-			else if (user.uuid === matchData.player_2.user.uuid)
-				paddleRight.keyHandler(e, true, true);
-		} else {
-			paddleLeft.keyHandler(e, true);
-			paddleRight.keyHandler(e, true);
-		}
-	});
-	document.addEventListener("keyup", (e) => {
-		if (matchData) {
-			if (user.uuid === matchData.player_1.user.uuid)
-				paddleLeft.keyHandler(e, false, true);
-			else if (user.uuid === matchData.player_2.user.uuid)
-				paddleRight.keyHandler(e, false, true);
-		} else {
-			paddleLeft.keyHandler(e, false);
-			paddleRight.keyHandler(e, false);
-		}
-	});
+	document.addEventListener(
+		"keydown",
+		(keyDownListener = (e) => {
+			if (matchData) {
+				if (user.uuid === matchData.player_1.user.uuid)
+					paddleLeft.keyHandler(e, true, true);
+				else if (user.uuid === matchData.player_2.user.uuid)
+					paddleRight.keyHandler(e, true, true);
+			} else {
+				paddleLeft.keyHandler(e, true);
+				paddleRight.keyHandler(e, true);
+			}
+		})
+	);
+	document.addEventListener(
+		"keyup",
+		(keyUpListener = (e) => {
+			if (matchData) {
+				if (user.uuid === matchData.player_1.user.uuid)
+					paddleLeft.keyHandler(e, false, true);
+				else if (user.uuid === matchData.player_2.user.uuid)
+					paddleRight.keyHandler(e, false, true);
+			} else {
+				paddleLeft.keyHandler(e, false);
+				paddleRight.keyHandler(e, false);
+			}
+		})
+	);
 	document.addEventListener("theme", () => {
 		color = isDarkMode() ? "rgb(0 0 0)" : "rgb(255 255 255)";
 		tr = isDarkMode() ? "rgb(0 0 0 / 10%)" : "rgb(255 255 255 / 10%)";
