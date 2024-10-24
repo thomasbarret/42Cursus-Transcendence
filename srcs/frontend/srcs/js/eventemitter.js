@@ -31,6 +31,10 @@ class EventEmitter {
 			}
 		}
 	}
+
+	clear() {
+		this.events.clear();
+	}
 }
 
 export const eventEmitter = new EventEmitter();

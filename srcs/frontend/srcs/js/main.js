@@ -1,3 +1,4 @@
+import { eventEmitter } from "./eventemitter.js";
 import {
 	animFrame,
 	keyDownListener,
@@ -65,6 +66,7 @@ export const navigate = (path, delay) => {
 // create a function that handles the url location
 const locationHandler = async () => {
 	navHandler();
+	eventEmitter.clear();
 	document.removeEventListener("keyup", keyUpListener);
 	document.removeEventListener("keydown", keyDownListener);
 	clearInterval(matchUpdateInterval);
