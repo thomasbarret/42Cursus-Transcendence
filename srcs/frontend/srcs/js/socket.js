@@ -1,4 +1,5 @@
 import { Toast } from "./components.js";
+import { eventEmitter } from "./eventemitter.js";
 import { gameHandler } from "./game.js";
 import { navigate } from "./main.js";
 import { getCurrentUser } from "./storage.js";
@@ -67,12 +68,10 @@ export const connectWebSocket = () => {
 					detail: data.data,
 				});
 				document.dispatchEvent(paddleEvent);
+
 				break;
 			case "DIRECT_MESSAGE_CREATE":
-				const messageEvent = new CustomEvent("messageEvent", {
-					detail: data.data,
-				});
-				document.dispatchEvent(messageEvent);
+				eventEmitter.emit(data.event, data.data);
 				break;
 			case "GAME_START_MATCH":
 				gameStartMatch(data.data);

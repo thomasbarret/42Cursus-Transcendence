@@ -4,6 +4,7 @@ import {
 	userListBox,
 	userProfileCard,
 } from "./components.js";
+import { eventEmitter } from "./eventemitter.js";
 import { BASE_URL } from "./handler.js";
 import { getCurrentUser } from "./storage.js";
 import { formatChatDate } from "./utils.js";
@@ -84,14 +85,12 @@ export const messageHandler = (route) => {
 			);
 			chatBody.scrollTop = chatBody.scrollHeight;
 		};
-		document.addEventListener("messageEvent", async (event) => {
-			// @ts-ignore
-			const data = event.detail;
-			getMessages();
-			if (currentChat === data.channel_uuid)
-				// @ts-ignore
-				addMessageToChat(event.detail);
+
+		eventEmitter.on("DIRECT_MESSAGE_CREATE", async (data) => {
+			await getMessages();
+			if (currentChat === data.channel_uuid) addMessageToChat(data);
 		});
+
 		const renderBody = async (channel) => {
 			// if (currentChat === channel.uuid) return;
 			currentChat = channel.uuid;
