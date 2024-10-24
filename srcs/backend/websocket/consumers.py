@@ -3,6 +3,9 @@ from channels.layers import get_channel_layer
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 
+from asgiref.sync import sync_to_async
+
+
 class EventGatewayConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.group_name = None  # Initialise à None
@@ -39,7 +42,9 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
                 elif match.status == 2:
                     match.status = 3
 
-                    winner = match.player1 if match.player1.user == self.user else match.player2
+                    player1 = await sync_to_async(lambda: match.player1)()
+                    player2 = await sync_to_async(lambda: match.player2)()
+                    winner = player1 if player1.user == self.user else player2
                     match.winner = winner
                     self.channel_layer.group_send(
                         f"user_{str(match.winner.user.uuid)}",
@@ -101,16 +106,16 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
             event = text_data_json['event']
             data = text_data_json['data']
 
-            if event == 'GAME_MATCH_PADDLE_UPDATE':
+            if event.startswith('GAME_'):
                 match_uuid = data.get('uuid')
                 paddle_position = data.get('paddle_position')
                 ball_position = data.get('ball_position')
                 user_uuid = data.get('user_uuid')
 
-                if not match_uuid or not paddle_position:
+                if not match_uuid:
                     return await self.send(text_data=json.dumps({
                         'event': 'ERROR',
-                        'data': {'message': 'Match UUID and paddle position are required.'}
+                        'data': {'message': 'Match UUID are required.'}
                     }))
 
                 from game.models import Match
@@ -147,7 +152,6 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
                             'player_uuid': str(player.uuid),
                             'paddle_position': paddle_position,
                             'ball_position': ball_position,
-
                         }
                     }
                 )
