@@ -192,22 +192,24 @@ export const gameHandler = (_, matchData) => {
 				if (multiplayer) sendPaddleDirection(this.direction);
 			} else if (multiplayer) {
 				if (
-					this.direction !== DIRECTION.UP &&
-					(event.key === this.keys.upKey ||
-						event.key === this.keys.altUpKey)
+					event.key === this.keys.upKey ||
+					event.key === this.keys.altUpKey
 				) {
 					event.preventDefault();
-					this.direction = DIRECTION.UP;
-					sendPaddleDirection(this.direction);
+					if (this.direction !== DIRECTION.UP) {
+						this.direction = DIRECTION.UP;
+						sendPaddleDirection(this.direction);
+					}
 				}
 				if (
-					this.direction !== DIRECTION.DOWN &&
-					(event.key === this.keys.downKey ||
-						event.key === this.keys.altDownKey)
+					event.key === this.keys.downKey ||
+					event.key === this.keys.altDownKey
 				) {
 					event.preventDefault();
-					this.direction = DIRECTION.DOWN;
-					sendPaddleDirection(this.direction);
+					if (this.direction !== DIRECTION.DOWN) {
+						this.direction = DIRECTION.DOWN;
+						sendPaddleDirection(this.direction);
+					}
 				}
 			} else {
 				if (
@@ -215,16 +217,13 @@ export const gameHandler = (_, matchData) => {
 					event.key === this.keys.upKey
 				) {
 					event.preventDefault();
-					this.direction = DIRECTION.UP;
-					console.log("CHANGED DIRECTION KEY: ", this.direction);
+					if (this.direction !== DIRECTION.UP)
+						this.direction = DIRECTION.UP;
 				}
-				if (
-					this.direction !== DIRECTION.DOWN &&
-					event.key === this.keys.downKey
-				) {
+				if (event.key === this.keys.downKey) {
 					event.preventDefault();
-					this.direction = DIRECTION.DOWN;
-					console.log("CHANGED DIRECTION KEY: ", this.direction);
+					if (this.direction !== DIRECTION.DOWN)
+						this.direction = DIRECTION.DOWN;
 				}
 			}
 			return this;
@@ -279,37 +278,35 @@ export const gameHandler = (_, matchData) => {
 				if (multiplayer) sendPaddleDirection(this.direction);
 			} else if (multiplayer) {
 				if (
-					this.direction !== DIRECTION.UP &&
-					(event.key === this.keys.upKey ||
-						event.key === this.keys.altUpKey)
+					event.key === this.keys.upKey ||
+					event.key === this.keys.altUpKey
 				) {
 					event.preventDefault();
-					this.direction = DIRECTION.UP;
-					sendPaddleDirection(this.direction);
+					if (this.direction !== DIRECTION.UP) {
+						this.direction = DIRECTION.UP;
+						sendPaddleDirection(this.direction);
+					}
 				}
 				if (
-					this.direction !== DIRECTION.DOWN &&
-					(event.key === this.keys.downKey ||
-						event.key === this.keys.altDownKey)
+					event.key === this.keys.downKey ||
+					event.key === this.keys.altDownKey
 				) {
 					event.preventDefault();
-					this.direction = DIRECTION.DOWN;
-					sendPaddleDirection(this.direction);
+					if (this.direction !== DIRECTION.DOWN) {
+						this.direction = DIRECTION.DOWN;
+						sendPaddleDirection(this.direction);
+					}
 				}
 			} else {
-				if (
-					this.direction !== DIRECTION.UP &&
-					event.key === this.keys.upKey
-				) {
+				if (event.key === this.keys.upKey) {
 					event.preventDefault();
-					this.direction = DIRECTION.UP;
+					if (this.direction !== DIRECTION.UP)
+						this.direction = DIRECTION.UP;
 				}
-				if (
-					this.direction !== DIRECTION.DOWN &&
-					event.key === this.keys.downKey
-				) {
+				if (event.key === this.keys.downKey) {
 					event.preventDefault();
-					this.direction = DIRECTION.DOWN;
+					if (this.direction !== DIRECTION.DOWN)
+						this.direction = DIRECTION.DOWN;
 				}
 			}
 			return this;

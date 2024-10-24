@@ -19,8 +19,10 @@ services:
     networks:
       - tsd-network
     depends_on:
-      - redis
-      - postgres
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
     volumes:
       - media:/app/avatars
     build:
@@ -51,6 +53,11 @@ services:
     env_file:
       - .env
     shm_size: 128mb
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
     restart: unless-stopped
 
 networks:
