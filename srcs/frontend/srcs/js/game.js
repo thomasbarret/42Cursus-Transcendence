@@ -61,6 +61,7 @@ export const gameHandler = (_, matchData) => {
 				const speed = Math.sqrt(this.vx ** 2 + this.vy ** 2);
 				this.vx = Math.sign(this.vx) * speed * Math.cos(thetaNew);
 				this.vy = speed * Math.sin(thetaNew);
+				sendBallData();
 			};
 			this.x += this.vx * deltaTime;
 			this.y += this.vy * deltaTime;
@@ -320,14 +321,13 @@ export const gameHandler = (_, matchData) => {
 	let tr;
 	const setColor = () => {
 		color = isDarkMode() ? "rgb(0 0 0)" : "rgb(255 255 255)";
-		tr = isDarkMode() ? "rgb(0 0 0 / 15%)" : "rgb(255 255 255 / 15%)";
+		tr = isDarkMode() ? "rgb(0 0 0 / 8%)" : "rgb(255 255 255 / 8%)";
 		const elColor = isDarkMode() ? "white" : "black";
 		paddleLeft.color = elColor;
 		paddleRight.color = elColor;
 		ball.color = elColor;
 	};
 	const clear = (transparent) => {
-		// ctx.clearRect(0, 0, gameBoard.width, gameBoard.height);
 		if (transparent === false) ctx.fillStyle = color;
 		else ctx.fillStyle = tr;
 		// @ts-ignore
@@ -341,41 +341,44 @@ export const gameHandler = (_, matchData) => {
 				paddleLeft.points + " : " + paddleRight.points;
 		ballActive = false;
 		ball.reset(gameBoard);
+		sendBallData();
 		setTimeout(() => {
 			ballActive = true;
 		}, 1500);
 	};
-	let lastTime = 0;
-	let fpsInterval = 1000 / 45;
-	const draw = (timestamp) => {
-		if (!lastTime) lastTime = timestamp;
-		const elapsed = timestamp - lastTime;
 
-		if (elapsed > fpsInterval) {
-			lastTime = timestamp - (elapsed % fpsInterval);
-			deltaTime = elapsed / 1000;
-			clear();
-			// deltaTime = (timestamp - lastTime) / 1000;
-			// lastTime = timestamp;
-			if (ballActive) {
-				if (!ball.draw(ctx).move(gameBoard, paddleLeft, paddleRight))
-					reset();
-			} else ball.draw(ctx);
-			paddleLeft.draw(ctx).move(gameBoard);
-			paddleRight.draw(ctx).move(gameBoard);
-		}
-		animFrame = window.requestAnimationFrame(draw);
-	};
-	if (matchData && matchData.player_1.user.uuid === user.uuid) {
-		setInterval(() => {
+	const sendBallData = () => {
+		if (matchData && matchData.player_1.user.uuid === user.uuid) {
 			sendPaddleDirection(paddleLeft.direction, {
 				x: ball.x,
 				y: ball.y,
 				vx: ball.vx,
 				vy: ball.vy,
+				left_score: paddleLeft.points,
+				right_score: paddleRight.points,
 			});
-		}, 200);
-	}
+		}
+	};
+	let lastTime = 0;
+	// let fpsInterval = 1000 / 45;
+	const draw = (timestamp) => {
+		if (!lastTime) lastTime = timestamp;
+		clear();
+		deltaTime = (timestamp - lastTime) / 1000;
+		lastTime = timestamp;
+
+		if (ballActive) {
+			if (!ball.draw(ctx).move(gameBoard, paddleLeft, paddleRight))
+				reset();
+		} else ball.draw(ctx);
+
+		paddleLeft.draw(ctx).move(gameBoard);
+		paddleRight.draw(ctx).move(gameBoard);
+		animFrame = window.requestAnimationFrame(draw);
+	};
+	setInterval(() => {
+		sendBallData();
+	}, 500);
 	// resetButton.addEventListener("click", () => {
 	// 	paddleLeft.points = 0;
 	// 	paddleRight.points = 0;
@@ -404,6 +407,8 @@ export const gameHandler = (_, matchData) => {
 			ball.y = data.ball_position.y;
 			ball.vx = data.ball_position.vx;
 			ball.vy = data.ball_position.vy;
+			paddleLeft.points = data.ball_position.left_score;
+			paddleRight.points = data.ball_position.right_score;
 		}
 	});
 
