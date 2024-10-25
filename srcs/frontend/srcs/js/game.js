@@ -8,7 +8,6 @@ export let keyDownListener;
 
 const PADDLE_VELOCITY = 8 * 40;
 const BALL_VELOCITY = 3 * 175;
-const MAX_BALL_VELOCITY = BALL_VELOCITY * 2.5;
 const referenceWidth = 840;
 const referenceHeight = 500;
 
@@ -46,8 +45,6 @@ export const gameHandler = (_, matchData) => {
 		y: 150,
 		vx: BALL_VELOCITY,
 		vy: BALL_VELOCITY / 2.5,
-		maxvX: MAX_BALL_VELOCITY,
-		maxvY: MAX_BALL_VELOCITY / 2.5,
 		radius: RADIUS,
 		color: "white",
 		move(canvas, paddleLeft, paddleRight) {
@@ -367,7 +364,7 @@ export const gameHandler = (_, matchData) => {
 	const sendBallData = () => {
 		if (matchData && matchData.player_1.user.uuid === user.uuid) {
 			const now = Date.now();
-			const throttleInterval = 1000 / 30;
+			const throttleInterval = 1000 / 55;
 
 			if (now - lastExecutionTime >= throttleInterval) {
 				lastExecutionTime = now;
@@ -386,7 +383,7 @@ export const gameHandler = (_, matchData) => {
 	};
 	matchUpdateInterval = setInterval(() => {
 		sendBallData();
-	}, 1000 / 15);
+	}, 1000 / 30);
 
 	const target = {
 		x: ball.x,
@@ -442,21 +439,48 @@ export const gameHandler = (_, matchData) => {
 	let lastTime = 0;
 
 	const lerp = (start, end, factor) => start + (end - start) * factor;
+	const adaptiveLerp = (
+		start,
+		end,
+		minFactor = 0.1,
+		maxFactor = 0.3,
+		divisor = 100
+	) => {
+		const diff = Math.abs(end - start);
+		const factor = Math.min(maxFactor, Math.max(minFactor, diff / divisor));
+		// const factor = 0.1;
+		return lerp(start, end, factor);
+	};
+
+	let syncCounter = 0;
 
 	const draw = (timestamp) => {
 		if (lastTime === 0) lastTime = timestamp;
 
-		if (matchData) {
-			ball.x = lerp(ball.x, target.x, 0.09);
-			ball.y = lerp(ball.y, target.y, 0.09);
-
-			paddleLeft.y = lerp(paddleLeft.y, target.left, 0.07);
-			paddleRight.y = lerp(paddleRight.y, target.right, 0.07);
-		}
-
 		clear();
-		deltaTime = (timestamp - lastTime) / 1000;
+		deltaTime = Math.min((timestamp - lastTime) / 1000, 1 / 30);
+		// syncCounter += timestamp - lastTime;
 		lastTime = timestamp;
+
+		if (matchData) {
+			ball.x = adaptiveLerp(ball.x, target.x);
+			ball.y = adaptiveLerp(ball.y, target.y);
+			paddleLeft.y = adaptiveLerp(paddleLeft.y, target.left);
+			paddleRight.y = adaptiveLerp(paddleRight.y, target.right);
+			// if (syncCounter >= 2000) {
+			// 	// ball.x = target.x;
+			// 	// ball.y = target.y;
+			// 	// paddleLeft.y = target.left;
+			// 	// paddleRight.y = target.right;
+
+			// 	ball.x = lerp(ball.x, target.x, 0.85);
+			// 	ball.y = lerp(ball.y, target.y, 0.85);
+			// 	paddleLeft.y = lerp(paddleLeft.y, target.left, 0.85);
+			// 	paddleRight.y = lerp(paddleRight.y, target.right, 0.85);
+			// 	syncCounter = 0;
+			// } else {
+			// }
+		}
 
 		if (ballActive) {
 			if (!ball.draw(ctx).move(gameBoard, paddleLeft, paddleRight)) {
