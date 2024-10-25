@@ -333,20 +333,20 @@ export const gameHandler = (_, matchData) => {
 	const scoreHandler = async () => {
 		if (matchData) {
 			let winner;
-			const maxScore = matchData.max_score;
-			// const maxScore = 30;
-
 			if (
-				paddleLeft.points === maxScore ||
-				paddleRight.points === maxScore
+				paddleLeft.points >= matchData.max_score ||
+				paddleRight.points >= matchData.max_score
 			) {
-				if (paddleLeft.points === matchData.max_score) {
+				if (paddleLeft.points >= matchData.max_score) {
 					winner = matchData.player_1.user.uuid;
 				} else {
 					winner = matchData.player_2.user.uuid;
 				}
 
-				console.log("WINNERRRRR: ", winner);
+				// sendMatchData("GAME_MATCH_WIN", {
+				// 	left_score: paddleLeft.points,
+				// 	right_score: paddleRight.points,
+				// });
 			}
 
 			sendMatchData("GAME_MATCH_SCORE_UPDATE", {
@@ -368,11 +368,13 @@ export const gameHandler = (_, matchData) => {
 					},
 					body: JSON.stringify({
 						score: current.points,
-						...(winner ? { winner: winner } : {}),
+						...(winner ? { winner_uuid: winner } : {}),
 					}),
 				}
 			);
 
+			// const json = await res.json();
+			// console.log(json);
 			if (!res.ok) Toast("Couldn't update match score!", "danger");
 		}
 	};
@@ -485,6 +487,8 @@ export const gameHandler = (_, matchData) => {
 				animFrame = window.requestAnimationFrame(draw);
 			}
 		});
+
+		eventEmitter.on("GAME_MATCH_FINISHED", () => (matchData = false));
 	}
 
 	let lastTime = 0;
@@ -582,6 +586,9 @@ export const gameHandler = (_, matchData) => {
 	paddleLeft.init(gameBoard, scale).draw(ctx);
 	paddleRight.init(gameBoard, scale).draw(ctx);
 	if (matchData) {
+		if (matchData.status === 3) {
+			matchData = false;
+		}
 		paddleLeft.points = matchData.player1_score;
 		paddleRight.points = matchData.player2_score;
 		setScoreText();

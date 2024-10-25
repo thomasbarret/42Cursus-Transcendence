@@ -2,7 +2,8 @@ import * as bootstrap from "bootstrap";
 import { BASE_URL } from "./handler.js";
 import { currentPlayerCard, inviteBoxCard, Toast } from "./components.js";
 import { navigate } from "./main.js";
-import { gameHandler } from "./game.js";
+import { animFrame, gameHandler } from "./game.js";
+import { eventEmitter } from "./eventemitter.js";
 
 export const playHandler = (route) => {
 	let timerId = 0;
@@ -72,6 +73,40 @@ export const lobbyHandler = (route, slug) => {
 	const inviteBox = document.getElementById("invite-box");
 	const currentPlayers = document.getElementById("current-players");
 
+	const waitingOverlay = document.getElementById("waiting-overlay");
+	const pauseOverlay = document.getElementById("pause-overlay");
+	const winnerOverlay = document.getElementById("winner-overlay");
+	const finalScore = document.getElementById("final-score");
+	const winnerText = document.getElementById("winner-text");
+
+	eventEmitter.on("GAME_START_MATCH", () => {
+		waitingOverlay.classList.add("d-none");
+	});
+
+	eventEmitter.on("GAME_MATCH_PAUSE_EVENT", (data) => {
+		if (data.state === "hidden") {
+			pauseOverlay.classList.toggle("d-none", false);
+		} else {
+			pauseOverlay.classList.toggle("d-none", true);
+		}
+	});
+
+	const matchFinish = (data) => {
+		waitingOverlay.classList.add("d-none");
+		pauseOverlay.classList.add("d-none");
+		window.cancelAnimationFrame(animFrame);
+		winnerOverlay.classList.remove("d-none");
+		finalScore.textContent =
+			data.player1_score + " : " + data.player2_score;
+		winnerText.textContent = data.winner
+			? data.winner.display_name
+			: "Draw";
+	};
+
+	eventEmitter.on("GAME_MATCH_FINISHED", (data) => {
+		matchFinish(data);
+	});
+
 	const getMatchData = async () => {
 		currentPlayers.textContent = "";
 		const res = await fetch(BASE_URL + "/game/match/" + slug);
@@ -79,7 +114,10 @@ export const lobbyHandler = (route, slug) => {
 
 		console.log("match: ", matchData);
 		if (res.ok) {
-			if (matchData["status"] === 2) gameHandler(false, matchData);
+			if (matchData["status"] === 2) {
+				waitingOverlay.classList.add("d-none");
+				gameHandler(false, matchData);
+			} else if (matchData["status"] === 3) matchFinish(matchData);
 			if (matchData["player_1"])
 				currentPlayers.appendChild(
 					currentPlayerCard(matchData["player_1"])
