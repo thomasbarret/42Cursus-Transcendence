@@ -364,7 +364,7 @@ export const gameHandler = (_, matchData) => {
 	const sendBallData = () => {
 		if (matchData && matchData.player_1.user.uuid === user.uuid) {
 			const now = Date.now();
-			const throttleInterval = 1000 / 55;
+			const throttleInterval = 1000 / 20;
 
 			if (now - lastExecutionTime >= throttleInterval) {
 				lastExecutionTime = now;
@@ -383,7 +383,7 @@ export const gameHandler = (_, matchData) => {
 	};
 	matchUpdateInterval = setInterval(() => {
 		sendBallData();
-	}, 1000 / 30);
+	}, 1000 / 8);
 
 	const target = {
 		x: ball.x,
@@ -439,18 +439,6 @@ export const gameHandler = (_, matchData) => {
 	let lastTime = 0;
 
 	const lerp = (start, end, factor) => start + (end - start) * factor;
-	const adaptiveLerp = (
-		start,
-		end,
-		minFactor = 0.1,
-		maxFactor = 0.3,
-		divisor = 100
-	) => {
-		const diff = Math.abs(end - start);
-		const factor = Math.min(maxFactor, Math.max(minFactor, diff / divisor));
-		// const factor = 0.1;
-		return lerp(start, end, factor);
-	};
 
 	let syncCounter = 0;
 
@@ -463,16 +451,15 @@ export const gameHandler = (_, matchData) => {
 		lastTime = timestamp;
 
 		if (matchData) {
-			ball.x = adaptiveLerp(ball.x, target.x);
-			ball.y = adaptiveLerp(ball.y, target.y);
-			paddleLeft.y = adaptiveLerp(paddleLeft.y, target.left);
-			paddleRight.y = adaptiveLerp(paddleRight.y, target.right);
+			ball.x = lerp(ball.x, target.x, 0.1);
+			ball.y = lerp(ball.y, target.y, 0.1);
+			paddleLeft.y = lerp(paddleLeft.y, target.left, 0.05);
+			paddleRight.y = lerp(paddleRight.y, target.right, 0.05);
 			// if (syncCounter >= 2000) {
 			// 	// ball.x = target.x;
 			// 	// ball.y = target.y;
 			// 	// paddleLeft.y = target.left;
 			// 	// paddleRight.y = target.right;
-
 			// 	ball.x = lerp(ball.x, target.x, 0.85);
 			// 	ball.y = lerp(ball.y, target.y, 0.85);
 			// 	paddleLeft.y = lerp(paddleLeft.y, target.left, 0.85);
