@@ -460,8 +460,8 @@ export const gameHandler = (_, matchData) => {
 		});
 
 		eventEmitter.on("GAME_MATCH_SCORE_UPDATE", (data) => {
-			// paddleLeft.points = data.state.left_score;
-			// paddleRight.points = data.state.right_score;
+			paddleLeft.points = data.state.left_score;
+			paddleRight.points = data.state.right_score;
 			reset();
 		});
 
