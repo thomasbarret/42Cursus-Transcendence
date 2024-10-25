@@ -24,3 +24,11 @@ export const getCurrentUser = () => {
 export const removeCurrentUser = () => {
 	localStorage.removeItem("user");
 };
+
+// export const setGameState = (data) => {
+// 	sessionStorage.setItem("game", JSON.stringify(data));
+// };
+
+// export const getGameState = (uuid) => {
+// 	return JSON.parse(sessionStorage.getItem("game"));
+// };

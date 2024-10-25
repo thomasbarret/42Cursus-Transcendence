@@ -7,18 +7,63 @@
 				<div class="fw-bold fs-4" id="score-text">Score: 0 : 0</div>
 			</div>
 		</div>
-		<div class="row flex-grow-1">
+		<div class="row flex-grow-1 position-relative">
 			<div
-				class="col-lg-8 col-md-7 col-sm-12 d-flex justify-content-center align-items-center bg-body-secondary p-3 rounded"
+				class="col-lg-8 col-md-7 col-sm-12 d-flex justify-content-center align-items-center bg-body-secondary p-3 rounded position-relative"
 			>
-				<!-- style="max-height: 1000px" -->
-				<!-- class="w-100 h-100" -->
 				<canvas
 					id="game-board"
 					width="1600"
 					style="max-height: 600px"
 					height="1600"
 				></canvas>
+				<div
+					id="pause-overlay"
+					class="position-absolute top-50 start-50 translate-middle w-100 h-100 d-none d-flex justify-content-center align-items-center"
+					style="background: rgba(0, 0, 0, 0.7)"
+				>
+					<div class="text-center text-white">
+						<h2>Game Paused</h2>
+						<h3>waiting for the opponent to come back...</h3>
+						<!-- <button
+							type="button"
+							class="btn btn-primary mt-3"
+							id="resume-game"
+						>
+							Resume Game
+						</button> -->
+					</div>
+				</div>
+				<div
+					id="waiting-overlay"
+					class="position-absolute top-50 start-50 translate-middle w-100 h-100 d-flex justify-content-center align-items-center"
+					style="background: rgba(0, 0, 0, 0.7)"
+				>
+					<div class="text-center text-white">
+						<h2>Waiting for game to start...</h2>
+					</div>
+				</div>
+				<div
+					id="winner-overlay"
+					class="position-absolute top-50 start-50 translate-middle w-100 h-100 d-none d-flex justify-content-center align-items-center"
+					style="background: rgba(0, 0, 0, 0.7)"
+				>
+					<div class="text-center text-white">
+						<h2 id="winner-text"></h2>
+						<p id="finalScore" class="fs-4 mt-2">
+							Final Score: <span id="final-score"></span>
+						</p>
+						<a
+							type="button"
+							class="btn btn-primary mt-3"
+							id="play-again"
+							href="/play"
+							data-router-navigation="true"
+						>
+							Play Again
+						</a>
+					</div>
+				</div>
 			</div>
 			<div class="col-lg-4 col-md-5 col-sm-12 d-flex flex-column">
 				<div

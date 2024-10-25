@@ -69,7 +69,7 @@ export const connectWebSocket = () => {
 		if (data.event === "GAME_START_MATCH") {
 			gameStartMatch(data.data);
 			gameHandler(false, data.data);
-			// sendSocket && sendSocket("GAME_MATCH_PAUSE_EVENT", "hidden");
-		} else eventEmitter.emit(data.event, data.data);
+		}
+		eventEmitter.emit(data.event, data.data);
 	};
 };

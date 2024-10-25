@@ -1,4 +1,6 @@
+import { Toast } from "./components.js";
 import { eventEmitter } from "./eventemitter.js";
+import { BASE_URL } from "./handler.js";
 import { socket } from "./socket.js";
 import { getCurrentUser, isDarkMode } from "./storage.js";
 export let animFrame;
@@ -8,7 +10,6 @@ export let keyDownListener;
 
 const PADDLE_VELOCITY = 8 * 40;
 const BALL_VELOCITY = 3 * 175;
-const MAX_BALL_VELOCITY = BALL_VELOCITY * 2.5;
 const referenceWidth = 840;
 const referenceHeight = 500;
 
@@ -46,8 +47,6 @@ export const gameHandler = (_, matchData) => {
 		y: 150,
 		vx: BALL_VELOCITY,
 		vy: BALL_VELOCITY / 2.5,
-		maxvX: MAX_BALL_VELOCITY,
-		maxvY: MAX_BALL_VELOCITY / 2.5,
 		radius: RADIUS,
 		color: "white",
 		move(canvas, paddleLeft, paddleRight) {
@@ -97,16 +96,14 @@ export const gameHandler = (_, matchData) => {
 				} else if (this.x - this.radius <= 0) {
 					paddleRight.points += 1;
 				}
-				sendMatchData("GAME_MATCH_SCORE_UPDATE", {
-					left_score: paddleLeft.points,
-					right_score: paddleRight.points,
-				});
+				scoreHandler();
 				return false;
 			}
 			if (
 				this.y + this.radius >= canvas.height ||
 				this.y - this.radius <= 0
 			) {
+				sendBallData();
 				this.vy *= -1;
 			}
 			return this;
@@ -332,6 +329,43 @@ export const gameHandler = (_, matchData) => {
 			return this;
 		},
 	};
+
+	const scoreHandler = async () => {
+		if (matchData) {
+			let winner;
+			if (paddleLeft.points >= matchData.max_score) {
+				winner = matchData.player_1.user.uuid;
+			} else if (paddleRight.points >= matchData.max_score) {
+				winner = matchData.player_2.user.uuid;
+			}
+
+			sendMatchData("GAME_MATCH_SCORE_UPDATE", {
+				left_score: paddleLeft.points,
+				right_score: paddleRight.points,
+			});
+
+			const current =
+				user.uuid === matchData.player_1.user.uuid
+					? paddleLeft
+					: paddleRight;
+
+			const res = await fetch(
+				BASE_URL + "/game/match/" + matchData.uuid,
+				{
+					method: "PUT",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({
+						score: current.points,
+						...(winner ? { winner_uuid: winner } : {}),
+					}),
+				}
+			);
+			if (!res.ok) Toast("Couldn't update match score!", "danger");
+		}
+	};
+
 	let ballActive = true;
 	let color;
 	let tr;
@@ -349,12 +383,15 @@ export const gameHandler = (_, matchData) => {
 		// @ts-ignore
 		ctx.fillRect(0, 0, gameBoard.width, gameBoard.height);
 	};
+	const setScoreText = () =>
+		scoreText &&
+		(scoreText.textContent =
+			paddleLeft.points + " : " + paddleRight.points);
+
 	const reset = () => {
 		paddleLeft.reset(gameBoard);
 		paddleRight.reset(gameBoard);
-		if (scoreText)
-			scoreText.textContent =
-				paddleLeft.points + " : " + paddleRight.points;
+		setScoreText();
 		ballActive = false;
 		ball.reset(gameBoard);
 		setTimeout(() => {
@@ -367,7 +404,7 @@ export const gameHandler = (_, matchData) => {
 	const sendBallData = () => {
 		if (matchData && matchData.player_1.user.uuid === user.uuid) {
 			const now = Date.now();
-			const throttleInterval = 1000 / 30;
+			const throttleInterval = 1000 / 45;
 
 			if (now - lastExecutionTime >= throttleInterval) {
 				lastExecutionTime = now;
@@ -386,7 +423,7 @@ export const gameHandler = (_, matchData) => {
 	};
 	matchUpdateInterval = setInterval(() => {
 		sendBallData();
-	}, 1000 / 15);
+	}, 1000 / 11);
 
 	const target = {
 		x: ball.x,
@@ -437,6 +474,11 @@ export const gameHandler = (_, matchData) => {
 				animFrame = window.requestAnimationFrame(draw);
 			}
 		});
+
+		eventEmitter.on("GAME_MATCH_FINISHED", () => {
+			window.cancelAnimationFrame(animFrame);
+			matchData = false;
+		});
 	}
 
 	let lastTime = 0;
@@ -446,17 +488,16 @@ export const gameHandler = (_, matchData) => {
 	const draw = (timestamp) => {
 		if (lastTime === 0) lastTime = timestamp;
 
-		if (matchData) {
-			ball.x = lerp(ball.x, target.x, 0.09);
-			ball.y = lerp(ball.y, target.y, 0.09);
-
-			paddleLeft.y = lerp(paddleLeft.y, target.left, 0.07);
-			paddleRight.y = lerp(paddleRight.y, target.right, 0.07);
-		}
-
 		clear();
-		deltaTime = (timestamp - lastTime) / 1000;
+		deltaTime = Math.min((timestamp - lastTime) / 1000, 1 / 30);
 		lastTime = timestamp;
+
+		if (matchData) {
+			ball.x = lerp(ball.x, target.x, 0.1);
+			ball.y = lerp(ball.y, target.y, 0.1);
+			paddleLeft.y = lerp(paddleLeft.y, target.left, 0.1);
+			paddleRight.y = lerp(paddleRight.y, target.right, 0.1);
+		}
 
 		if (ballActive) {
 			if (!ball.draw(ctx).move(gameBoard, paddleLeft, paddleRight)) {
@@ -488,6 +529,11 @@ export const gameHandler = (_, matchData) => {
 			}
 		})
 	);
+
+	// gameBoard.addEventListener("mouseenter", () => {
+	// animFrame = window.requestAnimationFrame(draw);
+	// });
+
 	document.addEventListener(
 		"keyup",
 		(keyUpListener = (e) => {
@@ -508,10 +554,19 @@ export const gameHandler = (_, matchData) => {
 		setColor();
 	});
 
+	// sendMatchData("GAME_MATCH_PAUSE_EVENT", document.visibilityState);
 	setColor();
 	clear(false);
 	ball.init(gameBoard, scale).draw(ctx);
 	paddleLeft.init(gameBoard, scale).draw(ctx);
 	paddleRight.init(gameBoard, scale).draw(ctx);
+	if (matchData) {
+		if (matchData.status === 3) {
+			matchData = false;
+		}
+		paddleLeft.points = matchData.player1_score;
+		paddleRight.points = matchData.player2_score;
+		setScoreText();
+	}
 	animFrame = window.requestAnimationFrame(draw);
 };
