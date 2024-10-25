@@ -259,6 +259,7 @@ class GetMatchView(APIView):
             )
             return Response(response)
 
+        match.save()
         return Response({
             "uuid": str(match.uuid),
             "status": match.status,
