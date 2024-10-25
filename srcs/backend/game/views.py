@@ -12,7 +12,7 @@ from django.db.models import Q
 from django.utils import timezone
 import random
 
-from .models import Match, MatchPlayer, balls_direction
+from .models import Match, MatchPlayer
 
 def get_avatar_url(user):
     return user.publicuser.avatar.url if user.publicuser.avatar else None
@@ -198,9 +198,6 @@ class GetMatchView(APIView):
             response = response = {
                 "uuid": str(match.uuid),
                 "status": match.status,
-                "game": {
-                    "ball_direction": random.choice(balls_direction)[1],
-                },
                 "player_1": {
                     "uuid": str(match.player1.uuid),
                     "display_name": match.player1.display_name,
@@ -263,9 +260,6 @@ class GetMatchView(APIView):
         return Response({
             "uuid": str(match.uuid),
             "status": match.status,
-            "game": {
-                "ball_direction": random.choice(balls_direction)[1],
-            },
             "player_1": {
                 "uuid": str(match.player1.uuid),
                 "display_name": match.player1.display_name,
@@ -339,9 +333,6 @@ class JoinMatchView(APIView):
         response = {
             "uuid": str(match.uuid),
             "status": match.status,
-            "game": {
-                "ball_direction": random.choice(balls_direction)[1],
-            },
             "player_1": {
                 "uuid": str(match.player1.uuid),
                 "display_name": match.player1.display_name,

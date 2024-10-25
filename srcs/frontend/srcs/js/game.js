@@ -333,20 +333,10 @@ export const gameHandler = (_, matchData) => {
 	const scoreHandler = async () => {
 		if (matchData) {
 			let winner;
-			if (
-				paddleLeft.points >= matchData.max_score ||
-				paddleRight.points >= matchData.max_score
-			) {
-				if (paddleLeft.points >= matchData.max_score) {
-					winner = matchData.player_1.user.uuid;
-				} else {
-					winner = matchData.player_2.user.uuid;
-				}
-
-				// sendMatchData("GAME_MATCH_WIN", {
-				// 	left_score: paddleLeft.points,
-				// 	right_score: paddleRight.points,
-				// });
+			if (paddleLeft.points >= matchData.max_score) {
+				winner = matchData.player_1.user.uuid;
+			} else if (paddleRight.points >= matchData.max_score) {
+				winner = matchData.player_2.user.uuid;
 			}
 
 			sendMatchData("GAME_MATCH_SCORE_UPDATE", {
@@ -372,9 +362,6 @@ export const gameHandler = (_, matchData) => {
 					}),
 				}
 			);
-
-			// const json = await res.json();
-			// console.log(json);
 			if (!res.ok) Toast("Couldn't update match score!", "danger");
 		}
 	};
@@ -417,7 +404,7 @@ export const gameHandler = (_, matchData) => {
 	const sendBallData = () => {
 		if (matchData && matchData.player_1.user.uuid === user.uuid) {
 			const now = Date.now();
-			const throttleInterval = 1000 / 25;
+			const throttleInterval = 1000 / 45;
 
 			if (now - lastExecutionTime >= throttleInterval) {
 				lastExecutionTime = now;
@@ -436,7 +423,7 @@ export const gameHandler = (_, matchData) => {
 	};
 	matchUpdateInterval = setInterval(() => {
 		sendBallData();
-	}, 1000 / 8);
+	}, 1000 / 11);
 
 	const target = {
 		x: ball.x,
@@ -473,8 +460,8 @@ export const gameHandler = (_, matchData) => {
 		});
 
 		eventEmitter.on("GAME_MATCH_SCORE_UPDATE", (data) => {
-			paddleLeft.points = data.state.left_score;
-			paddleRight.points = data.state.right_score;
+			// paddleLeft.points = data.state.left_score;
+			// paddleRight.points = data.state.right_score;
 			reset();
 		});
 
@@ -488,40 +475,28 @@ export const gameHandler = (_, matchData) => {
 			}
 		});
 
-		eventEmitter.on("GAME_MATCH_FINISHED", () => (matchData = false));
+		eventEmitter.on("GAME_MATCH_FINISHED", () => {
+			window.cancelAnimationFrame(animFrame);
+			matchData = false;
+		});
 	}
 
 	let lastTime = 0;
 
 	const lerp = (start, end, factor) => start + (end - start) * factor;
 
-	let syncCounter = 0;
-
 	const draw = (timestamp) => {
 		if (lastTime === 0) lastTime = timestamp;
 
 		clear();
 		deltaTime = Math.min((timestamp - lastTime) / 1000, 1 / 30);
-		// syncCounter += timestamp - lastTime;
 		lastTime = timestamp;
 
 		if (matchData) {
 			ball.x = lerp(ball.x, target.x, 0.1);
 			ball.y = lerp(ball.y, target.y, 0.1);
-			paddleLeft.y = lerp(paddleLeft.y, target.left, 0.08);
-			paddleRight.y = lerp(paddleRight.y, target.right, 0.08);
-			// if (syncCounter >= 2000) {
-			// 	// ball.x = target.x;
-			// 	// ball.y = target.y;
-			// 	// paddleLeft.y = target.left;
-			// 	// paddleRight.y = target.right;
-			// 	ball.x = lerp(ball.x, target.x, 0.85);
-			// 	ball.y = lerp(ball.y, target.y, 0.85);
-			// 	paddleLeft.y = lerp(paddleLeft.y, target.left, 0.85);
-			// 	paddleRight.y = lerp(paddleRight.y, target.right, 0.85);
-			// 	syncCounter = 0;
-			// } else {
-			// }
+			paddleLeft.y = lerp(paddleLeft.y, target.left, 0.1);
+			paddleRight.y = lerp(paddleRight.y, target.right, 0.1);
 		}
 
 		if (ballActive) {

@@ -81,13 +81,14 @@ export const lobbyHandler = (route, slug) => {
 
 	eventEmitter.on("GAME_START_MATCH", () => {
 		waitingOverlay.classList.add("d-none");
+		getMatchData();
 	});
 
 	eventEmitter.on("GAME_MATCH_PAUSE_EVENT", (data) => {
 		if (data.state === "hidden") {
-			pauseOverlay.classList.toggle("d-none", false);
+			pauseOverlay.classList.remove("d-none");
 		} else {
-			pauseOverlay.classList.toggle("d-none", true);
+			pauseOverlay.classList.add("d-none");
 		}
 	});
 
@@ -103,9 +104,7 @@ export const lobbyHandler = (route, slug) => {
 			: "Draw";
 	};
 
-	eventEmitter.on("GAME_MATCH_FINISHED", (data) => {
-		matchFinish(data);
-	});
+	eventEmitter.on("GAME_MATCH_FINISHED", (data) => matchFinish(data));
 
 	const getMatchData = async () => {
 		currentPlayers.textContent = "";

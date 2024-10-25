@@ -5,13 +5,6 @@ from chat.models import Channel
 
 import uuid
 
-balls_direction = (
-    (1, "RIGHT_UP"),
-    (2, "RIGHT_DOWN"),
-    (3, "LEFT_UP"),
-    (4, "LEFT_DOWN"),
-)
-
 class MatchPlayer(models.Model):
     status_type = (
         (1, "ACTIVE"),
