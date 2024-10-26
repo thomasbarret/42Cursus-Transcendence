@@ -13,7 +13,7 @@ export class Ball {
 	 * @param {HTMLCanvasElement} canvas
 	 * @param {Scale} scale
 	 */
-	constructor(canvas, scale) {
+	constructor(canvas, scale, remote) {
 		this.canvas = canvas;
 		this.ctx = canvas.getContext("2d");
 		this.scale = scale;
@@ -24,6 +24,8 @@ export class Ball {
 		this.vy = 0;
 		this.x = 0;
 		this.y = 0;
+
+		this.remote = remote;
 
 		this.target = {
 			x: 0,

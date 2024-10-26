@@ -8,7 +8,7 @@ export class Paddle {
 	 * @param {HTMLCanvasElement} canvas
 	 * @param {import("./ball").Scale} scale
 	 */
-	constructor(side, canvas, scale) {
+	constructor(side, canvas, scale, remote) {
 		this.canvas = canvas;
 		this.ctx = canvas.getContext("2d");
 		this.scale = scale;
@@ -21,6 +21,8 @@ export class Paddle {
 		this.direction = DIRECTION.IDLE;
 		this.points = 0;
 		this.target = 0;
+
+		this.remote = remote;
 
 		this.y = (canvas.height - this.height) / 2;
 		if (side === "left") {
@@ -95,13 +97,16 @@ export class Paddle {
 			return false;
 		}
 
-		if (key === this.keys.up) {
+		if (key === this.keys.up || (this.remote && key === this.keys.altUp)) {
 			event.preventDefault();
 			if (this.direction !== DIRECTION.UP) {
 				return (this.direction = DIRECTION.UP);
 			}
 		}
-		if (key === this.keys.down) {
+		if (
+			key === this.keys.down ||
+			(this.remote && key === this.keys.altDown)
+		) {
 			event.preventDefault();
 			if (this.direction !== DIRECTION.DOWN) {
 				return (this.direction = DIRECTION.DOWN);

@@ -14,10 +14,10 @@ import {
 import { Paddle } from "./paddle.js";
 
 export class Game {
-	constructor(matchData) {
+	constructor(remote) {
 		this.animationFrame = null;
 		this.finished = false;
-		this.remote = matchData;
+		this.remote = remote;
 		this.canvas = document.querySelector("canvas");
 		this.ctx = this.canvas.getContext("2d");
 
@@ -33,9 +33,19 @@ export class Game {
 		this.ballActive = true;
 		this.user = getCurrentUser();
 
-		this.ball = new Ball(this.canvas, this.scale);
-		this.player_1 = new Paddle("left", this.canvas, this.scale);
-		this.player_2 = new Paddle("right", this.canvas, this.scale);
+		this.ball = new Ball(this.canvas, this.scale, this.remote);
+		this.player_1 = new Paddle(
+			"left",
+			this.canvas,
+			this.scale,
+			this.remote
+		);
+		this.player_2 = new Paddle(
+			"right",
+			this.canvas,
+			this.scale,
+			this.remote
+		);
 
 		this.setColor();
 		this.eventListeners();
@@ -125,9 +135,7 @@ export class Game {
 
 	updateBallData() {
 		if (this.remote && this.authoritative) {
-			//TODO: Might need to do throttling here
-			// const now = Date.now();
-			// const throttleInterval
+			//TODO: Might need to do throttling here but let's leave it off for now.
 
 			this.sendRemote("GAME_MATCH_STATE_UPDATE", {
 				ball: {
@@ -305,7 +313,7 @@ export class Game {
 
 		eventEmitter.on("GAME_MATCH_PADDLE_UPDATE", (data) => {
 			const player =
-				data.player_uuid === this.remote.player_1.user.uuid
+				data.player_uuid === this.remote.player_1.uuid
 					? this.player_1
 					: this.player_2;
 			player.direction = data.state;
