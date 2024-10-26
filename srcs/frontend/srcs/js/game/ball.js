@@ -1,13 +1,13 @@
-const RADIUS = 10;
-const BALL_VELOCITY = 3 * 175;
-const MAX_ANGLE_DEVIATION = 45;
-
 // js doc for scale which has a x and y
 /**
  * @typedef {Object} Scale
  * @property {number} x
  * @property {number} y
  */
+
+import { isDarkMode } from "../storage.js";
+import { BALL_VELOCITY, MAX_ANGLE_DEVIATION, RADIUS } from "./constants.js";
+import { Paddle } from "./paddle.js";
 
 export class Ball {
 	/**
@@ -20,13 +20,16 @@ export class Ball {
 		this.scale = scale;
 		this.radius = RADIUS * scale.x;
 		this.reset();
-		this.color = "white";
+		this.color = isDarkMode() ? "white" : "black";
 		this.vx = 0;
 		this.vy = 0;
 		this.x = 0;
 		this.y = 0;
 	}
 
+	/**
+	 * @returns {Ball}
+	 */
 	reset() {
 		this.x = this.canvas.width / 2;
 		this.y = this.canvas.height / 2;
@@ -40,6 +43,9 @@ export class Ball {
 		return this;
 	}
 
+	/**
+	 * @returns {Ball}
+	 */
 	draw() {
 		this.ctx.beginPath();
 		this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, true);
@@ -49,6 +55,12 @@ export class Ball {
 		return this;
 	}
 
+	/**
+	 * @param {number} deltaTime
+	 * @param {Paddle} paddleLeft
+	 * @param {Paddle} paddleRight
+	 * @returns {boolean}
+	 */
 	move(deltaTime, paddleLeft, paddleRight) {
 		let nextX = this.x + this.vx * deltaTime;
 		let nextY = this.y + this.vy * deltaTime;
@@ -61,6 +73,11 @@ export class Ball {
 			nextY = this.y + this.vy * deltaTime;
 		}
 
+		/**
+		 *
+		 * @param {Paddle} paddle
+		 * @returns {boolean}
+		 */
 		const paddleCollision = (paddle) => {
 			return (
 				nextX - this.radius < paddle.x + paddle.width &&
@@ -70,34 +87,36 @@ export class Ball {
 			);
 		};
 
+		/**
+		 * @param {Paddle} paddle
+		 * @returns {number}
+		 */
+		const getBounceAngle = (paddle) => {
+			const relativeIntersectY = paddle.y + paddle.height / 2 - nextY;
+			const normalizedRelativeIntersectionY =
+				relativeIntersectY / (paddle.height / 2);
+			return (
+				normalizedRelativeIntersectionY *
+				(MAX_ANGLE_DEVIATION * (Math.PI / 180))
+			);
+		};
+
 		if (paddleCollision(paddleLeft)) {
 			this.x = paddleLeft.x + paddleLeft.width + this.radius;
 			this.vx *= -1;
 
-			const relativeIntersectY =
-				paddleLeft.y + paddleLeft.height / 2 - nextY;
-			const normalizedRelativeIntersectionY =
-				relativeIntersectY / (paddleLeft.height / 2);
-			const bounceAngle =
-				normalizedRelativeIntersectionY *
-				(MAX_ANGLE_DEVIATION * (Math.PI / 180));
-
+			const bounceAngle = getBounceAngle(paddleLeft);
 			const speed = Math.sqrt(this.vx ** 2 + this.vy ** 2);
+
 			this.vx = speed * Math.cos(bounceAngle);
 			this.vy = speed * -Math.sin(bounceAngle);
 		} else if (paddleCollision(paddleRight)) {
 			this.x = paddleRight.x - this.radius;
 			this.vx *= -1;
 
-			const relativeIntersectY =
-				paddleRight.y + paddleRight.height / 2 - nextY;
-			const normalizedRelativeIntersectionY =
-				relativeIntersectY / (paddleRight.height / 2);
-			const bounceAngle =
-				normalizedRelativeIntersectionY *
-				(MAX_ANGLE_DEVIATION * (Math.PI / 180));
-
+			const bounceAngle = getBounceAngle(paddleRight);
 			const speed = Math.sqrt(this.vx ** 2 + this.vy ** 2);
+
 			this.vx = -speed * Math.cos(bounceAngle);
 			this.vy = speed * -Math.sin(bounceAngle);
 		}

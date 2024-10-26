@@ -4,30 +4,14 @@ import { BASE_URL } from "../handler.js";
 import { socket } from "../socket.js";
 import { getCurrentUser, isDarkMode } from "../storage.js";
 import { Ball } from "./ball.js";
+import { Paddle } from "./paddle.js";
 export let animFrame;
 export let matchUpdateInterval;
 export let keyUpListener;
 export let keyDownListener;
 
-const PADDLE_VELOCITY = 8 * 40;
-const BALL_VELOCITY = 3 * 175;
 const referenceWidth = 840;
 const referenceHeight = 500;
-
-const DIRECTION = {
-	IDLE: 1,
-	UP: 2,
-	DOWN: 3,
-};
-
-const paddleSizes = {
-	width: 10,
-	height: 120,
-};
-
-const RADIUS = 10;
-
-const MAX_ANGLE_DEVIATION = 45;
 
 export const gameHandler = (_, matchData) => {
 	const gameBoard = document.getElementById("game-board");
@@ -43,97 +27,75 @@ export const gameHandler = (_, matchData) => {
 		y: gameBoard.height / referenceHeight,
 	};
 	let deltaTime;
-	const oldBall = {
-		x: 75,
-		y: 150,
-		vx: BALL_VELOCITY,
-		vy: BALL_VELOCITY / 2.5,
-		radius: RADIUS,
-		color: "white",
-		move(canvas, paddleLeft, paddleRight) {
-			const calculateImpactPoint = (paddle) => {
-				const impact = (this.y - paddle.y) / paddle.height;
-				const normalized = impact * 2 - 1;
-				const clampedImpact = Math.max(-1, Math.min(normalized, 1));
-
-				this.vx = -this.vx;
-				// const thetaBase = Math.atan2(this.vy, this.vx);
-
-				const thetaNew =
-					clampedImpact * (MAX_ANGLE_DEVIATION * (Math.PI / 180));
-
-				const speed = Math.sqrt(this.vx ** 2 + this.vy ** 2);
-				this.vx = Math.sign(this.vx) * speed * Math.cos(thetaNew);
-				this.vy = speed * Math.sin(thetaNew);
-				sendBallData();
-			};
-			this.x += this.vx * deltaTime;
-			this.y += this.vy * deltaTime;
-			// paddle right
-			if (
-				this.x + this.radius >= paddleRight.x &&
-				this.y >= paddleRight.y &&
-				this.y <= paddleRight.y + paddleRight.height
-			) {
-				calculateImpactPoint(paddleRight);
-				return this;
-			}
-			// paddle left
-			if (
-				this.x - this.radius <= paddleLeft.x + paddleLeft.width &&
-				this.y >= paddleLeft.y &&
-				this.y <= paddleLeft.y + paddleLeft.height
-			) {
-				calculateImpactPoint(paddleLeft);
-				return this;
-			}
-			// if it touches up and down border:
-			if (
-				this.x + this.radius >= canvas.width ||
-				this.x - this.radius <= 0
-			) {
-				if (this.x + this.radius >= canvas.width) {
-					paddleLeft.points += 1;
-				} else if (this.x - this.radius <= 0) {
-					paddleRight.points += 1;
-				}
-				scoreHandler();
-				return false;
-			}
-			if (
-				this.y + this.radius >= canvas.height ||
-				this.y - this.radius <= 0
-			) {
-				sendBallData();
-				this.vy *= -1;
-			}
-			return this;
-		},
-		init(canvas, scale) {
-			this.x = canvas.width / 2;
-			this.y = canvas.height / 2;
-			this.radius *= scale.x;
-			this.vx *= scale.x;
-			this.vy *= scale.y;
-			return this;
-		},
-		draw(ctx) {
-			ctx.beginPath();
-			ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, true);
-			ctx.closePath();
-			ctx.fillStyle = this.color;
-			ctx.fill();
-			return this;
-		},
-		reset(canvas) {
-			this.x = canvas.width / 2;
-			this.y = canvas.height / 2;
-			return this;
-		},
-	};
 
 	// @ts-ignore
 	const ball = new Ball(gameBoard, scale);
+	// @ts-ignore
+	const paddleLeft = new Paddle("left", gameBoard, scale);
+	// @ts-ignore
+	const paddleRight = new Paddle("right", gameBoard, scale);
+
+	// const oldBall = {
+	// 	move(canvas, paddleLeft, paddleRight) {
+	// 		const calculateImpactPoint = (paddle) => {
+	// 			const impact = (this.y - paddle.y) / paddle.height;
+	// 			const normalized = impact * 2 - 1;
+	// 			const clampedImpact = Math.max(-1, Math.min(normalized, 1));
+
+	// 			this.vx = -this.vx;
+	// 			// const thetaBase = Math.atan2(this.vy, this.vx);
+
+	// 			const thetaNew =
+	// 				clampedImpact * (MAX_ANGLE_DEVIATION * (Math.PI / 180));
+
+	// 			const speed = Math.sqrt(this.vx ** 2 + this.vy ** 2);
+	// 			this.vx = Math.sign(this.vx) * speed * Math.cos(thetaNew);
+	// 			this.vy = speed * Math.sin(thetaNew);
+	// 			sendBallData();
+	// 		};
+	// 		this.x += this.vx * deltaTime;
+	// 		this.y += this.vy * deltaTime;
+	// 		// paddle right
+	// 		if (
+	// 			this.x + this.radius >= paddleRight.x &&
+	// 			this.y >= paddleRight.y &&
+	// 			this.y <= paddleRight.y + paddleRight.height
+	// 		) {
+	// 			calculateImpactPoint(paddleRight);
+	// 			return this;
+	// 		}
+	// 		// paddle left
+	// 		if (
+	// 			this.x - this.radius <= paddleLeft.x + paddleLeft.width &&
+	// 			this.y >= paddleLeft.y &&
+	// 			this.y <= paddleLeft.y + paddleLeft.height
+	// 		) {
+	// 			calculateImpactPoint(paddleLeft);
+	// 			return this;
+	// 		}
+	// 		// if it touches up and down border:
+	// 		if (
+	// 			this.x + this.radius >= canvas.width ||
+	// 			this.x - this.radius <= 0
+	// 		) {
+	// 			if (this.x + this.radius >= canvas.width) {
+	// 				paddleLeft.points += 1;
+	// 			} else if (this.x - this.radius <= 0) {
+	// 				paddleRight.points += 1;
+	// 			}
+	// 			scoreHandler();
+	// 			return false;
+	// 		}
+	// 		if (
+	// 			this.y + this.radius >= canvas.height ||
+	// 			this.y - this.radius <= 0
+	// 		) {
+	// 			sendBallData();
+	// 			this.vy *= -1;
+	// 		}
+	// 		return this;
+	// 	},
+	// };
 
 	const user = getCurrentUser();
 	const sendMatchData = (event, state) => {
@@ -149,190 +111,189 @@ export const gameHandler = (_, matchData) => {
 			);
 		}
 	};
-
-	const paddleLeft = {
-		x: 0,
-		y: 0,
-		vy: PADDLE_VELOCITY,
-		width: paddleSizes.width,
-		height: paddleSizes.height,
-		color: "white",
-		direction: DIRECTION.IDLE,
-		keys: {
-			upKey: "w",
-			downKey: "s",
-			altUpKey: "ArrowUp",
-			altDownKey: "ArrowDown",
-		},
-		points: 0,
-		init(canvas, scale) {
-			this.x = 0;
-			this.y = canvas.height / 2;
-			this.width *= scale.x;
-			this.height *= scale.y;
-			this.vy *= scale.y;
-			return this;
-		},
-		draw(ctx) {
-			ctx.fillStyle = this.color;
-			ctx.fillRect(this.x, this.y, this.width, this.height);
-			return this;
-		},
-		move(canvas) {
-			if (this.direction === DIRECTION.IDLE) return this;
-			if (this.y + this.height >= canvas.height)
-				this.y = canvas.height - this.height;
-			else if (this.y <= 0) this.y = 0;
-			if (this.direction === DIRECTION.UP) this.y -= this.vy * deltaTime;
-			if (this.direction === DIRECTION.DOWN)
-				this.y += this.vy * deltaTime;
-			return this;
-		},
-		keyHandler(event, value) {
-			if (this.direction !== DIRECTION.IDLE && value === false) {
-				this.direction = DIRECTION.IDLE;
-				if (matchData)
-					sendMatchData("GAME_MATCH_PADDLE_UPDATE", this.direction);
-			} else if (matchData) {
-				if (
-					event.key === this.keys.upKey ||
-					event.key === this.keys.altUpKey
-				) {
-					event.preventDefault();
-					if (this.direction !== DIRECTION.UP) {
-						this.direction = DIRECTION.UP;
-						sendMatchData(
-							"GAME_MATCH_PADDLE_UPDATE",
-							this.direction
-						);
-					}
-				}
-				if (
-					event.key === this.keys.downKey ||
-					event.key === this.keys.altDownKey
-				) {
-					event.preventDefault();
-					if (this.direction !== DIRECTION.DOWN) {
-						this.direction = DIRECTION.DOWN;
-						sendMatchData(
-							"GAME_MATCH_PADDLE_UPDATE",
-							this.direction
-						);
-					}
-				}
-			} else {
-				if (
-					this.direction !== DIRECTION.UP &&
-					event.key === this.keys.upKey
-				) {
-					event.preventDefault();
-					if (this.direction !== DIRECTION.UP)
-						this.direction = DIRECTION.UP;
-				}
-				if (event.key === this.keys.downKey) {
-					event.preventDefault();
-					if (this.direction !== DIRECTION.DOWN)
-						this.direction = DIRECTION.DOWN;
-				}
-			}
-			return this;
-		},
-		reset(canvas) {
-			this.x = 0;
-			this.y = canvas.height / 2;
-			return this;
-		},
-	};
-	const paddleRight = {
-		x: 0,
-		y: 0,
-		vy: PADDLE_VELOCITY,
-		width: paddleSizes.width,
-		height: paddleSizes.height,
-		color: "white",
-		direction: DIRECTION.IDLE,
-		keys: {
-			upKey: "ArrowUp",
-			downKey: "ArrowDown",
-			altUpKey: "w",
-			altDownKey: "s",
-		},
-		points: 0,
-		init(canvas, scale) {
-			this.width *= scale.x;
-			this.height *= scale.y;
-			this.x = canvas.width - this.width;
-			this.y = canvas.height / 2;
-			this.vy *= scale.y;
-			return this;
-		},
-		draw(ctx) {
-			ctx.fillStyle = this.color;
-			ctx.fillRect(this.x, this.y, this.width, this.height);
-			return this;
-		},
-		move(canvas) {
-			if (this.direction === DIRECTION.IDLE) return this;
-			if (this.y + this.height >= canvas.height)
-				this.y = canvas.height - this.height;
-			else if (this.y <= 0) this.y = 0;
-			if (this.direction === DIRECTION.UP) this.y -= this.vy * deltaTime;
-			if (this.direction === DIRECTION.DOWN)
-				this.y += this.vy * deltaTime;
-			return this;
-		},
-		keyHandler(event, value) {
-			if (this.direction !== DIRECTION.IDLE && value === false) {
-				this.direction = DIRECTION.IDLE;
-				if (matchData)
-					sendMatchData("GAME_MATCH_PADDLE_UPDATE", this.direction);
-			} else if (matchData) {
-				if (
-					event.key === this.keys.upKey ||
-					event.key === this.keys.altUpKey
-				) {
-					event.preventDefault();
-					if (this.direction !== DIRECTION.UP) {
-						this.direction = DIRECTION.UP;
-						sendMatchData(
-							"GAME_MATCH_PADDLE_UPDATE",
-							this.direction
-						);
-					}
-				}
-				if (
-					event.key === this.keys.downKey ||
-					event.key === this.keys.altDownKey
-				) {
-					event.preventDefault();
-					if (this.direction !== DIRECTION.DOWN) {
-						this.direction = DIRECTION.DOWN;
-						sendMatchData(
-							"GAME_MATCH_PADDLE_UPDATE",
-							this.direction
-						);
-					}
-				}
-			} else {
-				if (event.key === this.keys.upKey) {
-					event.preventDefault();
-					if (this.direction !== DIRECTION.UP)
-						this.direction = DIRECTION.UP;
-				}
-				if (event.key === this.keys.downKey) {
-					event.preventDefault();
-					if (this.direction !== DIRECTION.DOWN)
-						this.direction = DIRECTION.DOWN;
-				}
-			}
-			return this;
-		},
-		reset(canvas) {
-			this.x = canvas.width - this.width;
-			this.y = canvas.height / 2;
-			return this;
-		},
-	};
+	// const paddleLeft = {
+	// 	x: 0,
+	// 	y: 0,
+	// 	vy: PADDLE_VELOCITY,
+	// 	width: paddleSizes.width,
+	// 	height: paddleSizes.height,
+	// 	color: "white",
+	// 	direction: DIRECTION.IDLE,
+	// 	keys: {
+	// 		upKey: "w",
+	// 		downKey: "s",
+	// 		altUpKey: "ArrowUp",
+	// 		altDownKey: "ArrowDown",
+	// 	},
+	// 	points: 0,
+	// 	init(canvas, scale) {
+	// 		this.x = 0;
+	// 		this.y = canvas.height / 2;
+	// 		this.width *= scale.x;
+	// 		this.height *= scale.y;
+	// 		this.vy *= scale.y;
+	// 		return this;
+	// 	},
+	// 	draw(ctx) {
+	// 		ctx.fillStyle = this.color;
+	// 		ctx.fillRect(this.x, this.y, this.width, this.height);
+	// 		return this;
+	// 	},
+	// 	move(canvas) {
+	// 		if (this.direction === DIRECTION.IDLE) return this;
+	// 		if (this.y + this.height >= canvas.height)
+	// 			this.y = canvas.height - this.height;
+	// 		else if (this.y <= 0) this.y = 0;
+	// 		if (this.direction === DIRECTION.UP) this.y -= this.vy * deltaTime;
+	// 		if (this.direction === DIRECTION.DOWN)
+	// 			this.y += this.vy * deltaTime;
+	// 		return this;
+	// 	},
+	// 	keyHandler(event, value) {
+	// 		if (this.direction !== DIRECTION.IDLE && value === false) {
+	// 			this.direction = DIRECTION.IDLE;
+	// 			if (matchData)
+	// 				sendMatchData("GAME_MATCH_PADDLE_UPDATE", this.direction);
+	// 		} else if (matchData) {
+	// 			if (
+	// 				event.key === this.keys.upKey ||
+	// 				event.key === this.keys.altUpKey
+	// 			) {
+	// 				event.preventDefault();
+	// 				if (this.direction !== DIRECTION.UP) {
+	// 					this.direction = DIRECTION.UP;
+	// 					sendMatchData(
+	// 						"GAME_MATCH_PADDLE_UPDATE",
+	// 						this.direction
+	// 					);
+	// 				}
+	// 			}
+	// 			if (
+	// 				event.key === this.keys.downKey ||
+	// 				event.key === this.keys.altDownKey
+	// 			) {
+	// 				event.preventDefault();
+	// 				if (this.direction !== DIRECTION.DOWN) {
+	// 					this.direction = DIRECTION.DOWN;
+	// 					sendMatchData(
+	// 						"GAME_MATCH_PADDLE_UPDATE",
+	// 						this.direction
+	// 					);
+	// 				}
+	// 			}
+	// 		} else {
+	// 			if (
+	// 				this.direction !== DIRECTION.UP &&
+	// 				event.key === this.keys.upKey
+	// 			) {
+	// 				event.preventDefault();
+	// 				if (this.direction !== DIRECTION.UP)
+	// 					this.direction = DIRECTION.UP;
+	// 			}
+	// 			if (event.key === this.keys.downKey) {
+	// 				event.preventDefault();
+	// 				if (this.direction !== DIRECTION.DOWN)
+	// 					this.direction = DIRECTION.DOWN;
+	// 			}
+	// 		}
+	// 		return this;
+	// 	},
+	// 	reset(canvas) {
+	// 		this.x = 0;
+	// 		this.y = canvas.height / 2;
+	// 		return this;
+	// 	},
+	// };
+	// const paddleRight = {
+	// 	x: 0,
+	// 	y: 0,
+	// 	vy: PADDLE_VELOCITY,
+	// 	width: paddleSizes.width,
+	// 	height: paddleSizes.height,
+	// 	color: "white",
+	// 	direction: DIRECTION.IDLE,
+	// 	keys: {
+	// 		upKey: "ArrowUp",
+	// 		downKey: "ArrowDown",
+	// 		altUpKey: "w",
+	// 		altDownKey: "s",
+	// 	},
+	// 	points: 0,
+	// 	init(canvas, scale) {
+	// 		this.width *= scale.x;
+	// 		this.height *= scale.y;
+	// 		this.x = canvas.width - this.width;
+	// 		this.y = canvas.height / 2;
+	// 		this.vy *= scale.y;
+	// 		return this;
+	// 	},
+	// 	draw(ctx) {
+	// 		ctx.fillStyle = this.color;
+	// 		ctx.fillRect(this.x, this.y, this.width, this.height);
+	// 		return this;
+	// 	},
+	// 	move(canvas) {
+	// 		if (this.direction === DIRECTION.IDLE) return this;
+	// 		if (this.y + this.height >= canvas.height)
+	// 			this.y = canvas.height - this.height;
+	// 		else if (this.y <= 0) this.y = 0;
+	// 		if (this.direction === DIRECTION.UP) this.y -= this.vy * deltaTime;
+	// 		if (this.direction === DIRECTION.DOWN)
+	// 			this.y += this.vy * deltaTime;
+	// 		return this;
+	// 	},
+	// 	keyHandler(event, value) {
+	// 		if (this.direction !== DIRECTION.IDLE && value === false) {
+	// 			this.direction = DIRECTION.IDLE;
+	// 			if (matchData)
+	// 				sendMatchData("GAME_MATCH_PADDLE_UPDATE", this.direction);
+	// 		} else if (matchData) {
+	// 			if (
+	// 				event.key === this.keys.upKey ||
+	// 				event.key === this.keys.altUpKey
+	// 			) {
+	// 				event.preventDefault();
+	// 				if (this.direction !== DIRECTION.UP) {
+	// 					this.direction = DIRECTION.UP;
+	// 					sendMatchData(
+	// 						"GAME_MATCH_PADDLE_UPDATE",
+	// 						this.direction
+	// 					);
+	// 				}
+	// 			}
+	// 			if (
+	// 				event.key === this.keys.downKey ||
+	// 				event.key === this.keys.altDownKey
+	// 			) {
+	// 				event.preventDefault();
+	// 				if (this.direction !== DIRECTION.DOWN) {
+	// 					this.direction = DIRECTION.DOWN;
+	// 					sendMatchData(
+	// 						"GAME_MATCH_PADDLE_UPDATE",
+	// 						this.direction
+	// 					);
+	// 				}
+	// 			}
+	// 		} else {
+	// 			if (event.key === this.keys.upKey) {
+	// 				event.preventDefault();
+	// 				if (this.direction !== DIRECTION.UP)
+	// 					this.direction = DIRECTION.UP;
+	// 			}
+	// 			if (event.key === this.keys.downKey) {
+	// 				event.preventDefault();
+	// 				if (this.direction !== DIRECTION.DOWN)
+	// 					this.direction = DIRECTION.DOWN;
+	// 			}
+	// 		}
+	// 		return this;
+	// 	},
+	// 	reset(canvas) {
+	// 		this.x = canvas.width - this.width;
+	// 		this.y = canvas.height / 2;
+	// 		return this;
+	// 	},
+	// };
 
 	const scoreHandler = async () => {
 		if (matchData) {
@@ -393,8 +354,8 @@ export const gameHandler = (_, matchData) => {
 			paddleLeft.points + " : " + paddleRight.points);
 
 	const reset = () => {
-		paddleLeft.reset(gameBoard);
-		paddleRight.reset(gameBoard);
+		paddleLeft.reset();
+		paddleRight.reset();
 		setScoreText();
 		ballActive = false;
 		ball.reset();
@@ -510,8 +471,8 @@ export const gameHandler = (_, matchData) => {
 			}
 		} else ball.draw();
 
-		paddleLeft.draw(ctx).move(gameBoard);
-		paddleRight.draw(ctx).move(gameBoard);
+		paddleLeft.draw().move(deltaTime);
+		paddleRight.draw().move(deltaTime);
 		animFrame = window.requestAnimationFrame(draw);
 	};
 
@@ -525,12 +486,12 @@ export const gameHandler = (_, matchData) => {
 		(keyDownListener = (e) => {
 			if (matchData) {
 				if (user.uuid === matchData.player_1.user.uuid)
-					paddleLeft.keyHandler(e, true);
+					paddleLeft.keyHandler(e, true, matchData, sendMatchData);
 				else if (user.uuid === matchData.player_2.user.uuid)
-					paddleRight.keyHandler(e, true);
+					paddleRight.keyHandler(e, true, matchData, sendMatchData);
 			} else {
-				paddleLeft.keyHandler(e, true);
-				paddleRight.keyHandler(e, true);
+				paddleLeft.keyHandler(e, true, matchData, sendMatchData);
+				paddleRight.keyHandler(e, true, matchData, sendMatchData);
 			}
 		})
 	);
@@ -544,12 +505,12 @@ export const gameHandler = (_, matchData) => {
 		(keyUpListener = (e) => {
 			if (matchData) {
 				if (user.uuid === matchData.player_1.user.uuid)
-					paddleLeft.keyHandler(e, false);
+					paddleLeft.keyHandler(e, false, matchData, sendMatchData);
 				else if (user.uuid === matchData.player_2.user.uuid)
-					paddleRight.keyHandler(e, false);
+					paddleRight.keyHandler(e, false, matchData, sendMatchData);
 			} else {
-				paddleLeft.keyHandler(e, false);
-				paddleRight.keyHandler(e, false);
+				paddleLeft.keyHandler(e, false, matchData, sendMatchData);
+				paddleRight.keyHandler(e, false, matchData, sendMatchData);
 			}
 		})
 	);
@@ -563,8 +524,8 @@ export const gameHandler = (_, matchData) => {
 	setColor();
 	clear(false);
 	ball.draw();
-	paddleLeft.init(gameBoard, scale).draw(ctx);
-	paddleRight.init(gameBoard, scale).draw(ctx);
+	paddleLeft.draw();
+	paddleRight.draw();
 	if (matchData) {
 		if (matchData.status === 3) {
 			matchData = false;
