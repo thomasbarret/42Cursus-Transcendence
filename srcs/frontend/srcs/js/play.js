@@ -4,6 +4,7 @@ import { currentPlayerCard, inviteBoxCard, Toast } from "./components.js";
 import { navigate } from "./main.js";
 import { gameHandler } from "./game/pong.js";
 import { eventEmitter } from "./eventemitter.js";
+import { socket } from "./socket.js";
 
 export const playHandler = (route) => {
 	let timerId = 0;
@@ -79,6 +80,8 @@ export const lobbyHandler = (route, slug) => {
 	const finalScore = document.getElementById("final-score");
 	const winnerText = document.getElementById("winner-text");
 
+	const readyGame = document.getElementById("ready-game");
+
 	eventEmitter.on("GAME_START_MATCH", () => {
 		waitingOverlay.classList.add("d-none");
 		getMatchData();
@@ -90,6 +93,17 @@ export const lobbyHandler = (route, slug) => {
 		} else {
 			pauseOverlay.classList.add("d-none");
 		}
+	});
+
+	readyGame.addEventListener("click", () => {
+		socket.send(
+			JSON.stringify({
+				event: "GAME_MATCH_READY",
+				data: {
+					uuid: slug,
+				},
+			})
+		);
 	});
 
 	const matchFinish = (data) => {

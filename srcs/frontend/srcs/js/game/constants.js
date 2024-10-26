@@ -15,11 +15,11 @@ export const PADDLE_LERP = 0.1;
 
 export const PADDLE_SIZE = {
 	WIDTH: 10,
-	HEIGHT: 120,
+	HEIGHT: 100,
 };
 
 export const DIRECTION = {
-	IDLE: 1,
-	UP: 2,
-	DOWN: 3,
+	IDLE: 0,
+	UP: -1,
+	DOWN: 1,
 };

@@ -13,9 +13,9 @@
 			>
 				<canvas
 					id="game-board"
-					width="1600"
+					width="800"
 					style="max-height: 600px"
-					height="1600"
+					height="600"
 				></canvas>
 				<div
 					id="pause-overlay"
@@ -25,13 +25,6 @@
 					<div class="text-center text-white">
 						<h2>Game Paused</h2>
 						<h3>waiting for the opponent to come back...</h3>
-						<!-- <button
-							type="button"
-							class="btn btn-primary mt-3"
-							id="resume-game"
-						>
-							Resume Game
-						</button> -->
 					</div>
 				</div>
 				<div
@@ -69,7 +62,16 @@
 				<div
 					class="current-players bg-body border rounded p-2 mb-3 overflow-auto flex-grow-1"
 				>
-					<div class="fw-bold mb-2">Current Players</div>
+					<div class="fw-bold mb-2">
+						Current Players
+						<button
+							type="button"
+							class="btn btn-primary mt-3"
+							id="ready-game"
+						>
+							Ready
+						</button>
+					</div>
 					<div id="current-players"></div>
 				</div>
 				<div
