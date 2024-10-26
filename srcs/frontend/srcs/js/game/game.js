@@ -79,11 +79,11 @@ export class Game {
 			this.draw.bind(this)
 		);
 
-		if (this.remote) {
-			this.matchUpdateInterval = setInterval(() => {
-				this.updateBallData();
-			}, MATCH_UPDATE_INTERVAL);
-		}
+		// if (this.remote) {
+		// 	this.matchUpdateInterval = setInterval(() => {
+		// 		this.updateBallData();
+		// 	}, MATCH_UPDATE_INTERVAL);
+		// }
 	}
 
 	setColor() {
@@ -114,6 +114,7 @@ export class Game {
 
 		this.ballActive = false;
 		this.ball.reset();
+		console.log("once");
 		setTimeout(() => {
 			this.ballActive = true;
 		}, 1500);
@@ -191,20 +192,20 @@ export class Game {
 		this.deltaTime = Math.min((timestamp - this.lastTime) / 1000, 1 / 60);
 		this.lastTime = timestamp;
 
-		if (this.remote) {
-			this.ball.x = this.lerp(this.ball.x, this.ball.target.x, BALL_LERP);
-			this.ball.y = this.lerp(this.ball.y, this.ball.target.y, BALL_LERP);
-			this.player_1.y = this.lerp(
-				this.player_1.y,
-				this.player_1.target,
-				PADDLE_LERP
-			);
-			this.player_2.y = this.lerp(
-				this.player_2.y,
-				this.player_2.target,
-				PADDLE_LERP
-			);
-		}
+		// if (this.remote) {
+		// 	this.ball.x = this.lerp(this.ball.x, this.ball.target.x, BALL_LERP);
+		// 	this.ball.y = this.lerp(this.ball.y, this.ball.target.y, BALL_LERP);
+		// 	this.player_1.y = this.lerp(
+		// 		this.player_1.y,
+		// 		this.player_1.target,
+		// 		PADDLE_LERP
+		// 	);
+		// 	this.player_2.y = this.lerp(
+		// 		this.player_2.y,
+		// 		this.player_2.target,
+		// 		PADDLE_LERP
+		// 	);
+		// }
 
 		if (this.ballActive) {
 			if (
@@ -212,6 +213,7 @@ export class Game {
 					.draw()
 					.move(this.deltaTime, this.player_1, this.player_2)
 			) {
+				this.updateBallData();
 				this.reset();
 			}
 		} else {
@@ -298,17 +300,33 @@ export class Game {
 
 		if (this.remote) {
 			eventEmitter.on("GAME_MATCH_STATE_UPDATE", (data) => {
-				this.ball.target = {
-					x: data.state.ball.x,
-					y: data.state.ball.y,
-					vx: data.state.ball.vx,
-					vy: data.state.ball.vy,
-				};
-				this.player_1.target = data.state.player1_position;
-				this.player_2.target = data.state.player2_position;
+				this.ball.x = data.state.ball.x;
+				this.ball.y = data.state.ball.y;
+				this.ball.vx = data.state.ball.vx;
+				this.ball.vy = data.state.ball.vy;
+				// this.ball.target = {
+				// 	x: data.state.ball.x,
+				// 	y: data.state.ball.y,
+				// 	vx: data.state.ball.vx,
+				// 	vy: data.state.ball.vy,
+				// };
+				this.player_1.y = data.state.player1_position;
+				this.player_2.y = data.state.player2_position;
 				this.player_1.points = data.state.player1_score;
 				this.player_2.points = data.state.player2_score;
 			});
+			// eventEmitter.on("GAME_MATCH_STATE_UPDATE", (data) => {
+			// 	this.ball.target = {
+			// 		x: data.state.ball.x,
+			// 		y: data.state.ball.y,
+			// 		vx: data.state.ball.vx,
+			// 		vy: data.state.ball.vy,
+			// 	};
+			// 	this.player_1.target = data.state.player1_position;
+			// 	this.player_2.target = data.state.player2_position;
+			// 	this.player_1.points = data.state.player1_score;
+			// 	this.player_2.points = data.state.player2_score;
+			// });
 		}
 
 		eventEmitter.on("GAME_MATCH_PADDLE_UPDATE", (data) => {
@@ -320,8 +338,11 @@ export class Game {
 		});
 
 		eventEmitter.on("GAME_MATCH_SCORE_UPDATE", (data) => {
-			if (data.state === "hidden") {
-			}
+			this.player_1.points = data.state.player1_score;
+			this.player_2.points = data.state.player2_score;
+			this.setScore();
+			this.ball.vx = data.state.ball.vx;
+			this.ball.vy = data.state.ball.vy;
 		});
 
 		eventEmitter.on("GAME_MATCH_FINISHED", (data) => {});
