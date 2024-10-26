@@ -1,6 +1,6 @@
 import { loginHandler, signUpHandler } from "./auth.js";
 import { friendsHandler } from "./friends.js";
-import { gameHandler } from "./game.js";
+import { gameHandler } from "./game/game.js";
 import {
 	aboutHandler,
 	indexHandler,

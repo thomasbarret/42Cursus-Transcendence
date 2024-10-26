@@ -1,6 +1,6 @@
 import { Toast } from "./components.js";
 import { eventEmitter } from "./eventemitter.js";
-import { gameHandler } from "./game.js";
+import { gameHandler } from "./game/game.js";
 import { navigate } from "./main.js";
 import { getCurrentUser } from "./storage.js";
 /**

@@ -2,7 +2,7 @@ import * as bootstrap from "bootstrap";
 import { BASE_URL } from "./handler.js";
 import { currentPlayerCard, inviteBoxCard, Toast } from "./components.js";
 import { navigate } from "./main.js";
-import { animFrame, gameHandler } from "./game.js";
+import { animFrame, gameHandler } from "./game/game.js";
 import { eventEmitter } from "./eventemitter.js";
 
 export const playHandler = (route) => {

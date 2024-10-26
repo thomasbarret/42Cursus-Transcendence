@@ -1,8 +1,9 @@
-import { Toast } from "./components.js";
-import { eventEmitter } from "./eventemitter.js";
-import { BASE_URL } from "./handler.js";
-import { socket } from "./socket.js";
-import { getCurrentUser, isDarkMode } from "./storage.js";
+import { Toast } from "../components.js";
+import { eventEmitter } from "../eventemitter.js";
+import { BASE_URL } from "../handler.js";
+import { socket } from "../socket.js";
+import { getCurrentUser, isDarkMode } from "../storage.js";
+import { Ball } from "./ball.js";
 export let animFrame;
 export let matchUpdateInterval;
 export let keyUpListener;
@@ -42,7 +43,7 @@ export const gameHandler = (_, matchData) => {
 		y: gameBoard.height / referenceHeight,
 	};
 	let deltaTime;
-	const ball = {
+	const oldBall = {
 		x: 75,
 		y: 150,
 		vx: BALL_VELOCITY,
@@ -130,6 +131,9 @@ export const gameHandler = (_, matchData) => {
 			return this;
 		},
 	};
+
+	// @ts-ignore
+	const ball = new Ball(gameBoard, scale);
 
 	const user = getCurrentUser();
 	const sendMatchData = (event, state) => {
@@ -393,7 +397,7 @@ export const gameHandler = (_, matchData) => {
 		paddleRight.reset(gameBoard);
 		setScoreText();
 		ballActive = false;
-		ball.reset(gameBoard);
+		ball.reset();
 		setTimeout(() => {
 			ballActive = true;
 		}, 1500);
@@ -489,7 +493,7 @@ export const gameHandler = (_, matchData) => {
 		if (lastTime === 0) lastTime = timestamp;
 
 		clear();
-		deltaTime = Math.min((timestamp - lastTime) / 1000, 1 / 30);
+		deltaTime = Math.min((timestamp - lastTime) / 1000, 1 / 60);
 		lastTime = timestamp;
 
 		if (matchData) {
@@ -500,17 +504,18 @@ export const gameHandler = (_, matchData) => {
 		}
 
 		if (ballActive) {
-			if (!ball.draw(ctx).move(gameBoard, paddleLeft, paddleRight)) {
+			if (!ball.draw().move(deltaTime, paddleLeft, paddleRight)) {
 				reset();
 				target.reset();
 			}
-		} else ball.draw(ctx);
+		} else ball.draw();
 
 		paddleLeft.draw(ctx).move(gameBoard);
 		paddleRight.draw(ctx).move(gameBoard);
 		animFrame = window.requestAnimationFrame(draw);
 	};
 
+	// @ts-ignore
 	document.addEventListener("visibilitychange", (event) => {
 		sendMatchData("GAME_MATCH_PAUSE_EVENT", document.visibilityState);
 	});
@@ -557,7 +562,7 @@ export const gameHandler = (_, matchData) => {
 	// sendMatchData("GAME_MATCH_PAUSE_EVENT", document.visibilityState);
 	setColor();
 	clear(false);
-	ball.init(gameBoard, scale).draw(ctx);
+	ball.draw();
 	paddleLeft.init(gameBoard, scale).draw(ctx);
 	paddleRight.init(gameBoard, scale).draw(ctx);
 	if (matchData) {

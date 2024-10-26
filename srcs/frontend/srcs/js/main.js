@@ -4,7 +4,7 @@ import {
 	keyDownListener,
 	keyUpListener,
 	matchUpdateInterval,
-} from "./game.js";
+} from "./game/game.js";
 import { BASE_URL, mainHandler, navHandler } from "./handler.js";
 import { routes } from "./route.js";
 import { closeWebSocket, connectWebSocket } from "./socket.js";
