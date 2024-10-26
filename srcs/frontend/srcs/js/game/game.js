@@ -30,6 +30,9 @@ export class Game {
 		this.deltaTime = 0;
 		this.lastTime = 0;
 		this.lastExecutionTime = 0;
+
+		// this.latency = 0;
+
 		this.ballActive = true;
 		this.user = getCurrentUser();
 
@@ -76,14 +79,15 @@ export class Game {
 		}
 
 		this.animationFrame = window.requestAnimationFrame(
-			this.draw.bind(this)
+			this.loop.bind(this)
 		);
 
-		// if (this.remote) {
-		// 	this.matchUpdateInterval = setInterval(() => {
-		// 		this.updateBallData();
-		// 	}, MATCH_UPDATE_INTERVAL);
-		// }
+		if (this.remote) {
+			this.matchUpdateInterval = setInterval(() => {
+				// console.log("idk");
+				this.updateBallData();
+			}, MATCH_UPDATE_INTERVAL);
+		}
 	}
 
 	setColor() {
@@ -114,7 +118,7 @@ export class Game {
 
 		this.ballActive = false;
 		this.ball.reset();
-		console.log("once");
+		this.scoreHandler();
 		setTimeout(() => {
 			this.ballActive = true;
 		}, 1500);
@@ -127,6 +131,7 @@ export class Game {
 					event,
 					data: {
 						state,
+						// timestamp: performance.now(),
 						uuid: this.remote.uuid,
 					},
 				})
@@ -153,7 +158,7 @@ export class Game {
 		}
 	}
 
-	async scoreHandler() {
+	async scoreHandler(player) {
 		if (this.remote) {
 			let winner = null;
 			if (this.player_1.points >= this.remote.max_score) {
@@ -162,10 +167,21 @@ export class Game {
 				winner = this.remote.player_2.user.uuid;
 			}
 
-			this.sendRemote("GAME_MATCH_SCORE_UPDATE", {
-				player1_score: this.player_1.points,
-				player2_score: this.player_2.points,
-			});
+			// this.sendRemote("GAME_MATCH_SCORE_UPDATE", {
+			// 	player1_score: this.player_1.points,
+			// 	player2_score: this.player_2.points,
+			// });
+
+			if (this.authoritative) {
+				this.sendRemote("GAME_MATCH_SCORE_UPDATE", {
+					// player1_score: this.player_1.points,
+					// player2_score: this.player_2.points,
+					ball: {
+						vx: this.ball.vx,
+						vy: this.ball.vy,
+					},
+				});
+			}
 
 			const res = await fetch(
 				BASE_URL + "/game/match/" + this.remote.uuid,
@@ -175,37 +191,42 @@ export class Game {
 						"Content-Type": "application/json",
 					},
 					body: JSON.stringify({
-						score: this.currentPlayer.points,
+						score: 1,
+						// score: this.currentPlayer.points,
 						...(winner ? { winner_uuid: winner } : {}),
 					}),
 				}
 			);
-			if (!res.ok)
+			const json = await res.json();
+			if (res.ok) {
+				this.remote = json;
+			} else {
 				Toast("An error occurred while updating the score", "danger");
+			}
 		}
 	}
 
-	draw(timestamp) {
+	loop(timestamp) {
 		if (this.lastTime === 0) this.lastTime = timestamp;
 		this.clear();
 
 		this.deltaTime = Math.min((timestamp - this.lastTime) / 1000, 1 / 60);
 		this.lastTime = timestamp;
 
-		// if (this.remote) {
-		// 	this.ball.x = this.lerp(this.ball.x, this.ball.target.x, BALL_LERP);
-		// 	this.ball.y = this.lerp(this.ball.y, this.ball.target.y, BALL_LERP);
-		// 	this.player_1.y = this.lerp(
-		// 		this.player_1.y,
-		// 		this.player_1.target,
-		// 		PADDLE_LERP
-		// 	);
-		// 	this.player_2.y = this.lerp(
-		// 		this.player_2.y,
-		// 		this.player_2.target,
-		// 		PADDLE_LERP
-		// 	);
-		// }
+		if (this.remote) {
+			this.ball.x = this.lerp(this.ball.x, this.ball.target.x, BALL_LERP);
+			this.ball.y = this.lerp(this.ball.y, this.ball.target.y, BALL_LERP);
+			this.player_1.y = this.lerp(
+				this.player_1.y,
+				this.player_1.target,
+				PADDLE_LERP
+			);
+			this.player_2.y = this.lerp(
+				this.player_2.y,
+				this.player_2.target,
+				PADDLE_LERP
+			);
+		}
 
 		if (this.ballActive) {
 			if (
@@ -213,7 +234,7 @@ export class Game {
 					.draw()
 					.move(this.deltaTime, this.player_1, this.player_2)
 			) {
-				this.updateBallData();
+				// this.updateBallData();
 				this.reset();
 			}
 		} else {
@@ -224,7 +245,7 @@ export class Game {
 		this.player_2.draw().move(this.deltaTime);
 
 		this.animationFrame = window.requestAnimationFrame(
-			this.draw.bind(this)
+			this.loop.bind(this)
 		);
 	}
 
@@ -300,33 +321,17 @@ export class Game {
 
 		if (this.remote) {
 			eventEmitter.on("GAME_MATCH_STATE_UPDATE", (data) => {
-				this.ball.x = data.state.ball.x;
-				this.ball.y = data.state.ball.y;
-				this.ball.vx = data.state.ball.vx;
-				this.ball.vy = data.state.ball.vy;
-				// this.ball.target = {
-				// 	x: data.state.ball.x,
-				// 	y: data.state.ball.y,
-				// 	vx: data.state.ball.vx,
-				// 	vy: data.state.ball.vy,
-				// };
-				this.player_1.y = data.state.player1_position;
-				this.player_2.y = data.state.player2_position;
+				this.ball.target = {
+					x: data.state.ball.x,
+					y: data.state.ball.y,
+					vx: data.state.ball.vx,
+					vy: data.state.ball.vy,
+				};
+				this.player_1.target = data.state.player1_position;
+				this.player_2.target = data.state.player2_position;
 				this.player_1.points = data.state.player1_score;
 				this.player_2.points = data.state.player2_score;
 			});
-			// eventEmitter.on("GAME_MATCH_STATE_UPDATE", (data) => {
-			// 	this.ball.target = {
-			// 		x: data.state.ball.x,
-			// 		y: data.state.ball.y,
-			// 		vx: data.state.ball.vx,
-			// 		vy: data.state.ball.vy,
-			// 	};
-			// 	this.player_1.target = data.state.player1_position;
-			// 	this.player_2.target = data.state.player2_position;
-			// 	this.player_1.points = data.state.player1_score;
-			// 	this.player_2.points = data.state.player2_score;
-			// });
 		}
 
 		eventEmitter.on("GAME_MATCH_PADDLE_UPDATE", (data) => {
@@ -340,9 +345,9 @@ export class Game {
 		eventEmitter.on("GAME_MATCH_SCORE_UPDATE", (data) => {
 			this.player_1.points = data.state.player1_score;
 			this.player_2.points = data.state.player2_score;
-			this.setScore();
 			this.ball.vx = data.state.ball.vx;
 			this.ball.vy = data.state.ball.vy;
+			this.setScore();
 		});
 
 		eventEmitter.on("GAME_MATCH_FINISHED", (data) => {});
