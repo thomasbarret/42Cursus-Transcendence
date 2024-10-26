@@ -2,7 +2,7 @@ import * as bootstrap from "bootstrap";
 import { BASE_URL } from "./handler.js";
 import { currentPlayerCard, inviteBoxCard, Toast } from "./components.js";
 import { navigate } from "./main.js";
-import { animFrame, gameHandler } from "./game.js";
+import { gameHandler } from "./game/pong.js";
 import { eventEmitter } from "./eventemitter.js";
 
 export const playHandler = (route) => {
@@ -95,7 +95,7 @@ export const lobbyHandler = (route, slug) => {
 	const matchFinish = (data) => {
 		waitingOverlay.classList.add("d-none");
 		pauseOverlay.classList.add("d-none");
-		window.cancelAnimationFrame(animFrame);
+		// window.cancelAnimationFrame(animFrame);
 		winnerOverlay.classList.remove("d-none");
 		finalScore.textContent =
 			data.player1_score + " : " + data.player2_score;

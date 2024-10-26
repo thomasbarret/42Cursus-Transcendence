@@ -1,6 +1,6 @@
 import { Toast } from "./components.js";
 import { eventEmitter } from "./eventemitter.js";
-import { gameHandler } from "./game.js";
+import { gameHandler } from "./game/pong.js";
 import { navigate } from "./main.js";
 import { getCurrentUser } from "./storage.js";
 /**
@@ -11,7 +11,9 @@ export let socketReconnectTry = 0;
 
 export const gameStartMatch = (data) => {
 	const gameUrl = "/lobby/" + data.uuid;
-	if (window.location.pathname !== gameUrl) navigate(gameUrl);
+	if (window.location.pathname !== gameUrl) {
+		navigate(gameUrl);
+	}
 };
 
 export const closeWebSocket = () => {
@@ -68,7 +70,6 @@ export const connectWebSocket = () => {
 			console.log("received socket message: ", data);
 		if (data.event === "GAME_START_MATCH") {
 			gameStartMatch(data.data);
-			gameHandler(false, data.data);
 		}
 		eventEmitter.emit(data.event, data.data);
 	};

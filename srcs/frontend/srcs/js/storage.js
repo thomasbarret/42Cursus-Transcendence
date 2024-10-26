@@ -1,9 +1,10 @@
-export const themeEvent = new Event("theme");
+import { eventEmitter } from "./eventemitter.js";
+
 export const activateDarkMode = (toggle) => {
 	const html = document.querySelector("html");
 	html.setAttribute("data-bs-theme", isDarkMode() ? "dark" : "light");
 	if (toggle) toggle.textContent = isDarkMode() ? "🌙" : "☀️";
-	document.dispatchEvent(themeEvent);
+	eventEmitter.emit("theme", isDarkMode());
 };
 export const isDarkMode = () => {
 	const mode = localStorage.getItem("theme");
