@@ -20,6 +20,7 @@ export class Paddle {
 		this.color = isDarkMode() ? "white" : "black";
 		this.direction = DIRECTION.IDLE;
 		this.points = 0;
+		this.target = 0;
 
 		this.y = (canvas.height - this.height) / 2;
 		if (side === "left") {
@@ -48,6 +49,7 @@ export class Paddle {
 	 */
 	reset() {
 		this.y = (this.canvas.height - this.height) / 2;
+		this.target = this.y;
 		return this;
 	}
 
@@ -81,35 +83,30 @@ export class Paddle {
 	/**
 	 * @param {KeyboardEvent} event
 	 * @param {boolean} isKeyDown
-	 * @param {Object} matchData
-	 * @param {Function} sendMatchdata
-	 * @returns {Paddle}
+	 * @returns {number | false}
 	 */
-	keyHandler(event, isKeyDown, matchData, sendMatchdata) {
+	keyHandler(event, isKeyDown) {
 		const key = event.key;
 
 		if (!isKeyDown) {
 			if (this.direction !== DIRECTION.IDLE) {
-				this.direction = DIRECTION.IDLE;
-				sendMatchdata("GAME_MATCH_PADDLE_UPDATE", this.direction);
+				return (this.direction = DIRECTION.IDLE);
 			}
-			return this;
+			return false;
 		}
 
 		if (key === this.keys.up) {
 			event.preventDefault();
 			if (this.direction !== DIRECTION.UP) {
-				this.direction = DIRECTION.UP;
-				sendMatchdata("GAME_MATCH_PADDLE_UPDATE", this.direction);
+				return (this.direction = DIRECTION.UP);
 			}
 		}
 		if (key === this.keys.down) {
 			event.preventDefault();
 			if (this.direction !== DIRECTION.DOWN) {
-				this.direction = DIRECTION.DOWN;
-				sendMatchdata("GAME_MATCH_PADDLE_UPDATE", this.direction);
+				return (this.direction = DIRECTION.DOWN);
 			}
 		}
-		return this;
+		return false;
 	}
 }

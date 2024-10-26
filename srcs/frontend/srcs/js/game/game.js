@@ -4,535 +4,318 @@ import { BASE_URL } from "../handler.js";
 import { socket } from "../socket.js";
 import { getCurrentUser, isDarkMode } from "../storage.js";
 import { Ball } from "./ball.js";
+import {
+	BALL_LERP,
+	MATCH_UPDATE_INTERVAL,
+	PADDLE_LERP,
+	REFERENCE_HEIGHT,
+	REFERENCE_WIDTH,
+} from "./constants.js";
 import { Paddle } from "./paddle.js";
-export let animFrame;
-export let matchUpdateInterval;
-export let keyUpListener;
-export let keyDownListener;
 
-const referenceWidth = 840;
-const referenceHeight = 500;
+export class Game {
+	constructor(matchData) {
+		this.animationFrame = null;
+		this.finished = false;
+		this.remote = matchData;
+		this.canvas = document.querySelector("canvas");
+		this.ctx = this.canvas.getContext("2d");
 
-export const gameHandler = (_, matchData) => {
-	const gameBoard = document.getElementById("game-board");
-	// @ts-ignore
-	const ctx = gameBoard.getContext("2d");
-	if (!ctx) return false;
-	const scoreText = document.getElementById("score-text");
-	// const resetButton = document.getElementById("reset-btn");
-	const scale = {
-		// @ts-ignore
-		x: gameBoard.width / referenceWidth,
-		// @ts-ignore
-		y: gameBoard.height / referenceHeight,
-	};
-	let deltaTime;
+		this.scoreText = document.getElementById("score-text");
+		this.scale = {
+			x: this.canvas.width / REFERENCE_WIDTH,
+			y: this.canvas.height / REFERENCE_HEIGHT,
+		};
 
-	// @ts-ignore
-	const ball = new Ball(gameBoard, scale);
-	// @ts-ignore
-	const paddleLeft = new Paddle("left", gameBoard, scale);
-	// @ts-ignore
-	const paddleRight = new Paddle("right", gameBoard, scale);
+		this.deltaTime = 0;
+		this.lastTime = 0;
+		this.lastExecutionTime = 0;
+		this.ballActive = true;
+		this.user = getCurrentUser();
 
-	// const oldBall = {
-	// 	move(canvas, paddleLeft, paddleRight) {
-	// 		const calculateImpactPoint = (paddle) => {
-	// 			const impact = (this.y - paddle.y) / paddle.height;
-	// 			const normalized = impact * 2 - 1;
-	// 			const clampedImpact = Math.max(-1, Math.min(normalized, 1));
+		this.ball = new Ball(this.canvas, this.scale);
+		this.player_1 = new Paddle("left", this.canvas, this.scale);
+		this.player_2 = new Paddle("right", this.canvas, this.scale);
 
-	// 			this.vx = -this.vx;
-	// 			// const thetaBase = Math.atan2(this.vy, this.vx);
+		this.setColor();
+		this.eventListeners();
 
-	// 			const thetaNew =
-	// 				clampedImpact * (MAX_ANGLE_DEVIATION * (Math.PI / 180));
+		if (this.remote) {
+			this.currentPlayer =
+				this.user.uuid === this.remote.player_1.user.uuid
+					? this.player_1
+					: this.player_2;
+			this.authoritative = this.currentPlayer === this.player_1;
+		}
+		this.start();
+	}
 
-	// 			const speed = Math.sqrt(this.vx ** 2 + this.vy ** 2);
-	// 			this.vx = Math.sign(this.vx) * speed * Math.cos(thetaNew);
-	// 			this.vy = speed * Math.sin(thetaNew);
-	// 			sendBallData();
-	// 		};
-	// 		this.x += this.vx * deltaTime;
-	// 		this.y += this.vy * deltaTime;
-	// 		// paddle right
-	// 		if (
-	// 			this.x + this.radius >= paddleRight.x &&
-	// 			this.y >= paddleRight.y &&
-	// 			this.y <= paddleRight.y + paddleRight.height
-	// 		) {
-	// 			calculateImpactPoint(paddleRight);
-	// 			return this;
-	// 		}
-	// 		// paddle left
-	// 		if (
-	// 			this.x - this.radius <= paddleLeft.x + paddleLeft.width &&
-	// 			this.y >= paddleLeft.y &&
-	// 			this.y <= paddleLeft.y + paddleLeft.height
-	// 		) {
-	// 			calculateImpactPoint(paddleLeft);
-	// 			return this;
-	// 		}
-	// 		// if it touches up and down border:
-	// 		if (
-	// 			this.x + this.radius >= canvas.width ||
-	// 			this.x - this.radius <= 0
-	// 		) {
-	// 			if (this.x + this.radius >= canvas.width) {
-	// 				paddleLeft.points += 1;
-	// 			} else if (this.x - this.radius <= 0) {
-	// 				paddleRight.points += 1;
-	// 			}
-	// 			scoreHandler();
-	// 			return false;
-	// 		}
-	// 		if (
-	// 			this.y + this.radius >= canvas.height ||
-	// 			this.y - this.radius <= 0
-	// 		) {
-	// 			sendBallData();
-	// 			this.vy *= -1;
-	// 		}
-	// 		return this;
-	// 	},
-	// };
+	start() {
+		this.clear(false);
 
-	const user = getCurrentUser();
-	const sendMatchData = (event, state) => {
-		if (matchData && socket.readyState === WebSocket.OPEN) {
+		this.ball.draw();
+		this.player_1.draw();
+		this.player_2.draw();
+
+		if (this.remote) {
+			if (this.remote.status === 3) this.finished = true;
+
+			this.player_1.points = this.remote.player1_score;
+			this.player_2.points = this.remote.player2_score;
+			this.setScore();
+		}
+
+		this.animationFrame = window.requestAnimationFrame(
+			this.draw.bind(this)
+		);
+
+		if (this.remote) {
+			this.matchUpdateInterval = setInterval(() => {
+				this.updateBallData();
+			}, MATCH_UPDATE_INTERVAL);
+		}
+	}
+
+	setColor() {
+		this.color = isDarkMode() ? "rgb(0 0 0)" : "rgb(255 255 255)";
+		this.transparent = isDarkMode()
+			? "rgb(0 0 0 / 10%)"
+			: "rgb(255 255 255 / 10%)";
+
+		const elementColor = isDarkMode() ? "white" : "black";
+		this.player_1.color = elementColor;
+		this.player_2.color = elementColor;
+		this.ball.color = elementColor;
+	}
+
+	clear(transparent = true) {
+		this.ctx.fillStyle = transparent ? this.transparent : this.color;
+		this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+	}
+
+	setScore() {
+		this.scoreText.textContent = `${this.player_1.points} : ${this.player_2.points}`;
+	}
+
+	reset() {
+		this.player_1.reset();
+		this.player_2.reset();
+		this.setScore();
+
+		this.ballActive = false;
+		this.ball.reset();
+		setTimeout(() => {
+			this.ballActive = true;
+		}, 1500);
+	}
+
+	sendRemote(event, state) {
+		if (this.remote && !this.finished) {
 			socket.send(
 				JSON.stringify({
-					event: event,
+					event,
 					data: {
-						uuid: matchData.uuid,
-						state: state,
+						state,
+						uuid: this.remote.uuid,
 					},
 				})
 			);
 		}
-	};
-	// const paddleLeft = {
-	// 	x: 0,
-	// 	y: 0,
-	// 	vy: PADDLE_VELOCITY,
-	// 	width: paddleSizes.width,
-	// 	height: paddleSizes.height,
-	// 	color: "white",
-	// 	direction: DIRECTION.IDLE,
-	// 	keys: {
-	// 		upKey: "w",
-	// 		downKey: "s",
-	// 		altUpKey: "ArrowUp",
-	// 		altDownKey: "ArrowDown",
-	// 	},
-	// 	points: 0,
-	// 	init(canvas, scale) {
-	// 		this.x = 0;
-	// 		this.y = canvas.height / 2;
-	// 		this.width *= scale.x;
-	// 		this.height *= scale.y;
-	// 		this.vy *= scale.y;
-	// 		return this;
-	// 	},
-	// 	draw(ctx) {
-	// 		ctx.fillStyle = this.color;
-	// 		ctx.fillRect(this.x, this.y, this.width, this.height);
-	// 		return this;
-	// 	},
-	// 	move(canvas) {
-	// 		if (this.direction === DIRECTION.IDLE) return this;
-	// 		if (this.y + this.height >= canvas.height)
-	// 			this.y = canvas.height - this.height;
-	// 		else if (this.y <= 0) this.y = 0;
-	// 		if (this.direction === DIRECTION.UP) this.y -= this.vy * deltaTime;
-	// 		if (this.direction === DIRECTION.DOWN)
-	// 			this.y += this.vy * deltaTime;
-	// 		return this;
-	// 	},
-	// 	keyHandler(event, value) {
-	// 		if (this.direction !== DIRECTION.IDLE && value === false) {
-	// 			this.direction = DIRECTION.IDLE;
-	// 			if (matchData)
-	// 				sendMatchData("GAME_MATCH_PADDLE_UPDATE", this.direction);
-	// 		} else if (matchData) {
-	// 			if (
-	// 				event.key === this.keys.upKey ||
-	// 				event.key === this.keys.altUpKey
-	// 			) {
-	// 				event.preventDefault();
-	// 				if (this.direction !== DIRECTION.UP) {
-	// 					this.direction = DIRECTION.UP;
-	// 					sendMatchData(
-	// 						"GAME_MATCH_PADDLE_UPDATE",
-	// 						this.direction
-	// 					);
-	// 				}
-	// 			}
-	// 			if (
-	// 				event.key === this.keys.downKey ||
-	// 				event.key === this.keys.altDownKey
-	// 			) {
-	// 				event.preventDefault();
-	// 				if (this.direction !== DIRECTION.DOWN) {
-	// 					this.direction = DIRECTION.DOWN;
-	// 					sendMatchData(
-	// 						"GAME_MATCH_PADDLE_UPDATE",
-	// 						this.direction
-	// 					);
-	// 				}
-	// 			}
-	// 		} else {
-	// 			if (
-	// 				this.direction !== DIRECTION.UP &&
-	// 				event.key === this.keys.upKey
-	// 			) {
-	// 				event.preventDefault();
-	// 				if (this.direction !== DIRECTION.UP)
-	// 					this.direction = DIRECTION.UP;
-	// 			}
-	// 			if (event.key === this.keys.downKey) {
-	// 				event.preventDefault();
-	// 				if (this.direction !== DIRECTION.DOWN)
-	// 					this.direction = DIRECTION.DOWN;
-	// 			}
-	// 		}
-	// 		return this;
-	// 	},
-	// 	reset(canvas) {
-	// 		this.x = 0;
-	// 		this.y = canvas.height / 2;
-	// 		return this;
-	// 	},
-	// };
-	// const paddleRight = {
-	// 	x: 0,
-	// 	y: 0,
-	// 	vy: PADDLE_VELOCITY,
-	// 	width: paddleSizes.width,
-	// 	height: paddleSizes.height,
-	// 	color: "white",
-	// 	direction: DIRECTION.IDLE,
-	// 	keys: {
-	// 		upKey: "ArrowUp",
-	// 		downKey: "ArrowDown",
-	// 		altUpKey: "w",
-	// 		altDownKey: "s",
-	// 	},
-	// 	points: 0,
-	// 	init(canvas, scale) {
-	// 		this.width *= scale.x;
-	// 		this.height *= scale.y;
-	// 		this.x = canvas.width - this.width;
-	// 		this.y = canvas.height / 2;
-	// 		this.vy *= scale.y;
-	// 		return this;
-	// 	},
-	// 	draw(ctx) {
-	// 		ctx.fillStyle = this.color;
-	// 		ctx.fillRect(this.x, this.y, this.width, this.height);
-	// 		return this;
-	// 	},
-	// 	move(canvas) {
-	// 		if (this.direction === DIRECTION.IDLE) return this;
-	// 		if (this.y + this.height >= canvas.height)
-	// 			this.y = canvas.height - this.height;
-	// 		else if (this.y <= 0) this.y = 0;
-	// 		if (this.direction === DIRECTION.UP) this.y -= this.vy * deltaTime;
-	// 		if (this.direction === DIRECTION.DOWN)
-	// 			this.y += this.vy * deltaTime;
-	// 		return this;
-	// 	},
-	// 	keyHandler(event, value) {
-	// 		if (this.direction !== DIRECTION.IDLE && value === false) {
-	// 			this.direction = DIRECTION.IDLE;
-	// 			if (matchData)
-	// 				sendMatchData("GAME_MATCH_PADDLE_UPDATE", this.direction);
-	// 		} else if (matchData) {
-	// 			if (
-	// 				event.key === this.keys.upKey ||
-	// 				event.key === this.keys.altUpKey
-	// 			) {
-	// 				event.preventDefault();
-	// 				if (this.direction !== DIRECTION.UP) {
-	// 					this.direction = DIRECTION.UP;
-	// 					sendMatchData(
-	// 						"GAME_MATCH_PADDLE_UPDATE",
-	// 						this.direction
-	// 					);
-	// 				}
-	// 			}
-	// 			if (
-	// 				event.key === this.keys.downKey ||
-	// 				event.key === this.keys.altDownKey
-	// 			) {
-	// 				event.preventDefault();
-	// 				if (this.direction !== DIRECTION.DOWN) {
-	// 					this.direction = DIRECTION.DOWN;
-	// 					sendMatchData(
-	// 						"GAME_MATCH_PADDLE_UPDATE",
-	// 						this.direction
-	// 					);
-	// 				}
-	// 			}
-	// 		} else {
-	// 			if (event.key === this.keys.upKey) {
-	// 				event.preventDefault();
-	// 				if (this.direction !== DIRECTION.UP)
-	// 					this.direction = DIRECTION.UP;
-	// 			}
-	// 			if (event.key === this.keys.downKey) {
-	// 				event.preventDefault();
-	// 				if (this.direction !== DIRECTION.DOWN)
-	// 					this.direction = DIRECTION.DOWN;
-	// 			}
-	// 		}
-	// 		return this;
-	// 	},
-	// 	reset(canvas) {
-	// 		this.x = canvas.width - this.width;
-	// 		this.y = canvas.height / 2;
-	// 		return this;
-	// 	},
-	// };
+	}
 
-	const scoreHandler = async () => {
-		if (matchData) {
-			let winner;
-			if (paddleLeft.points >= matchData.max_score) {
-				winner = matchData.player_1.user.uuid;
-			} else if (paddleRight.points >= matchData.max_score) {
-				winner = matchData.player_2.user.uuid;
+	updateBallData() {
+		if (this.remote && this.authoritative) {
+			//TODO: Might need to do throttling here
+			// const now = Date.now();
+			// const throttleInterval
+
+			this.sendRemote("GAME_MATCH_STATE_UPDATE", {
+				ball: {
+					x: this.ball.x,
+					y: this.ball.y,
+					vx: this.ball.vx,
+					vy: this.ball.vy,
+				},
+				player1_score: this.player_1.points,
+				player2_score: this.player_2.points,
+				player1_position: this.player_1.y,
+				player2_position: this.player_2.y,
+			});
+		}
+	}
+
+	async scoreHandler() {
+		if (this.remote) {
+			let winner = null;
+			if (this.player_1.points >= this.remote.max_score) {
+				winner = this.remote.player_1.user.uuid;
+			} else if (this.player_2.points >= this.remote.max_score) {
+				winner = this.remote.player_2.user.uuid;
 			}
 
-			sendMatchData("GAME_MATCH_SCORE_UPDATE", {
-				left_score: paddleLeft.points,
-				right_score: paddleRight.points,
+			this.sendRemote("GAME_MATCH_SCORE_UPDATE", {
+				player1_score: this.player_1.points,
+				player2_score: this.player_2.points,
 			});
 
-			const current =
-				user.uuid === matchData.player_1.user.uuid
-					? paddleLeft
-					: paddleRight;
-
 			const res = await fetch(
-				BASE_URL + "/game/match/" + matchData.uuid,
+				BASE_URL + "/game/match/" + this.remote.uuid,
 				{
 					method: "PUT",
 					headers: {
 						"Content-Type": "application/json",
 					},
 					body: JSON.stringify({
-						score: current.points,
+						score: this.currentPlayer.points,
 						...(winner ? { winner_uuid: winner } : {}),
 					}),
 				}
 			);
-			if (!res.ok) Toast("Couldn't update match score!", "danger");
+			if (!res.ok)
+				Toast("An error occurred while updating the score", "danger");
 		}
-	};
+	}
 
-	let ballActive = true;
-	let color;
-	let tr;
-	const setColor = () => {
-		color = isDarkMode() ? "rgb(0 0 0)" : "rgb(255 255 255)";
-		tr = isDarkMode() ? "rgb(0 0 0 / 10%)" : "rgb(255 255 255 / 10%)";
-		const elColor = isDarkMode() ? "white" : "black";
-		paddleLeft.color = elColor;
-		paddleRight.color = elColor;
-		ball.color = elColor;
-	};
-	const clear = (transparent) => {
-		if (transparent === false) ctx.fillStyle = color;
-		else ctx.fillStyle = tr;
-		// @ts-ignore
-		ctx.fillRect(0, 0, gameBoard.width, gameBoard.height);
-	};
-	const setScoreText = () =>
-		scoreText &&
-		(scoreText.textContent =
-			paddleLeft.points + " : " + paddleRight.points);
+	draw(timestamp) {
+		if (this.lastTime === 0) this.lastTime = timestamp;
+		this.clear();
 
-	const reset = () => {
-		paddleLeft.reset();
-		paddleRight.reset();
-		setScoreText();
-		ballActive = false;
-		ball.reset();
-		setTimeout(() => {
-			ballActive = true;
-		}, 1500);
-	};
+		this.deltaTime = Math.min((timestamp - this.lastTime) / 1000, 1 / 60);
+		this.lastTime = timestamp;
 
-	let lastExecutionTime = 0;
+		if (this.remote) {
+			this.ball.x = this.lerp(this.ball.x, this.ball.target.x, BALL_LERP);
+			this.ball.y = this.lerp(this.ball.y, this.ball.target.y, BALL_LERP);
+			this.player_1.y = this.lerp(
+				this.player_1.y,
+				this.player_1.target,
+				PADDLE_LERP
+			);
+			this.player_2.y = this.lerp(
+				this.player_2.y,
+				this.player_2.target,
+				PADDLE_LERP
+			);
+		}
 
-	const sendBallData = () => {
-		if (matchData && matchData.player_1.user.uuid === user.uuid) {
-			const now = Date.now();
-			const throttleInterval = 1000 / 45;
-
-			if (now - lastExecutionTime >= throttleInterval) {
-				lastExecutionTime = now;
-				sendMatchData("GAME_MATCH_STATE_UPDATE", {
-					x: ball.x,
-					y: ball.y,
-					vx: ball.vx,
-					vy: ball.vy,
-					left_score: paddleLeft.points,
-					right_score: paddleRight.points,
-					left_paddle: paddleLeft.y,
-					right_paddle: paddleRight.y,
-				});
+		if (this.ballActive) {
+			if (
+				!this.ball
+					.draw()
+					.move(this.deltaTime, this.player_1, this.player_2)
+			) {
+				this.reset();
 			}
+		} else {
+			this.ball.draw();
 		}
-	};
-	matchUpdateInterval = setInterval(() => {
-		sendBallData();
-	}, 1000 / 11);
 
-	const target = {
-		x: ball.x,
-		y: ball.y,
-		left: paddleLeft.y,
-		right: paddleRight.y,
-		reset() {
-			this.x = ball.x;
-			this.y = ball.y;
-			this.left = paddleLeft.y;
-			this.right = paddleRight.y;
-		},
-	};
+		this.player_1.draw().move(this.deltaTime);
+		this.player_2.draw().move(this.deltaTime);
 
-	if (matchData) {
-		eventEmitter.on("GAME_MATCH_STATE_UPDATE", (data) => {
-			target.x = data.state.x;
-			target.y = data.state.y;
-			ball.vx = data.state.vx;
-			ball.vy = data.state.vy;
-			paddleLeft.points = data.state.left_score;
-			paddleRight.points = data.state.right_score;
-			target.left = data.state.left_paddle;
-			target.right = data.state.right_paddle;
+		this.animationFrame = window.requestAnimationFrame(
+			this.draw.bind(this)
+		);
+	}
+
+	lerp(start, end, factor) {
+		return start + (end - start) * factor;
+	}
+
+	eventListeners() {
+		document.addEventListener(
+			"visibilitychange",
+			(this.visibilityListener = () => {
+				this.sendRemote(
+					"GAME_MATCH_PAUSE_EVENT",
+					document.visibilityState
+				);
+			})
+		);
+
+		if (this.remote) {
+			document.addEventListener(
+				"keydown",
+				(this.keyDownListener = (event) => {
+					if (!this.finished) {
+						if (
+							this.currentPlayer.keyHandler(event, true) !== false
+						) {
+							this.sendRemote(
+								"GAME_MATCH_PADDLE_UPDATE",
+								this.currentPlayer.direction
+							);
+						}
+					}
+				})
+			);
+
+			document.addEventListener(
+				"keyup",
+				(this.keyDownListener = (event) => {
+					if (!this.finished) {
+						if (
+							this.currentPlayer.keyHandler(event, false) !==
+							false
+						) {
+							this.sendRemote(
+								"GAME_MATCH_PADDLE_UPDATE",
+								this.currentPlayer.direction
+							);
+						}
+					}
+				})
+			);
+		} else {
+			document.addEventListener(
+				"keydown",
+				(this.keyDownListener = (event) => {
+					this.player_1.keyHandler(event, true);
+					this.player_2.keyHandler(event, true);
+				})
+			);
+
+			document.addEventListener(
+				"keyup",
+				(this.keyDownListener = (event) => {
+					this.player_1.keyHandler(event, false);
+					this.player_2.keyHandler(event, false);
+				})
+			);
+		}
+
+		eventEmitter.on("theme", () => {
+			this.setColor();
 		});
+
+		if (this.remote) {
+			eventEmitter.on("GAME_MATCH_STATE_UPDATE", (data) => {
+				this.ball.target = {
+					x: data.state.ball.x,
+					y: data.state.ball.y,
+					vx: data.state.ball.vx,
+					vy: data.state.ball.vy,
+				};
+				this.player_1.target = data.state.player1_position;
+				this.player_2.target = data.state.player2_position;
+				this.player_1.points = data.state.player1_score;
+				this.player_2.points = data.state.player2_score;
+			});
+		}
 
 		eventEmitter.on("GAME_MATCH_PADDLE_UPDATE", (data) => {
 			const player =
-				data.player_uuid === matchData.player_1.uuid
-					? paddleLeft
-					: paddleRight;
-
+				data.player_uuid === this.remote.player_1.user.uuid
+					? this.player_1
+					: this.player_2;
 			player.direction = data.state;
 		});
 
 		eventEmitter.on("GAME_MATCH_SCORE_UPDATE", (data) => {
-			paddleLeft.points = data.state.left_score;
-			paddleRight.points = data.state.right_score;
-			reset();
-		});
-
-		eventEmitter.on("GAME_MATCH_PAUSE_EVENT", (data) => {
 			if (data.state === "hidden") {
-				lastTime = 0;
-				target.reset();
-				window.cancelAnimationFrame(animFrame);
-			} else {
-				animFrame = window.requestAnimationFrame(draw);
 			}
 		});
 
-		eventEmitter.on("GAME_MATCH_FINISHED", () => {
-			window.cancelAnimationFrame(animFrame);
-			matchData = false;
-		});
+		eventEmitter.on("GAME_MATCH_FINISHED", (data) => {});
 	}
-
-	let lastTime = 0;
-
-	const lerp = (start, end, factor) => start + (end - start) * factor;
-
-	const draw = (timestamp) => {
-		if (lastTime === 0) lastTime = timestamp;
-
-		clear();
-		deltaTime = Math.min((timestamp - lastTime) / 1000, 1 / 60);
-		lastTime = timestamp;
-
-		if (matchData) {
-			ball.x = lerp(ball.x, target.x, 0.1);
-			ball.y = lerp(ball.y, target.y, 0.1);
-			paddleLeft.y = lerp(paddleLeft.y, target.left, 0.1);
-			paddleRight.y = lerp(paddleRight.y, target.right, 0.1);
-		}
-
-		if (ballActive) {
-			if (!ball.draw().move(deltaTime, paddleLeft, paddleRight)) {
-				reset();
-				target.reset();
-			}
-		} else ball.draw();
-
-		paddleLeft.draw().move(deltaTime);
-		paddleRight.draw().move(deltaTime);
-		animFrame = window.requestAnimationFrame(draw);
-	};
-
-	// @ts-ignore
-	document.addEventListener("visibilitychange", (event) => {
-		sendMatchData("GAME_MATCH_PAUSE_EVENT", document.visibilityState);
-	});
-
-	document.addEventListener(
-		"keydown",
-		(keyDownListener = (e) => {
-			if (matchData) {
-				if (user.uuid === matchData.player_1.user.uuid)
-					paddleLeft.keyHandler(e, true, matchData, sendMatchData);
-				else if (user.uuid === matchData.player_2.user.uuid)
-					paddleRight.keyHandler(e, true, matchData, sendMatchData);
-			} else {
-				paddleLeft.keyHandler(e, true, matchData, sendMatchData);
-				paddleRight.keyHandler(e, true, matchData, sendMatchData);
-			}
-		})
-	);
-
-	// gameBoard.addEventListener("mouseenter", () => {
-	// animFrame = window.requestAnimationFrame(draw);
-	// });
-
-	document.addEventListener(
-		"keyup",
-		(keyUpListener = (e) => {
-			if (matchData) {
-				if (user.uuid === matchData.player_1.user.uuid)
-					paddleLeft.keyHandler(e, false, matchData, sendMatchData);
-				else if (user.uuid === matchData.player_2.user.uuid)
-					paddleRight.keyHandler(e, false, matchData, sendMatchData);
-			} else {
-				paddleLeft.keyHandler(e, false, matchData, sendMatchData);
-				paddleRight.keyHandler(e, false, matchData, sendMatchData);
-			}
-		})
-	);
-	document.addEventListener("theme", () => {
-		color = isDarkMode() ? "rgb(0 0 0)" : "rgb(255 255 255)";
-		tr = isDarkMode() ? "rgb(0 0 0 / 10%)" : "rgb(255 255 255 / 10%)";
-		setColor();
-	});
-
-	// sendMatchData("GAME_MATCH_PAUSE_EVENT", document.visibilityState);
-	setColor();
-	clear(false);
-	ball.draw();
-	paddleLeft.draw();
-	paddleRight.draw();
-	if (matchData) {
-		if (matchData.status === 3) {
-			matchData = false;
-		}
-		paddleLeft.points = matchData.player1_score;
-		paddleRight.points = matchData.player2_score;
-		setScoreText();
-	}
-	animFrame = window.requestAnimationFrame(draw);
-};
+}

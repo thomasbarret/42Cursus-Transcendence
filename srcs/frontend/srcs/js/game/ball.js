@@ -1,4 +1,3 @@
-// js doc for scale which has a x and y
 /**
  * @typedef {Object} Scale
  * @property {number} x
@@ -25,6 +24,14 @@ export class Ball {
 		this.vy = 0;
 		this.x = 0;
 		this.y = 0;
+
+		this.target = {
+			x: 0,
+			y: 0,
+			vx: 0,
+			vy: 0,
+		};
+		this.reset();
 	}
 
 	/**
@@ -40,6 +47,13 @@ export class Ball {
 
 		this.vx = direction * speed * Math.cos(angle);
 		this.vy = speed * Math.sin(angle);
+
+		this.target = {
+			x: this.x,
+			y: this.y,
+			vx: this.vx,
+			vy: this.vy,
+		};
 		return this;
 	}
 
