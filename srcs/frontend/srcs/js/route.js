@@ -10,7 +10,7 @@ import {
 import { messageHandler } from "./messages.js";
 import { lobbyMiddleware } from "./middleware.js";
 import { lobbyHandler, playHandler } from "./play.js";
-const urlPageTitle = "nascent";
+const urlPageTitle = "transcendence";
 export const routes = {
 	404: {
 		page: "/pages/not_found.html",
