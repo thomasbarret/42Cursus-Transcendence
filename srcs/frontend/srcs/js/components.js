@@ -16,7 +16,7 @@ import {
 import * as bootstrap from "bootstrap";
 import { getCurrentUser } from "./storage.js";
 import { navigate } from "./main.js";
-import { BASE_URL } from "./handler.js";
+import { BASE_URL, DEFAULT_AVATAR } from "./handler.js";
 export const goToProfile = (uuid) => navigate("/profile/" + uuid);
 export const ToastComponent = (value, level) => {
 	return div(
@@ -57,12 +57,14 @@ export const Toast = (value, level, delay) => {
 	});
 	toastBootstrap.show();
 };
-export const userListBox = (text, lastMessage) => {
-	const image = img("https://picsum.photos/50?random=1")
+export const userListBox = (user, lastMessage) => {
+	const image = img(user.avatar ? user.avatar : DEFAULT_AVATAR)
 		.attr("alt", "user avatar")
 		.cl("rounded-circle me-2")
 		.attr("style", "width: 35px; height: 35px");
-	const username = span(text).cl("small fw-semibold mb-0 text-truncate");
+	const username = span(user.display_name + " (@" + user.username + ")").cl(
+		"small fw-semibold mb-0 text-truncate"
+	);
 	if (lastMessage && lastMessage["user"]["uuid"] === getCurrentUser().uuid) {
 		lastMessage["content"] = "You: " + lastMessage["content"];
 	}
@@ -75,8 +77,8 @@ export const userListBox = (text, lastMessage) => {
 	);
 	return li;
 };
-export const messageBoxRight = (text, time) => {
-	const image = img("https://picsum.photos/45")
+export const messageBoxRight = (text, time, avatar) => {
+	const image = img(avatar ? avatar : DEFAULT_AVATAR)
 		.attr("alt", "avatar 1")
 		.attr("style", "width: 30px; height: 30px")
 		.attr("class", "rounded-circle");
@@ -95,8 +97,8 @@ export const messageBoxRight = (text, time) => {
 	);
 	return message;
 };
-export const messageBoxLeft = (text, time, uuid) => {
-	const image = img("https://picsum.photos/45")
+export const messageBoxLeft = (text, time, uuid, avatar) => {
+	const image = img(avatar ? avatar : DEFAULT_AVATAR)
 		.attr("alt", "avatar 1")
 		.attr("style", "width: 30px; height: 30px")
 		.attr("class", "rounded-circle")
@@ -116,8 +118,8 @@ export const messageBoxLeft = (text, time, uuid) => {
 	return message;
 };
 
-export const matchInviteRight = (time, callback) => {
-	const image = img("https://picsum.photos/45")
+export const matchInviteRight = (time, callback, avatar) => {
+	const image = img(avatar ? avatar : DEFAULT_AVATAR)
 		.attr("alt", "avatar 1")
 		.attr("style", "width: 30px; height: 30px")
 		.attr("class", "rounded-circle");
@@ -142,8 +144,8 @@ export const matchInviteRight = (time, callback) => {
 	return message;
 };
 
-export const matchInviteLeft = (time, uuid, callback) => {
-	const image = img("https://picsum.photos/45")
+export const matchInviteLeft = (time, uuid, callback, avatar) => {
+	const image = img(avatar ? avatar : DEFAULT_AVATAR)
 		.attr("alt", "avatar 1")
 		.attr("style", "width: 30px; height: 30px")
 		.attr("class", "rounded-circle")
@@ -173,7 +175,7 @@ export const matchInviteLeft = (time, uuid, callback) => {
 	return message;
 };
 
-export const messageBox = (content, time, current, uuid) => {
+export const messageBox = (content, time, current, uuid, avatar) => {
 	if (content.startsWith('{"game":')) {
 		try {
 			const invite = JSON.parse(content);
@@ -196,17 +198,17 @@ export const messageBox = (content, time, current, uuid) => {
 				} else Toast("Couldn't join lobby " + msg["error"], "danger");
 			};
 			return current
-				? matchInviteRight(time, callback)
-				: matchInviteLeft(time, uuid, callback);
+				? matchInviteRight(time, callback, avatar)
+				: matchInviteLeft(time, uuid, callback, avatar);
 		} catch (e) {}
 	}
 
 	return current
-		? messageBoxRight(content, time)
-		: messageBoxLeft(content, time, uuid);
+		? messageBoxRight(content, time, avatar)
+		: messageBoxLeft(content, time, uuid, avatar);
 };
 export const userProfileCard = (user, event) => {
-	const avatar = img("https://picsum.photos/80")
+	const avatar = img(user.avatar ? user.avatar : DEFAULT_AVATAR)
 		.attr("alt", "Avatar")
 		.cl("rounded-circle me-3")
 		.attr("style", "width: 80px; height:80px")
@@ -238,7 +240,7 @@ export const relationCard = (user, relation, callback) => {
 	})().onclick$(callback);
 	return div(
 		div(
-			img("https://picsum.photos/50")
+			img(user.avatar ? user.avatar : DEFAULT_AVATAR)
 				.attr("alt", "avatar")
 				.cl("rounded-circle me-3")
 				.attr("role", "button")
@@ -315,7 +317,7 @@ export const profileCard = (user, callback) => {
 		  ).cl("mx-auto w-25")
 		: div(...buttons).cl("d-flex justify-content-center gap-2 mt-3");
 	return div(
-		img("https://picsum.photos/200")
+		img(user.avatar ? user.avatar : DEFAULT_AVATAR)
 			.attr("alt", "avatar")
 			.attr("style", "width: 120px; height: 120px")
 			.attr("id", "avatar-field")
@@ -336,7 +338,7 @@ export const profileCard = (user, callback) => {
 
 export const inviteBoxCard = (user, matchId, update) => {
 	return div(
-		img("https://picsum.photos/30")
+		img(user.avatar ? user.avatar : DEFAULT_AVATAR)
 			.attr("alt", "avatar")
 			.cl("rounded-circle me-2")
 			.attr("style", "width: 30px; height: 30px"),
@@ -387,7 +389,7 @@ export const inviteBoxCard = (user, matchId, update) => {
 export const currentPlayerCard = (user) => {
 	return div(
 		div(
-			img("https://picsum.photos/30")
+			img(user.avatar ? user.avatar : DEFAULT_AVATAR)
 				.attr("alt", "avatar")
 				.cl("rounded-circle me-2")
 				.attr("style", "width: 30px; height: 30px"),

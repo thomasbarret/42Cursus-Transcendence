@@ -5,6 +5,7 @@ import { activateDarkMode, getCurrentUser, toggleDarkMode } from "./storage.js";
 // @ts-ignore
 import * as bootstrap from "bootstrap";
 export const BASE_URL = "/api";
+export const DEFAULT_AVATAR = "https://picsum.photos/45";
 export const navHandler = () => {
 	const navAuth = document.getElementById("nav-auth");
 	navAuth.innerHTML = "";
