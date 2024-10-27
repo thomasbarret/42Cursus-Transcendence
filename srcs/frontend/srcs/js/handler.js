@@ -32,6 +32,10 @@ export const navHandler = () => {
 			const signUpButton = a("/signup", "Sign Up")
 				.attr("data-router-navigation", "true")
 				.cl("btn col");
+			const oauthButton = a(BASE_URL + "/oauth/42/", "Login 42").cl(
+				"btn btn-outline-primary col me-2"
+			);
+			navAuth.appendChild(oauthButton);
 			navAuth.appendChild(loginButton);
 			navAuth.appendChild(signUpButton);
 		}
