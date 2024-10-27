@@ -101,7 +101,11 @@ export const profileHandler = (route, slug) => {
 					}
 				};
 				profile.appendChild(
-					profileCard({ ...data, me: !slug }, postRelation)
+					profileCard(
+						{ ...data, me: !slug },
+						postRelation,
+						getUserProfile
+					)
 				);
 			} else {
 				profile.appendChild(profileCard(false));

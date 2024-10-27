@@ -256,7 +256,7 @@ export const relationCard = (user, relation, callback) => {
 		"friend-card d-flex align-items-center justify-content-between p-2 mb-2 border rounded"
 	);
 };
-export const profileCard = (user, callback) => {
+export const profileCard = (user, callback, update) => {
 	if (user === false)
 		return div(h1("User not found!").cl("display-1")).cl(
 			"card-body text-center"
@@ -280,19 +280,33 @@ export const profileCard = (user, callback) => {
 		? div(
 				t("input")
 					.cl("form-control mt-3")
+					.attr("type", "text")
+					.attr("id", "form-display-name")
+					.attr("placeholder", "Display Name"),
+				t("input")
+					.cl("form-control mt-3")
 					.attr("type", "file")
-					.attr("id", "form-file"),
-				button("Upload Avatar")
+					.attr("id", "form-avatar"),
+				button("Edit Profile")
 					.cl("btn btn-primary mt-3")
 					.onclick$(async () => {
-						const avatar = document.getElementById("form-file");
+						const display_name =
+							document.getElementById("form-display-name");
+						const avatar = document.getElementById("form-avatar");
 						// @ts-ignore
 						const file = avatar.files[0];
-						if (file) {
-							console.log("uploaded: ", file);
+						// @ts-ignore
+						if (display_name.value || file) {
 							const formData = new FormData();
 
-							formData.append("avatar", file);
+							if (file) formData.append("avatar", file);
+							// @ts-ignore
+							else if (display_name.value)
+								formData.append(
+									"display_name",
+									// @ts-ignore
+									display_name.value
+								);
 
 							const res = await fetch(BASE_URL + "/user/@me", {
 								method: "POST",
@@ -303,12 +317,13 @@ export const profileCard = (user, callback) => {
 							console.log(json);
 							if (res.ok) {
 								Toast(
-									"Updated avatar successfully!",
+									"Edited profile successfully!",
 									"success"
 								);
+								update();
 							} else {
 								Toast(
-									"Couldn't upload avatar, file size might be too large!",
+									"Couldn't edit profile, check the file size or if invalid display name",
 									"danger"
 								);
 							}
@@ -322,15 +337,15 @@ export const profileCard = (user, callback) => {
 			.attr("style", "width: 120px; height: 120px")
 			.attr("id", "avatar-field")
 			.cl("rounded-circle mb-3"),
-		h3(user.username).cl("card-title"),
+		h3(user.display_name + " (@" + user.username + ")").cl("card-title"),
 		h6(user.uuid).cl("card-title"),
 		container,
 		div(
 			h5("Pong Game Data"),
 			ul(
-				li("Wins: 10").cl("list-group-item"),
-				li("Losses: 0").cl("list-group-item"),
-				li("Games Played: 10").cl("list-group-item")
+				li("Wins: " + user.match_wins).cl("list-group-item"),
+				li("Losses: " + user.match_loses).cl("list-group-item"),
+				li("Games Played: " + user.match_count).cl("list-group-item")
 			).cl("list-group list-group-flish mt-3")
 		).cl("mt-4")
 	).cl("card-body text-center");
