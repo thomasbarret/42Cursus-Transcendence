@@ -75,7 +75,6 @@ export const lobbyHandler = (route, slug) => {
 	const currentPlayers = document.getElementById("current-players");
 
 	const waitingOverlay = document.getElementById("waiting-overlay");
-	const pauseOverlay = document.getElementById("pause-overlay");
 	const winnerOverlay = document.getElementById("winner-overlay");
 	const finalScore = document.getElementById("final-score");
 	const winnerText = document.getElementById("winner-text");
@@ -85,14 +84,6 @@ export const lobbyHandler = (route, slug) => {
 	eventEmitter.on("GAME_START_MATCH", () => {
 		waitingOverlay.classList.add("d-none");
 		getMatchData();
-	});
-
-	eventEmitter.on("GAME_MATCH_PAUSE_EVENT", (data) => {
-		if (data.state === "hidden") {
-			pauseOverlay.classList.remove("d-none");
-		} else {
-			pauseOverlay.classList.add("d-none");
-		}
 	});
 
 	readyGame.addEventListener("click", () => {
@@ -108,8 +99,6 @@ export const lobbyHandler = (route, slug) => {
 
 	const matchFinish = (data) => {
 		waitingOverlay.classList.add("d-none");
-		pauseOverlay.classList.add("d-none");
-		// window.cancelAnimationFrame(animFrame);
 		winnerOverlay.classList.remove("d-none");
 		finalScore.textContent =
 			data.player1_score + " : " + data.player2_score;
