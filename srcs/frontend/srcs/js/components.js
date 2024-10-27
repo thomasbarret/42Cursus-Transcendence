@@ -62,7 +62,7 @@ export const userListBox = (user, lastMessage) => {
 	const image = img(user.avatar ? user.avatar : DEFAULT_AVATAR)
 		.attr("alt", "user avatar")
 		.cl("rounded-circle me-2")
-		.attr("style", "width: 35px; height: 35px");
+		.attr("style", "width: 50px; height: 50px");
 	const username = span(user.display_name + " (@" + user.username + ")").cl(
 		"small fw-semibold mb-0 text-truncate"
 	);
@@ -81,7 +81,7 @@ export const userListBox = (user, lastMessage) => {
 export const messageBoxRight = (text, time, avatar) => {
 	const image = img(avatar ? avatar : DEFAULT_AVATAR)
 		.attr("alt", "avatar 1")
-		.attr("style", "width: 30px; height: 30px")
+		.attr("style", "width: 35px; height: 35px")
 		.attr("class", "rounded-circle");
 	const content = div(
 		p(text).cl(
@@ -101,7 +101,7 @@ export const messageBoxRight = (text, time, avatar) => {
 export const messageBoxLeft = (text, time, uuid, avatar) => {
 	const image = img(avatar ? avatar : DEFAULT_AVATAR)
 		.attr("alt", "avatar 1")
-		.attr("style", "width: 30px; height: 30px")
+		.attr("style", "width: 35px; height: 35px")
 		.attr("class", "rounded-circle")
 		.attr("role", "button")
 		.onclick$(() => goToProfile(uuid));
@@ -122,16 +122,16 @@ export const messageBoxLeft = (text, time, uuid, avatar) => {
 export const matchInviteRight = (time, callback, avatar) => {
 	const image = img(avatar ? avatar : DEFAULT_AVATAR)
 		.attr("alt", "avatar 1")
-		.attr("style", "width: 30px; height: 30px")
+		.attr("style", "width: 35px; height: 35px")
 		.attr("class", "rounded-circle");
 	const content = div(
 		div(
 			h5("Play with me"),
 			button("Join Game")
-				.cl("btn btn-warning rounded-2")
+				.cl("btn btn-outline-primary rounded-2")
 				.onclick$(callback)
 		).cl(
-			"container justify-content-center text-center bg-success rounded-2 p-3"
+			"container justify-content-center text-center bg-primary-subtle rounded-2 p-3"
 		),
 		p(time).attr(
 			"class",
@@ -148,7 +148,7 @@ export const matchInviteRight = (time, callback, avatar) => {
 export const matchInviteLeft = (time, uuid, callback, avatar) => {
 	const image = img(avatar ? avatar : DEFAULT_AVATAR)
 		.attr("alt", "avatar 1")
-		.attr("style", "width: 30px; height: 30px")
+		.attr("style", "width: 35px; height: 35px")
 		.attr("class", "rounded-circle")
 		.attr("role", "button")
 		.onclick$(() => goToProfile(uuid));
@@ -157,10 +157,10 @@ export const matchInviteLeft = (time, uuid, callback, avatar) => {
 		div(
 			h5("Play with me"),
 			button("Join Game")
-				.cl("btn btn-warning rounded-2")
+				.cl("btn btn-outline-primary rounded-2")
 				.onclick$(callback)
 		).cl(
-			"container justify-content-center text-center bg-success rounded-2 p-3"
+			"container justify-content-center text-center bg-primary-subtle rounded-2 p-3"
 		),
 		p(time).attr(
 			"class",
@@ -245,6 +245,7 @@ export const relationCard = (user, relation, callback) => {
 				.attr("alt", "avatar")
 				.cl("rounded-circle me-3")
 				.attr("role", "button")
+				.attr("style", "width: 50px; height: 50px")
 				.onclick$(() => goToProfile(user.uuid)),
 			div(
 				user.display_name + " (@" + user.username + ")",
