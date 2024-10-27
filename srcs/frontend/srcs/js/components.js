@@ -273,8 +273,46 @@ export const profileCard = (user, callback) => {
 			.onclick$(() => callback(2));
 	};
 	const buttons = [add(), block()];
+
 	const container = user.me
-		? ""
+		? div(
+				t("input")
+					.cl("form-control mt-3")
+					.attr("type", "file")
+					.attr("id", "form-file"),
+				button("Upload Avatar")
+					.cl("btn btn-primary mt-3")
+					.onclick$(async () => {
+						const avatar = document.getElementById("form-file");
+						// @ts-ignore
+						const file = avatar.files[0];
+						if (file) {
+							console.log("uploaded: ", file);
+							const formData = new FormData();
+
+							formData.append("avatar", file);
+
+							const res = await fetch(BASE_URL + "/user/@me", {
+								method: "POST",
+								body: formData,
+							});
+
+							const json = await res.json();
+							console.log(json);
+							if (res.ok) {
+								Toast(
+									"Updated avatar successfully!",
+									"success"
+								);
+							} else {
+								Toast(
+									"Couldn't upload avatar, file size might be too large!",
+									"danger"
+								);
+							}
+						}
+					})
+		  ).cl("mx-auto w-25")
 		: div(...buttons).cl("d-flex justify-content-center gap-2 mt-3");
 	return div(
 		img("https://picsum.photos/200")

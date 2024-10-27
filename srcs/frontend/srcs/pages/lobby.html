@@ -18,22 +18,19 @@
 					height="600"
 				></canvas>
 				<div
-					id="pause-overlay"
-					class="position-absolute top-50 start-50 translate-middle w-100 h-100 d-none d-flex justify-content-center align-items-center"
-					style="background: rgba(0, 0, 0, 0.7)"
-				>
-					<div class="text-center text-white">
-						<h2>Game Paused</h2>
-						<h3>waiting for the opponent to come back...</h3>
-					</div>
-				</div>
-				<div
 					id="waiting-overlay"
 					class="position-absolute top-50 start-50 translate-middle w-100 h-100 d-flex justify-content-center align-items-center"
 					style="background: rgba(0, 0, 0, 0.7)"
 				>
 					<div class="text-center text-white">
 						<h2>Waiting for game to start...</h2>
+						<button
+							type="button"
+							class="btn btn-primary mt-3"
+							id="ready-game"
+						>
+							Ready
+						</button>
 					</div>
 				</div>
 				<div
