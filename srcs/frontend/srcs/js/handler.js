@@ -1,4 +1,4 @@
-import { profileCard, Toast } from "./components.js";
+import { matchCard, matchHistory, profileCard, Toast } from "./components.js";
 import { a, button, div, h1, t } from "./framework.js";
 import { checkLoggedIn, navigate } from "./main.js";
 import { activateDarkMode, getCurrentUser, toggleDarkMode } from "./storage.js";
@@ -71,6 +71,7 @@ export const aboutHandler = (route) => {
 // @ts-ignore
 export const profileHandler = (route, slug) => {
 	console.log("current path slug: ", slug);
+
 	const profile = document.getElementById("profile");
 	try {
 		const getUserProfile = async () => {
@@ -111,6 +112,27 @@ export const profileHandler = (route, slug) => {
 						getUserProfile
 					)
 				);
+
+				const historyButton = document.getElementById("history-tab");
+				const historyContent =
+					document.getElementById("history-tab-pane");
+
+				historyButton.addEventListener("show.bs.tab", async () => {
+					const url = "/user/" + (slug ? slug : "@me") + "/match";
+					const res = await fetch(BASE_URL + url);
+
+					const data = await res.json();
+
+					console.log(data);
+					if (res.ok) {
+						historyContent.textContent = "";
+						historyContent.appendChild(matchHistory(data.matches));
+					} else
+						Toast(
+							"Error occured when fetching match history, try again later.",
+							"danger"
+						);
+				});
 			} else {
 				profile.appendChild(profileCard(false));
 				Toast("User not found!", "danger");
@@ -121,7 +143,7 @@ export const profileHandler = (route, slug) => {
 		Toast("Network error", "danger");
 	}
 };
-// @ts-ignore
+
 export const settingsHandler = async (route) => {
 	console.log("settings route");
 	const enable2FAButton = document.getElementById("enable-two-factor");
