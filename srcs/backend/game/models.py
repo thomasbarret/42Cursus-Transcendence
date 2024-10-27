@@ -13,7 +13,7 @@ class MatchPlayer(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     status = models.IntegerField(choices=status_type, default=1)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    display_name = models.CharField(max_length=10)
+    display_name = models.CharField()
 
 class Tournament(models.Model):
     status_type = (
