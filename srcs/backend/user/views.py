@@ -396,7 +396,7 @@ class ProfilMatchView(APIView):
 
         matches = Match.objects.filter(
             Q(player1=player) | Q(player2=player)
-        ).order_by('-start_date')
+        ).order_by('start_date')
 
         return JsonResponse({
             'matches': [{
