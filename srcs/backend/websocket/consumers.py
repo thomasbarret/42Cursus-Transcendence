@@ -121,6 +121,20 @@ class GameManager:
             game_state.player1_score += 1
             self.reset_ball(game_state, direction=-1)
 
+        await channel_layer.group_send(
+            f"match_{GameState.match_uuid}",
+            {
+                "type": "send_event",
+                "event_name": "GAME_SCORE_UPDATE",
+                "data": {
+                    'uuid': str(match_uuid),
+                    'player_1_score': game_state.player1_score,
+                    'player_2_score': game_state.player2_score
+                }
+            }
+        )
+
+
     def reset_ball(self, game_state: GameState, direction=1):
         game_state.ball_x = game_state.canvas_width / 2
         game_state.ball_y = game_state.canvas_height / 2
