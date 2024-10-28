@@ -403,9 +403,17 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
 
 
                 from game.models import Match
-                match = await database_sync_to_async(Match.objects.filter(uuid=match_uuid).select_related('player1__user', 'player2__user').first)()
+                match = await database_sync_to_async(Match.objects.filter(uuid=match_uuid).select_related("player1__user__publicuser", "player2__user__publicuser").first)()
 
-                player_uuid = str(match.player1.uuid) if match.player1.user == self.user else str(match.player2.uuid)
+                if self.user != match.player1.user and self.user != match.player2.user:
+                    return await self.send(text_data=json.dumps({
+                        'event': 'ERROR',
+                        'data': {'message': 'Invalid match or user.'}
+                    }))
+
+                player_uuid = str(match.player1.uuid) if self.user == match.player1.user else str(match.player2.uuid)$
+
+
                 await sync_to_async(game_manager.update_player_direction)(match_uuid, player_uuid, direction)
 
 
