@@ -8,9 +8,9 @@ export const BASE_URL = "/api";
 export const DEFAULT_AVATAR = "https://picsum.photos/45";
 export const navHandler = () => {
 	const navAuth = document.getElementById("nav-auth");
-	navAuth.innerHTML = "";
 	checkLoggedIn().then((loggedIn) => {
 		if (loggedIn) {
+			navAuth.innerHTML = "";
 			const logoutButon = div(
 				getCurrentUser().username,
 				button("Logout")
@@ -21,11 +21,11 @@ export const navHandler = () => {
 							method: "POST",
 						});
 						navigate("/");
-						// navHandler();
 					})
 			).cl("fw-bold");
 			navAuth.appendChild(logoutButon);
 		} else {
+			navAuth.innerHTML = "";
 			const loginButton = a("/login", "Login")
 				.attr("data-router-navigation", "true")
 				.cl("btn btn-primary col me-1");

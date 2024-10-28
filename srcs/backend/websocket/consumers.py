@@ -143,7 +143,7 @@ class GameManager:
             return
         if player_uuid == game_state.player1_uuid:
             game_state.player1_direction = direction
-        elif player_uuid == game_state.player2_uuid:
+        else:
             game_state.player2_direction = direction
 
     async def end_game(self, match_uuid, winner_uuid, channel_layer):
@@ -411,9 +411,7 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
                         'data': {'message': 'Invalid match or user.'}
                     }))
 
-                player_uuid = str(match.player1.uuid) if self.user == match.player1.user else str(match.player2.uuid)$
-
-
+                player_uuid = str(match.player1.uuid) if self.user == match.player1.user else str(match.player2.uuid)
                 await sync_to_async(game_manager.update_player_direction)(match_uuid, player_uuid, direction)
 
 
