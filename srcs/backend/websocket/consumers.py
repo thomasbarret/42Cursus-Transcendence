@@ -1,4 +1,5 @@
 import json
+from django.core.cache import cache
 from channels.layers import get_channel_layer
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
@@ -51,6 +52,7 @@ class GameManager:
         game_state = self.games[match_uuid]
         last_time = asyncio.get_event_loop().time()
         while True:
+
             current_time = asyncio.get_event_loop().time()
             delta_time = current_time - last_time
             last_time = current_time
@@ -72,6 +74,10 @@ class GameManager:
             if game_state.player1_score >= game_state.max_score or game_state.player2_score >= game_state.max_score:
                 winner_uuid = game_state.player1_uuid if game_state.player1_score >= game_state.max_score else game_state.player2_uuid
                 await self.end_game(match_uuid, winner_uuid, channel_layer)
+                cache.set(f"{match_uuid}_finished", True)
+                break
+
+            if cache.get(f"{match_uuid}_finished"):
                 break
 
             await asyncio.sleep(1 / 60)
@@ -341,20 +347,45 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
 
                 from game.models import Match
                 match = await database_sync_to_async(Match.objects.filter(uuid=match_uuid).select_related('player1__user', 'player2__user').first)()
+                if not match.player2:
+                    return await self.send(text_data=json.dumps({
+                        'event': 'ERROR',
+                        'data': {'message': 'Match is not ready.'}
+                    }))
+
                 if not match or self.user not in [match.player1.user, match.player2.user]:
                     return await self.send(text_data=json.dumps({
                         'event': 'ERROR',
                         'data': {'message': 'Invalid match or user.'}
                     }))
 
-                # if match_uuid not in self.match_player_ready:
-                #     self.match_player_ready[match_uuid] = set()
-                # self.match_player_ready[match_uuid].add(str(self.user.uuid))
 
-                # player_uuids = {str(match.player1.user.uuid), str(match.player2.user.uuid)}
 
-                # if self.match_player_ready[match_uuid] == player_uuids:
-                await self.channel_layer.group_add(f"match_{match_uuid}", self.channel_name)
+                if self.user == match.player1.user:
+                    if cache.get(f"{match_uuid}_player1_ready"):
+                        return await self.send(text_data=json.dumps({
+                            'event': 'ERROR',
+                            'data': {'message': 'Player 1 is already ready.'}
+                        }))
+                    else:
+                        await self.channel_layer.group_add(f"match_{match_uuid}", self.channel_name)
+                        cache.set(f"{match_uuid}_player1_ready", True)
+                elif self.user == match.player2.user:
+                    if cache.get(f"{match_uuid}_player2_ready"):
+                        return await self.send(text_data=json.dumps({
+                            'event': 'ERROR',
+                            'data': {'message': 'Player 2 is already ready.'}
+                        }))
+                    else:
+                        await self.channel_layer.group_add(f"match_{match_uuid}", self.channel_name)
+                        cache.set(f"{match_uuid}_player2_ready", True)
+
+                if not cache.get(f"{match_uuid}_player1_ready") or not cache.get(f"{match_uuid}_player2_ready"):
+                    return await self.send(text_data=json.dumps({
+                        'event': 'ERROR',
+                        'data': {'message': 'Second player are not ready.'}
+                    }))
+
                 player1_uuid = str(match.player1.uuid)
                 player2_uuid = str(match.player2.uuid)
                 max_score = match.max_score
@@ -369,6 +400,7 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
                         'event': 'ERROR',
                         'data': {'message': 'Match UUID and direction are required.'}
                     }))
+
 
                 from game.models import Match
                 match = await database_sync_to_async(Match.objects.filter(uuid=match_uuid).select_related('player1__user', 'player2__user').first)()
