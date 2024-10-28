@@ -8,6 +8,10 @@ from asgiref.sync import sync_to_async
 import asyncio
 from django.utils import timezone
 
+
+import math
+import random
+
 class GameState:
     def __init__(self, match_uuid, player1_uuid, player2_uuid, max_score=5):
         self.max_score = max_score
@@ -31,11 +35,17 @@ class GameState:
         self.ball_x = self.canvas_width / 2
         self.ball_y = self.canvas_height / 2
 
+        self.ball_velocity = 620
+
         self.ball_vx = 200
         self.ball_vy = 150
 
         self.player1_score = 0
         self.player2_score = 0
+
+        self.max_angle_deviation = 45 * math.pi / 180
+        self.initial_angle_deviation = 22.5 * math.pi / 180
+
 
 class GameManager:
     def __init__(self):
@@ -98,34 +108,82 @@ class GameManager:
             await asyncio.sleep(1 / 60)
 
     def update_game_state(self, game_state: GameState, delta_time):
-        game_state.paddle1_y += game_state.player1_direction * game_state.paddle_speed * delta_time
-        game_state.paddle2_y += game_state.player2_direction * game_state.paddle_speed * delta_time
+        if (game_state.player1_direction != 0):
+            game_state.paddle1_y += game_state.player1_direction * game_state.paddle_speed * delta_time
+        if (game_state.player2_direction != 0):
+            game_state.paddle2_y += game_state.player2_direction * game_state.paddle_speed * delta_time
 
-        game_state.paddle1_y = max(0, min(game_state.canvas_height - game_state.paddle_height, game_state.paddle1_y))
-        game_state.paddle2_y = max(0, min(game_state.canvas_height - game_state.paddle_height, game_state.paddle2_y))
+        collision_buffer = 1
+        game_state.paddle1_y = max(collision_buffer, min(game_state.canvas_height - game_state.paddle_height - collision_buffer, game_state.paddle1_y))
+        game_state.paddle2_y = max(collision_buffer, min(game_state.canvas_height - game_state.paddle_height - collision_buffer, game_state.paddle2_y))
+
+        next_ball_x = game_state.ball_x + game_state.ball_vx * delta_time
+        next_ball_y = game_state.ball_y + game_state.ball_vy * delta_time
+
+        self.check_paddle_collision(game_state, next_ball_x, next_ball_y)
+
+        self.check_wall_collision(game_state, next_ball_y)
 
         game_state.ball_x += game_state.ball_vx * delta_time
         game_state.ball_y += game_state.ball_vy * delta_time
 
-        if game_state.ball_y - game_state.ball_radius <= 0 or game_state.ball_y + game_state.ball_radius >= game_state.canvas_height:
-            game_state.ball_vy *= -1
-
-        self.check_paddle_collision(game_state)
-
         return self.check_scoring(game_state)
 
-    def check_paddle_collision(self, game_state: GameState):
-        if (game_state.ball_x - game_state.ball_radius <= game_state.paddle_width and
-            game_state.paddle1_y <= game_state.ball_y <= game_state.paddle1_y + game_state.paddle_height):
-            game_state.ball_vx = abs(game_state.ball_vx)
-            hit_pos = ((game_state.ball_y - game_state.paddle1_y) / game_state.paddle_height) - 0.5
-            game_state.ball_vy += hit_pos * 300
+    def check_wall_collision(self, game_state: GameState, next_ball_y):
+        if next_ball_y - game_state.ball_radius <= 0:
+            game_state.ball_vy *= -1
+            game_state.ball_y = game_state.ball_radius
+        if next_ball_y + game_state.ball_radius >= game_state.canvas_height:
+            game_state.ball_vy *= -1
+            game_state.ball_y = game_state.canvas_height - game_state.ball_radius
 
-        if (game_state.ball_x + game_state.ball_radius >= game_state.canvas_width - game_state.paddle_width and
-            game_state.paddle2_y <= game_state.ball_y <= game_state.paddle2_y + game_state.paddle_height):
-            game_state.ball_vx = -abs(game_state.ball_vx)
-            hit_pos = ((game_state.ball_y - game_state.paddle2_y) / game_state.paddle_height) - 0.5
-            game_state.ball_vy += hit_pos * 300
+    def check_paddle_collision(self, game_state: GameState, next_ball_x, next_ball_y):
+        ball_radius = game_state.ball_radius
+        paddle1 = {
+            'x': 0,
+            'y': game_state.paddle1_y,
+            'width': game_state.paddle_width,
+            'height': game_state.paddle_height
+        }
+
+        paddle2 = {
+            'x': game_state.canvas_width - game_state.paddle_width,
+            'y': game_state.paddle2_y,
+            'width': game_state.paddle_width,
+            'height': game_state.paddle_height
+        }
+
+        if (
+            next_ball_x - ball_radius <= paddle1['x'] + paddle1['width'] and
+            next_ball_x + ball_radius >= paddle1['x'] and
+            next_ball_y + ball_radius >= paddle1['y'] and
+            next_ball_y - ball_radius <= paddle1['y'] + paddle1['height']
+            ):
+            game_state.ball_x = paddle1['x'] + paddle1['width'] + ball_radius
+
+            relative_intersect_y = (paddle1['y'] + paddle1['height'] / 2) - next_ball_y
+            normalized_relative_angle = (relative_intersect_y / (paddle1['height'] / 2))
+            bounce_angle = normalized_relative_angle * game_state.max_angle_deviation
+
+            speed = math.sqrt(game_state.ball_vx ** 2 + game_state.ball_vy ** 2)
+            game_state.ball_vx = speed * math.cos(bounce_angle)
+            game_state.ball_vy = speed * -math.sin(bounce_angle)
+
+        elif (
+            next_ball_x + ball_radius >= paddle2['x'] and
+            next_ball_x - ball_radius <= paddle2['x'] + paddle2['width'] and
+            next_ball_y + ball_radius >= paddle2['y'] and
+            next_ball_y - ball_radius <= paddle2['y'] + paddle2['height']
+            ):
+            game_state.ball_x = paddle2['x'] - ball_radius
+
+            relative_intersect_y = (paddle2['y'] + paddle2['height'] / 2) - next_ball_y
+            normalized_relative_angle = (relative_intersect_y / (paddle2['height'] / 2))
+            bounce_angle = normalized_relative_angle * game_state.max_angle_deviation
+
+            speed = math.sqrt(game_state.ball_vx ** 2 + game_state.ball_vy ** 2)
+            game_state.ball_vx = -speed * math.cos(bounce_angle)
+            game_state.ball_vy = speed * -math.sin(bounce_angle)
 
     def check_scoring(self, game_state: GameState):
         if game_state.ball_x < 0:
@@ -139,16 +197,13 @@ class GameManager:
     def reset_ball(self, game_state: GameState, direction=1):
         game_state.ball_x = game_state.canvas_width / 2
         game_state.ball_y = game_state.canvas_height / 2
-        game_state.ball_vx = 200 * direction
-        game_state.ball_vy = 150
+
+        speed = game_state.ball_velocity
+        angle = random.uniform(-game_state.initial_angle_deviation, game_state.initial_angle_deviation)
+
+        game_state.ball_vx = direction * speed * math.cos(angle)
+        game_state.ball_vy = speed * math.sin(angle)
         return True
-
-
-
-    def serialize_game_state(self, game_state: GameState):
-        return {
-
-        }
 
     def update_player_direction(self, match_uuid, player_uuid, direction):
         game_state = self.games.get(match_uuid)
