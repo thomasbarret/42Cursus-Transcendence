@@ -1,15 +1,16 @@
-import { profileCard, Toast } from "./components.js";
+import { matchCard, matchHistory, profileCard, Toast } from "./components.js";
 import { a, button, div, h1, t } from "./framework.js";
 import { checkLoggedIn, navigate } from "./main.js";
 import { activateDarkMode, getCurrentUser, toggleDarkMode } from "./storage.js";
 // @ts-ignore
 import * as bootstrap from "bootstrap";
 export const BASE_URL = "/api";
+export const DEFAULT_AVATAR = "https://picsum.photos/45";
 export const navHandler = () => {
 	const navAuth = document.getElementById("nav-auth");
-	navAuth.innerHTML = "";
 	checkLoggedIn().then((loggedIn) => {
 		if (loggedIn) {
+			navAuth.innerHTML = "";
 			const logoutButon = div(
 				getCurrentUser().username,
 				button("Logout")
@@ -20,17 +21,21 @@ export const navHandler = () => {
 							method: "POST",
 						});
 						navigate("/");
-						// navHandler();
 					})
 			).cl("fw-bold");
 			navAuth.appendChild(logoutButon);
 		} else {
+			navAuth.innerHTML = "";
 			const loginButton = a("/login", "Login")
 				.attr("data-router-navigation", "true")
 				.cl("btn btn-primary col me-1");
 			const signUpButton = a("/signup", "Sign Up")
 				.attr("data-router-navigation", "true")
 				.cl("btn col");
+			const oauthButton = a(BASE_URL + "/oauth/42/", "Login 42").cl(
+				"btn btn-outline-primary col me-2"
+			);
+			navAuth.appendChild(oauthButton);
 			navAuth.appendChild(loginButton);
 			navAuth.appendChild(signUpButton);
 		}
@@ -66,6 +71,7 @@ export const aboutHandler = (route) => {
 // @ts-ignore
 export const profileHandler = (route, slug) => {
 	console.log("current path slug: ", slug);
+
 	const profile = document.getElementById("profile");
 	try {
 		const getUserProfile = async () => {
@@ -100,8 +106,33 @@ export const profileHandler = (route, slug) => {
 					}
 				};
 				profile.appendChild(
-					profileCard({ ...data, me: !slug }, postRelation)
+					profileCard(
+						{ ...data, me: !slug },
+						postRelation,
+						getUserProfile
+					)
 				);
+
+				const historyButton = document.getElementById("history-tab");
+				const historyContent =
+					document.getElementById("history-tab-pane");
+
+				historyButton.addEventListener("show.bs.tab", async () => {
+					const url = "/user/" + (slug ? slug : "@me") + "/match";
+					const res = await fetch(BASE_URL + url);
+
+					const data = await res.json();
+
+					console.log(data);
+					if (res.ok) {
+						historyContent.textContent = "";
+						historyContent.appendChild(matchHistory(data.matches));
+					} else
+						Toast(
+							"Error occured when fetching match history, try again later.",
+							"danger"
+						);
+				});
 			} else {
 				profile.appendChild(profileCard(false));
 				Toast("User not found!", "danger");
@@ -112,7 +143,7 @@ export const profileHandler = (route, slug) => {
 		Toast("Network error", "danger");
 	}
 };
-// @ts-ignore
+
 export const settingsHandler = async (route) => {
 	console.log("settings route");
 	const enable2FAButton = document.getElementById("enable-two-factor");

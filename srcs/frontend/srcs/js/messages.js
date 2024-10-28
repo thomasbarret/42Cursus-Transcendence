@@ -80,7 +80,8 @@ export const messageHandler = (route) => {
 					message.content,
 					formatChatDate(message.created_at),
 					message.user.uuid === currentUser.uuid,
-					message.user.uuid
+					message.user.uuid,
+					message.user.avatar
 				)
 			);
 			chatBody.scrollTop = chatBody.scrollHeight;
@@ -132,24 +133,22 @@ export const messageHandler = (route) => {
 				}
 			};
 			chatBody.innerHTML = "";
-			chatTitle.textContent = getChannelTitle(channel.users);
+			chatTitle.textContent =
+				getChannelUser(channel.users).display_name +
+				" (@" +
+				getChannelUser(channel.users).username +
+				")";
 			const res = await fetch(BASE_URL + "/chat/" + channel.uuid);
 			const data = await res.json();
 			data.messages.forEach((message) => addMessageToChat(message));
 		};
-		const getChannelTitle = (users) => {
-			const arr = [];
-			const not = users.filter((u) => u.uuid != currentUser.uuid);
-			not.forEach((el) =>
-				arr.push(el.display_name + " (@" + el.username + ")")
-			);
-			return arr.join(", ");
-		};
+		const getChannelUser = (users) =>
+			users.filter((u) => u.uuid != currentUser.uuid)[0];
 		const addChannel = (channel) => {
-			const title = getChannelTitle(channel.users);
+			const user = getChannelUser(channel.users);
 			allChannels.push(channel);
 			userList.appendChild(
-				userListBox(title, channel["last_message"]).onclick$(() =>
+				userListBox(user, channel["last_message"]).onclick$(() =>
 					renderBody(channel)
 				)
 			);

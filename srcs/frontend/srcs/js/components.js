@@ -3,6 +3,7 @@ import {
 	div,
 	h1,
 	h3,
+	h4,
 	h5,
 	h6,
 	img,
@@ -16,7 +17,7 @@ import {
 import * as bootstrap from "bootstrap";
 import { getCurrentUser } from "./storage.js";
 import { navigate } from "./main.js";
-import { BASE_URL } from "./handler.js";
+import { BASE_URL, DEFAULT_AVATAR } from "./handler.js";
 export const goToProfile = (uuid) => navigate("/profile/" + uuid);
 export const ToastComponent = (value, level) => {
 	return div(
@@ -57,12 +58,14 @@ export const Toast = (value, level, delay) => {
 	});
 	toastBootstrap.show();
 };
-export const userListBox = (text, lastMessage) => {
-	const image = img("https://picsum.photos/50?random=1")
+export const userListBox = (user, lastMessage) => {
+	const image = img(user.avatar ? user.avatar : DEFAULT_AVATAR)
 		.attr("alt", "user avatar")
 		.cl("rounded-circle me-2")
-		.attr("style", "width: 35px; height: 35px");
-	const username = span(text).cl("small fw-semibold mb-0 text-truncate");
+		.attr("style", "width: 50px; height: 50px");
+	const username = span(user.display_name + " (@" + user.username + ")").cl(
+		"small fw-semibold mb-0 text-truncate"
+	);
 	if (lastMessage && lastMessage["user"]["uuid"] === getCurrentUser().uuid) {
 		lastMessage["content"] = "You: " + lastMessage["content"];
 	}
@@ -75,10 +78,10 @@ export const userListBox = (text, lastMessage) => {
 	);
 	return li;
 };
-export const messageBoxRight = (text, time) => {
-	const image = img("https://picsum.photos/45")
+export const messageBoxRight = (text, time, avatar) => {
+	const image = img(avatar ? avatar : DEFAULT_AVATAR)
 		.attr("alt", "avatar 1")
-		.attr("style", "width: 30px; height: 30px")
+		.attr("style", "width: 35px; height: 35px")
 		.attr("class", "rounded-circle");
 	const content = div(
 		p(text).cl(
@@ -95,10 +98,10 @@ export const messageBoxRight = (text, time) => {
 	);
 	return message;
 };
-export const messageBoxLeft = (text, time, uuid) => {
-	const image = img("https://picsum.photos/45")
+export const messageBoxLeft = (text, time, uuid, avatar) => {
+	const image = img(avatar ? avatar : DEFAULT_AVATAR)
 		.attr("alt", "avatar 1")
-		.attr("style", "width: 30px; height: 30px")
+		.attr("style", "width: 35px; height: 35px")
 		.attr("class", "rounded-circle")
 		.attr("role", "button")
 		.onclick$(() => goToProfile(uuid));
@@ -116,19 +119,19 @@ export const messageBoxLeft = (text, time, uuid) => {
 	return message;
 };
 
-export const matchInviteRight = (time, callback) => {
-	const image = img("https://picsum.photos/45")
+export const matchInviteRight = (time, callback, avatar) => {
+	const image = img(avatar ? avatar : DEFAULT_AVATAR)
 		.attr("alt", "avatar 1")
-		.attr("style", "width: 30px; height: 30px")
+		.attr("style", "width: 35px; height: 35px")
 		.attr("class", "rounded-circle");
 	const content = div(
 		div(
 			h5("Play with me"),
 			button("Join Game")
-				.cl("btn btn-warning rounded-2")
+				.cl("btn btn-outline-primary rounded-2")
 				.onclick$(callback)
 		).cl(
-			"container justify-content-center text-center bg-success rounded-2 p-3"
+			"container justify-content-center text-center bg-primary-subtle rounded-2 p-3"
 		),
 		p(time).attr(
 			"class",
@@ -142,10 +145,10 @@ export const matchInviteRight = (time, callback) => {
 	return message;
 };
 
-export const matchInviteLeft = (time, uuid, callback) => {
-	const image = img("https://picsum.photos/45")
+export const matchInviteLeft = (time, uuid, callback, avatar) => {
+	const image = img(avatar ? avatar : DEFAULT_AVATAR)
 		.attr("alt", "avatar 1")
-		.attr("style", "width: 30px; height: 30px")
+		.attr("style", "width: 35px; height: 35px")
 		.attr("class", "rounded-circle")
 		.attr("role", "button")
 		.onclick$(() => goToProfile(uuid));
@@ -154,10 +157,10 @@ export const matchInviteLeft = (time, uuid, callback) => {
 		div(
 			h5("Play with me"),
 			button("Join Game")
-				.cl("btn btn-warning rounded-2")
+				.cl("btn btn-outline-primary rounded-2")
 				.onclick$(callback)
 		).cl(
-			"container justify-content-center text-center bg-success rounded-2 p-3"
+			"container justify-content-center text-center bg-primary-subtle rounded-2 p-3"
 		),
 		p(time).attr(
 			"class",
@@ -173,7 +176,7 @@ export const matchInviteLeft = (time, uuid, callback) => {
 	return message;
 };
 
-export const messageBox = (content, time, current, uuid) => {
+export const messageBox = (content, time, current, uuid, avatar) => {
 	if (content.startsWith('{"game":')) {
 		try {
 			const invite = JSON.parse(content);
@@ -189,24 +192,26 @@ export const messageBox = (content, time, current, uuid) => {
 					}),
 				});
 
-				const msg = await res.json();
-
 				if (res.ok) {
 					navigate("/lobby/" + invite.game);
-				} else Toast("Couldn't join lobby " + msg["error"], "danger");
+				} else
+					Toast(
+						"Couldn't join lobby please try again later.",
+						"danger"
+					);
 			};
 			return current
-				? matchInviteRight(time, callback)
-				: matchInviteLeft(time, uuid, callback);
+				? matchInviteRight(time, callback, avatar)
+				: matchInviteLeft(time, uuid, callback, avatar);
 		} catch (e) {}
 	}
 
 	return current
-		? messageBoxRight(content, time)
-		: messageBoxLeft(content, time, uuid);
+		? messageBoxRight(content, time, avatar)
+		: messageBoxLeft(content, time, uuid, avatar);
 };
 export const userProfileCard = (user, event) => {
-	const avatar = img("https://picsum.photos/80")
+	const avatar = img(user.avatar ? user.avatar : DEFAULT_AVATAR)
 		.attr("alt", "Avatar")
 		.cl("rounded-circle me-3")
 		.attr("style", "width: 80px; height:80px")
@@ -238,10 +243,11 @@ export const relationCard = (user, relation, callback) => {
 	})().onclick$(callback);
 	return div(
 		div(
-			img("https://picsum.photos/50")
+			img(user.avatar ? user.avatar : DEFAULT_AVATAR)
 				.attr("alt", "avatar")
 				.cl("rounded-circle me-3")
 				.attr("role", "button")
+				.attr("style", "width: 50px; height: 50px")
 				.onclick$(() => goToProfile(user.uuid)),
 			div(
 				user.display_name + " (@" + user.username + ")",
@@ -254,11 +260,12 @@ export const relationCard = (user, relation, callback) => {
 		"friend-card d-flex align-items-center justify-content-between p-2 mb-2 border rounded"
 	);
 };
-export const profileCard = (user, callback) => {
+export const profileCard = (user, callback, update) => {
 	if (user === false)
 		return div(h1("User not found!").cl("display-1")).cl(
 			"card-body text-center"
 		);
+
 	const add = () => {
 		if (user.is_blocked || user.is_friend) return "";
 		const btn = button("Add Friend")
@@ -273,32 +280,223 @@ export const profileCard = (user, callback) => {
 			.onclick$(() => callback(2));
 	};
 	const buttons = [add(), block()];
-	const container = user.me
-		? ""
+
+	const editProfileContainer = div(
+		t("input")
+			.cl("form-control mt-3")
+			.attr("type", "text")
+			.attr("id", "form-display-name")
+			.attr("placeholder", "Display Name"),
+		t("input")
+			.cl("form-control mt-3")
+			.attr("type", "file")
+			.attr("id", "form-avatar"),
+		button("Edit Profile")
+			.cl("btn btn-primary mt-3")
+			.onclick$(async () => {
+				const display_name =
+					document.getElementById("form-display-name");
+				const avatar = document.getElementById("form-avatar");
+				// @ts-ignore
+				const file = avatar.files[0];
+				// @ts-ignore
+				if (display_name.value || file) {
+					const formData = new FormData();
+
+					if (file) formData.append("avatar", file);
+					// @ts-ignore
+					else if (display_name.value)
+						formData.append(
+							"display_name",
+							// @ts-ignore
+							display_name.value
+						);
+
+					const res = await fetch(BASE_URL + "/user/@me", {
+						method: "POST",
+						body: formData,
+					});
+
+					const json = await res.json();
+					console.log(json);
+					if (res.ok) {
+						Toast("Edited profile successfully!", "success");
+						update();
+					} else {
+						Toast(
+							"Couldn't edit profile, check the file size or if invalid display name",
+							"danger"
+						);
+					}
+				}
+			})
+	).cl("mx-auto w-25");
+
+	const actionsContainer = user.me
+		? editProfileContainer
 		: div(...buttons).cl("d-flex justify-content-center gap-2 mt-3");
-	return div(
-		img("https://picsum.photos/200")
+
+	const profileInfo = div(
+		img(user.avatar ? user.avatar : DEFAULT_AVATAR)
 			.attr("alt", "avatar")
 			.attr("style", "width: 120px; height: 120px")
 			.attr("id", "avatar-field")
 			.cl("rounded-circle mb-3"),
-		h3(user.username).cl("card-title"),
-		h6(user.uuid).cl("card-title"),
-		container,
-		div(
-			h5("Pong Game Data"),
-			ul(
-				li("Wins: 10").cl("list-group-item"),
-				li("Losses: 0").cl("list-group-item"),
-				li("Games Played: 10").cl("list-group-item")
-			).cl("list-group list-group-flish mt-3")
-		).cl("mt-4")
+		h3(user.display_name + " (@" + user.username + ")").cl("card-title"),
+		h6(user.uuid).cl("card-title")
 	).cl("card-body text-center");
+
+	const tabContainer = div(
+		ul(
+			li(
+				button("Profile")
+					.cl("nav-link active")
+					.attr("id", "profile-tab")
+					.attr("data-bs-toggle", "tab")
+					.attr("data-bs-target", "#profile-tab-pane")
+					.attr("type", "button")
+					.attr("role", "tab")
+					.attr("aria-controls", "profile-tab-pane")
+					.attr("aria-selected", "true")
+			).cl("nav-item"),
+			li(
+				button("Match History")
+					.cl("nav-link")
+					.attr("id", "history-tab")
+					.attr("data-bs-toggle", "tab")
+					.attr("data-bs-target", "#history-tab-pane")
+					.attr("type", "button")
+					.attr("role", "tab")
+					.attr("aria-controls", "history-tab-pane")
+					.attr("aria-selected", "false")
+			).cl("nav-item")
+		)
+			.cl("nav nav-tabs")
+			.attr("id", "myTab")
+			.attr("role", "tablist"),
+		div(
+			div(
+				actionsContainer,
+				div(
+					h5("Pong Game Data"),
+					ul(
+						li("Wins: " + user.match_wins).cl("list-group-item"),
+						li("Losses: " + user.match_loses).cl("list-group-item"),
+						li("Games Played: " + user.match_count).cl(
+							"list-group-item"
+						)
+					).cl("list-group list-group-flush mt-3")
+				).cl("mt-4")
+			)
+				.attr("id", "profile-tab-pane")
+				.cl("tab-pane fade show active")
+				.attr("role", "tabpanel")
+				.attr("aria-labelledby", "profile-tab")
+				.attr("tabindex", "0"),
+			div(h4("Match History"), p("hello").cl("mt-3"))
+				.attr("id", "history-tab-pane")
+				.cl("tab-pane fade")
+				.attr("role", "tabpanel")
+				.attr("aria-labelledby", "history-tab")
+				.attr("tabindex", "0")
+		)
+			.cl("tab-content")
+			.attr("id", "myTabContent")
+	);
+	return div(profileInfo, tabContainer).cl("card-body");
+};
+
+export const matchCard = (match) => {
+	const currentUserUuid = getCurrentUser().uuid;
+
+	const getPlayer = (player) => {
+		if (player) {
+			return div(
+				img(player.user.avatar ? player.user.avatar : DEFAULT_AVATAR)
+					.attr("alt", "avatar")
+					.cl("rounded-circle me-2")
+					.attr("style", "width: 50px; height: 50px"),
+				span(
+					player.user.display_name +
+						" (@" +
+						player.user.username +
+						")"
+				).cl("fw-semibold")
+			).cl("d-flex align-items-center");
+		}
+		return div("NO PLAYER").cl("text-muted");
+	};
+
+	const isCurrentUserWinner =
+		match.winner && match.winner.uuid === currentUserUuid;
+
+	let cardClass = "card mb-3 shadow-sm ";
+	if (match.status === 4) {
+		cardClass += "text-bg-danger-subtle";
+	} else if (match.status === 3 && match.winner) {
+		cardClass += isCurrentUserWinner
+			? "text-bg-success-subtle bg-success-subtle"
+			: "text-bg-warning-subtle bg-danger-subtle";
+	} else {
+		cardClass += "text-bg-light";
+	}
+
+	const scoreInfo = h5(match.player1_score + " - " + match.player2_score).cl(
+		"fw-bold text-center"
+	);
+
+	const statusMap = {
+		1: span("Waiting").cl("badge bg-info mb-2"),
+		2: span("Started").cl("badge bg-warning mb-2"),
+		3: span("Finished").cl("badge bg-primary mb-2"),
+		4: span("Cancelled").cl("badge bg-danger mb-2"),
+	};
+	const matchStatus = statusMap[match.status];
+
+	const winnerInfo =
+		match.status === 3 && match.winner
+			? div(
+					h6("Winner: " + match.winner.display_name).cl("fw-bold"),
+					img(
+						match.winner.avatar
+							? match.winner.avatar
+							: DEFAULT_AVATAR
+					)
+						.attr("alt", "winner avatar")
+						.cl("rounded-circle mt-1")
+						.attr("style", "width: 30px; height: 30px")
+			  ).cl("d-flex flex-column align-items-center")
+			: match.status === 4
+			? div(h6("Match Cancelled")).cl("text-muted fw-bold mt-2")
+			: "";
+
+	const matchInfo = div(
+		div(
+			div(getPlayer(match.player1), getPlayer(match.player2)).cl(
+				"d-flex justify-content-around w-100"
+			),
+			scoreInfo,
+			matchStatus,
+			winnerInfo
+		).cl("d-flex flex-column align-items-center w-100 p-3")
+	).cl("card-body");
+
+	return div(matchInfo).cl(cardClass);
+};
+
+export const matchHistory = (matches) => {
+	const matchCards = matches.map((match) => matchCard(match));
+	return div(...matchCards)
+		.cl("overflow-auto p-3")
+		.attr(
+			"style",
+			"max-height: 500px; border: 1px solid #ddd; border-radius: 8px"
+		);
 };
 
 export const inviteBoxCard = (user, matchId, update) => {
 	return div(
-		img("https://picsum.photos/30")
+		img(user.avatar ? user.avatar : DEFAULT_AVATAR)
 			.attr("alt", "avatar")
 			.cl("rounded-circle me-2")
 			.attr("style", "width: 30px; height: 30px"),
@@ -349,7 +547,7 @@ export const inviteBoxCard = (user, matchId, update) => {
 export const currentPlayerCard = (user) => {
 	return div(
 		div(
-			img("https://picsum.photos/30")
+			img(user.avatar ? user.avatar : DEFAULT_AVATAR)
 				.attr("alt", "avatar")
 				.cl("rounded-circle me-2")
 				.attr("style", "width: 30px; height: 30px"),

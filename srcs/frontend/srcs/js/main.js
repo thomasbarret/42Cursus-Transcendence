@@ -1,4 +1,5 @@
 import { eventEmitter } from "./eventemitter.js";
+import { keyDownListener, keyUpListener } from "./game/game.js";
 import { BASE_URL, mainHandler, navHandler } from "./handler.js";
 import { routes } from "./route.js";
 import { closeWebSocket, connectWebSocket } from "./socket.js";
@@ -17,10 +18,8 @@ document.addEventListener("click", (e) => {
 
 const clear = () => {
 	eventEmitter.clear();
-	// document.removeEventListener("keyup", keyUpListener);
-	// document.removeEventListener("keydown", keyDownListener);
-	// clearInterval(matchUpdateInterval);
-	// window.cancelAnimationFrame(animFrame);
+	document.removeEventListener("keyup", keyUpListener);
+	document.removeEventListener("keydown", keyDownListener);
 };
 
 export const urlRoute = (event) => {

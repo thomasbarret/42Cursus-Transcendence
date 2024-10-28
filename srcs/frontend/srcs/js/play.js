@@ -4,6 +4,7 @@ import { currentPlayerCard, inviteBoxCard, Toast } from "./components.js";
 import { navigate } from "./main.js";
 import { gameHandler } from "./game/pong.js";
 import { eventEmitter } from "./eventemitter.js";
+import { socket } from "./socket.js";
 
 export const playHandler = (route) => {
 	let timerId = 0;
@@ -74,28 +75,30 @@ export const lobbyHandler = (route, slug) => {
 	const currentPlayers = document.getElementById("current-players");
 
 	const waitingOverlay = document.getElementById("waiting-overlay");
-	const pauseOverlay = document.getElementById("pause-overlay");
 	const winnerOverlay = document.getElementById("winner-overlay");
 	const finalScore = document.getElementById("final-score");
 	const winnerText = document.getElementById("winner-text");
+
+	const readyGame = document.getElementById("ready-game");
 
 	eventEmitter.on("GAME_START_MATCH", () => {
 		waitingOverlay.classList.add("d-none");
 		getMatchData();
 	});
 
-	eventEmitter.on("GAME_MATCH_PAUSE_EVENT", (data) => {
-		if (data.state === "hidden") {
-			pauseOverlay.classList.remove("d-none");
-		} else {
-			pauseOverlay.classList.add("d-none");
-		}
+	readyGame.addEventListener("click", () => {
+		socket.send(
+			JSON.stringify({
+				event: "GAME_MATCH_READY",
+				data: {
+					uuid: slug,
+				},
+			})
+		);
 	});
 
 	const matchFinish = (data) => {
 		waitingOverlay.classList.add("d-none");
-		pauseOverlay.classList.add("d-none");
-		// window.cancelAnimationFrame(animFrame);
 		winnerOverlay.classList.remove("d-none");
 		finalScore.textContent =
 			data.player1_score + " : " + data.player2_score;
