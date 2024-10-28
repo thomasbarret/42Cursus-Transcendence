@@ -35,7 +35,7 @@ class GameState:
         self.ball_x = self.canvas_width / 2
         self.ball_y = self.canvas_height / 2
 
-        self.ball_velocity = 650
+        self.ball_velocity = 620
 
         self.ball_vx = 200
         self.ball_vy = 150
