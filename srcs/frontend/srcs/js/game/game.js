@@ -11,6 +11,9 @@ import {
 } from "./constants.js";
 import { Paddle } from "./paddle.js";
 
+export let keyDownListener = null;
+export let keyUpListener = null;
+
 export class Game {
 	constructor(remote) {
 		this.animationFrame = null;
@@ -186,7 +189,7 @@ export class Game {
 		if (this.remote) {
 			document.addEventListener(
 				"keydown",
-				(this.keyDownListener = (event) => {
+				(keyDownListener = (event) => {
 					if (!this.finished) {
 						if (
 							this.currentPlayer.keyHandler(event, true) !== false
@@ -202,7 +205,7 @@ export class Game {
 
 			document.addEventListener(
 				"keyup",
-				(this.keyDownListener = (event) => {
+				(keyUpListener = (event) => {
 					if (!this.finished) {
 						if (
 							this.currentPlayer.keyHandler(event, false) !==
@@ -240,14 +243,16 @@ export class Game {
 
 		if (this.remote) {
 			eventEmitter.on("GAME_STATE_UPDATE", (data) => {
-				this.ball.x = data.state.ball_x;
-				this.ball.y = data.state.ball_y;
-				this.player_1.y = data.state.player1_position;
-				this.player_2.y = data.state.player2_position;
+				this.ball.x = data.b_x;
+				this.ball.y = data.b_y;
+				this.player_1.y = data.p1_pos;
+				this.player_2.y = data.p2_pos;
+			});
 
-				this.player_1.points = data.state.player1_score;
-				this.player_2.points = data.state.player2_score;
-				// this.setScore();
+			eventEmitter.on("GAME_SCORE_UPDATE", (data) => {
+				this.player_1.points = data.p1_score;
+				this.player_2.points = data.p2_score;
+				this.setScore();
 			});
 		}
 	}

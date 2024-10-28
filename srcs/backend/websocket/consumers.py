@@ -57,7 +57,19 @@ class GameManager:
             delta_time = current_time - last_time
             last_time = current_time
 
-            self.update_game_state(game_state, delta_time)
+            if self.update_game_state(game_state, delta_time):
+                await channel_layer.group_send(
+                    f"match_{game_state.match_uuid}",
+                    {
+                        "type": "send_event",
+                        "event_name": "GAME_SCORE_UPDATE",
+                        "data": {
+                            'uuid': str(game_state.match_uuid),
+                            'p1_score': game_state.player1_score,
+                            'p2_score': game_state.player2_score
+                        }
+                    }
+                )
 
             await channel_layer.group_send(
                 f"match_{match_uuid}",
@@ -66,7 +78,10 @@ class GameManager:
                     "event_name": "GAME_STATE_UPDATE",
                     "data": {
                         'uuid': str(match_uuid),
-                        'state': self.serialize_game_state(game_state),
+                        "p1_pos": game_state.paddle1_y,
+                        "p2_pos": game_state.paddle2_y,
+                        "b_x": game_state.ball_x,
+                        "b_y": game_state.ball_y,
                     }
                 }
             )
@@ -97,7 +112,7 @@ class GameManager:
 
         self.check_paddle_collision(game_state)
 
-        self.check_scoring(game_state)
+        return self.check_scoring(game_state)
 
     def check_paddle_collision(self, game_state: GameState):
         if (game_state.ball_x - game_state.ball_radius <= game_state.paddle_width and
@@ -108,7 +123,6 @@ class GameManager:
 
         if (game_state.ball_x + game_state.ball_radius >= game_state.canvas_width - game_state.paddle_width and
             game_state.paddle2_y <= game_state.ball_y <= game_state.paddle2_y + game_state.paddle_height):
-            # game_state.ball_vx *= -1
             game_state.ball_vx = -abs(game_state.ball_vx)
             hit_pos = ((game_state.ball_y - game_state.paddle2_y) / game_state.paddle_height) - 0.5
             game_state.ball_vy += hit_pos * 300
@@ -116,38 +130,24 @@ class GameManager:
     def check_scoring(self, game_state: GameState):
         if game_state.ball_x < 0:
             game_state.player2_score += 1
-            self.reset_ball(game_state, direction=1)
+            return self.reset_ball(game_state, direction=1)
         elif game_state.ball_x > game_state.canvas_width:
             game_state.player1_score += 1
-            self.reset_ball(game_state, direction=-1)
-        await channel_layer.group_send(
-            f"match_{game_state.match_uuid}",
-            {
-                "type": "send_event",
-                "event_name": "GAME_SCORE_UPDATE",
-                "data": {
-                    'uuid': str(match_uuid),
-                    'player_1_score': game_state.player1_score,
-                    'player_2_score': game_state.player2_score
-                }
-            }
-        )
-
+            return self.reset_ball(game_state, direction=-1)
+        return False
 
     def reset_ball(self, game_state: GameState, direction=1):
         game_state.ball_x = game_state.canvas_width / 2
         game_state.ball_y = game_state.canvas_height / 2
         game_state.ball_vx = 200 * direction
         game_state.ball_vy = 150
+        return True
+
+
 
     def serialize_game_state(self, game_state: GameState):
         return {
-            "player1_position": game_state.paddle1_y,
-            "player2_position": game_state.paddle2_y,
-            "ball_x": game_state.ball_x,
-            "ball_y": game_state.ball_y,
-            "player1_score": game_state.player1_score,
-            "player2_score": game_state.player2_score,
+
         }
 
     def update_player_direction(self, match_uuid, player_uuid, direction):
@@ -269,74 +269,74 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
             await self.channel_layer.group_discard(self.group_name, self.channel_name)
             await self.update_user_status('offline')
 
-            # Utilisation correcte de database_sync_to_async pour les opérations sur la base de données
-            matchs = await database_sync_to_async(lambda: list(Match.objects.filter(
-                Q(status__in=[1, 2]) & (Q(player1__user=self.user) | Q(player2__user=self.user))
-            ).select_related("player1__user__publicuser", "player2__user__publicuser")))()
+            # # Utilisation correcte de database_sync_to_async pour les opérations sur la base de données
+            # matchs = await database_sync_to_async(lambda: list(Match.objects.filter(
+            #     Q(status__in=[1, 2]) & (Q(player1__user=self.user) | Q(player2__user=self.user))
+            # ).select_related("player1__user__publicuser", "player2__user__publicuser")))()
 
-            for match in matchs:
-                match_uuid = str(match.uuid)
-                await self.channel_layer.group_discard(f"match_{match_uuid}", self.channel_name)
-                await sync_to_async(game_manager.stop_game)(match_uuid)
+            # for match in matchs:
+            #     match_uuid = str(match.uuid)
+            #     await self.channel_layer.group_discard(f"match_{match_uuid}", self.channel_name)
+            #     await sync_to_async(game_manager.stop_game)(match_uuid)
 
-            for match in matchs:
-                if match.status == 1:
-                    match.status = 4
-                    await database_sync_to_async(match.save)()
-                elif match.status == 2:
-                    match.status = 3
+            # for match in matchs:
+            #     if match.status == 1:
+            #         match.status = 4
+            #         await database_sync_to_async(match.save)()
+            #     elif match.status == 2:
+            #         match.status = 3
 
-                    player1 = await sync_to_async(lambda: match.player1)()
-                    player2 = await sync_to_async(lambda: match.player2)()
-                    winner = player1 if player1.user == self.user else player2
-                    match.winner = winner
-                    await self.channel_layer.group_send(
-                        f"user_{str(match.winner.user.uuid)}",
-                        {
-                            "type": "send_event",
-                            "event_name": "GAME_MATCH_OPPONENT_DISCONNECTED",
-                            "data": {
-                                "uuid": str(match.uuid),
-                                "status": match.status,
-                                "player_1": {
-                                    "uuid": str(match.player1.uuid),
-                                    "display_name": match.player1.display_name,
-                                    "user": {
-                                        "uuid": str(match.player1.user.uuid),
-                                        "username": match.player1.user.username,
-                                        "display_name": match.player1.user.publicuser.display_name,
-                                        "avatar": match.player1.user.publicuser.avatar.url if match.player1.user.publicuser.avatar else None,
-                                    },
-                                },
-                                "player_2": {
-                                    "uuid": str(match.player2.uuid),
-                                    "display_name": match.player2.display_name,
-                                    "user": {
-                                        "uuid": str(match.player2.user.uuid),
-                                        "username": match.player1.user.username,
-                                        "display_name": match.player2.user.publicuser.display_name,
-                                        "avatar": match.player2.user.publicuser.avatar.url if match.player2.user.publicuser.avatar else None,
-                                    },
-                                },
-                                "player1_score": match.player1_score,
-                                "player2_score": match.player2_score,
-                                "winner": {
-                                    "uuid": str(match.winner.uuid),
-                                    "display_name": match.winner.display_name,
-                                    "user": {
-                                        "uuid": str(match.winner.user.uuid),
-                                        "display_name": match.winner.user.publicuser.display_name,
-                                        "avatar": match.winner.user.publicuser.avatar.url if match.winner.user.publicuser.avatar else None,
-                                    },
-                                } if match.winner else None,
-                                "max_score": match.max_score,
-                                "start_date": match.start_date.isoformat() if match.start_date else None,
-                                "end_date": match.end_date.isoformat() if match.end_date else None,
-                                "created_at": match.created_at.isoformat(),
-                                "updated_at": match.updated_at.isoformat() if match.updated_at else None,
-                            }
-                        }
-                    )
+            #         player1 = await sync_to_async(lambda: match.player1)()
+            #         player2 = await sync_to_async(lambda: match.player2)()
+            #         winner = player1 if player1.user == self.user else player2
+            #         match.winner = winner
+            #         await self.channel_layer.group_send(
+            #             f"user_{str(match.winner.user.uuid)}",
+            #             {
+            #                 "type": "send_event",
+            #                 "event_name": "GAME_MATCH_OPPONENT_DISCONNECTED",
+            #                 "data": {
+            #                     "uuid": str(match.uuid),
+            #                     "status": match.status,
+            #                     "player_1": {
+            #                         "uuid": str(match.player1.uuid),
+            #                         "display_name": match.player1.display_name,
+            #                         "user": {
+            #                             "uuid": str(match.player1.user.uuid),
+            #                             "username": match.player1.user.username,
+            #                             "display_name": match.player1.user.publicuser.display_name,
+            #                             "avatar": match.player1.user.publicuser.avatar.url if match.player1.user.publicuser.avatar else None,
+            #                         },
+            #                     },
+            #                     "player_2": {
+            #                         "uuid": str(match.player2.uuid),
+            #                         "display_name": match.player2.display_name,
+            #                         "user": {
+            #                             "uuid": str(match.player2.user.uuid),
+            #                             "username": match.player1.user.username,
+            #                             "display_name": match.player2.user.publicuser.display_name,
+            #                             "avatar": match.player2.user.publicuser.avatar.url if match.player2.user.publicuser.avatar else None,
+            #                         },
+            #                     },
+            #                     "player1_score": match.player1_score,
+            #                     "player2_score": match.player2_score,
+            #                     "winner": {
+            #                         "uuid": str(match.winner.uuid),
+            #                         "display_name": match.winner.display_name,
+            #                         "user": {
+            #                             "uuid": str(match.winner.user.uuid),
+            #                             "display_name": match.winner.user.publicuser.display_name,
+            #                             "avatar": match.winner.user.publicuser.avatar.url if match.winner.user.publicuser.avatar else None,
+            #                         },
+            #                     } if match.winner else None,
+            #                     "max_score": match.max_score,
+            #                     "start_date": match.start_date.isoformat() if match.start_date else None,
+            #                     "end_date": match.end_date.isoformat() if match.end_date else None,
+            #                     "created_at": match.created_at.isoformat(),
+            #                     "updated_at": match.updated_at.isoformat() if match.updated_at else None,
+            #                 }
+            #             }
+            #         )
 
     async def receive(self, text_data):
         try:
