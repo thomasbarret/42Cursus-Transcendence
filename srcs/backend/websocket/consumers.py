@@ -8,6 +8,10 @@ from asgiref.sync import sync_to_async
 import asyncio
 from django.utils import timezone
 
+
+def get_avatar_url(user):
+    return user.publicuser.avatar.url if user.publicuser.avatar else None
+
 class GameState:
     def __init__(self, match_uuid, player1_uuid, player2_uuid, max_score=5):
         self.max_score = max_score
@@ -426,7 +430,152 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
 
                 player_uuid = str(match.player1.uuid) if self.user == match.player1.user else str(match.player2.uuid)
                 await sync_to_async(game_manager.update_player_direction)(match_uuid, player_uuid, direction)
+            elif event == "TOURNAMENT_START":
+                tournament_uuid = data.get('uuid')
 
+                if not tournament_uuid:
+                    return await self.send(text_data=json.dumps({
+                        'event': 'ERROR',
+                        'data': {'message': 'Tournament UUID is required.'}
+                    }))
+
+                from tournament.models import Tournament
+
+                tournament = await database_sync_to_async(
+                    Tournament.objects.filter(uuid=tournament_uuid)
+                    .select_related('created_by__user__publicuser')
+                    .prefetch_related('players__user__publicuser')
+                    .first
+                )()
+
+                if not tournament:
+                    return await self.send(text_data=json.dumps({
+                        'event': 'ERROR',
+                        'data': {'message': 'Invalid tournament.'}
+                    }))
+
+                if self.user != tournament.created_by.user:
+                    return await self.send(text_data=json.dumps({
+                        'event': 'ERROR',
+                        'data': {'message': 'You are not the creator of this tournament.'}
+                    }))
+
+                # Crée tous les matchs (Assurez-vous que cette méthode est bien une méthode asynchrone)
+                await sync_to_async(tournament.create_all_matches)()
+
+                players = await database_sync_to_async(lambda: list(tournament.players.all()))()
+
+                if len(players) < 2:
+                    return await self.send(text_data=json.dumps({
+                        'event': 'ERROR',
+                        'data': {'message': 'Not enough players in the tournament.'}
+                    }))
+                players_data = []
+
+                channel_layer = get_channel_layer()
+
+                for player in players:
+                    player_data = {
+                        'uuid': str(player.uuid),
+                        'user': {
+                            'uuid': str(player.user.uuid),
+                            'display_name': player.user.publicuser.display_name,
+                            'avatar': get_avatar_url(player.user)
+                        }
+                    }
+                    players_data.append(player_data)
+
+                response = {
+                    'uuid': str(tournament.uuid),
+                    'max_score': tournament.max_score,
+                    'created_at': tournament.created_at.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+                    'creator': {
+                        'uuid': str(tournament.created_by.uuid),
+                        'user': {
+                            'uuid': str(tournament.created_by.user.uuid),
+                            'display_name': tournament.created_by.user.publicuser.display_name,
+                            'avatar': get_avatar_url(tournament.created_by.user)
+                        }
+                    },
+                    'players': players_data,
+                    'current_match': None,  # Initialise à None
+                }
+
+                # Vérifie si current_match existe avant de tenter d'y accéder
+                if tournament.current_match:
+                    response['current_match'] = {
+                        'uuid': str(tournament.current_match.uuid),
+                        'player1': {
+                            'uuid': str(tournament.current_match.player1.uuid),
+                            'user': {
+                                'uuid': str(tournament.current_match.player1.user.publicuser.uuid),
+                                'display_name': tournament.current_match.player1.display_name,
+                                'avatar': get_avatar_url(tournament.current_match.player1.user)
+                            }
+                        },
+                        'player2': {
+                            'uuid': str(tournament.current_match.player2.uuid),
+                            'user': {
+                                'uuid': str(tournament.current_match.player2.user.publicuser.uuid),
+                                'display_name': tournament.current_match.player2.display_name,
+                                'avatar': get_avatar_url(tournament.current_match.player2.user)
+                            }
+                        },
+                    }
+                    # Modifie le statut du match actuel
+                    tournament.current_match.status = 2
+                    await database_sync_to_async(tournament.current_match.save)()  # Sauvegarde le match actuel
+
+                # Envoie le message à tous les joueurs
+                for player in players:
+                    await channel_layer.group_send(
+                        f"user_{str(player.user.uuid)}",
+                        {
+                            "type": "send_event",
+                            "event_name": "GAME_TOURNAMENT_READY",
+                            "data": response
+                        }
+                    )
+                cache.get(f"{tournament.current_match.uuid}_player1_ready", True)
+                cache.get(f"{tournament.current_match.uuid}_player2_ready", True)
+
+                game_manager.start_game(tournament.current_match.uuid, str(tournament.current_match.player1.uuid), str(tournament.current_match.player2.uuid), tournament.max_score, channel_layer)
+
+            elif event == "GAME_TOURNAMENT_WATCH":
+                tournament_uuid = data.get('uuid')
+
+                if not tournament_uuid:
+                    return await self.send(text_data=json.dumps({
+                        'event': 'ERROR',
+                        'data': {'message': 'Tournament UUID is required.'}
+                    }))
+
+                from tournament.models import Tournament
+
+                tournament = await database_sync_to_async(Tournament.objects.filter(uuid=tournament_uuid).select_related('creator__user__publicuser').first)()
+
+                if not tournament:
+                    return await self.send(text_data=json.dumps({
+                        'event': 'ERROR',
+                        'data': {'message': 'Invalid tournament.'}
+                    }))
+
+                players = await database_sync_to_async(lambda: list(tournament.players.all()))()
+
+                if self.user not in [player.user for player in players]:
+                    return await self.send(text_data=json.dumps({
+                        'event': 'ERROR',
+                        'data': {'message': 'You are not in this tournament.'}
+                    }))
+
+                current_match = tournament.current_match
+
+                if not current_match:
+                    return await self.send(text_data=json.dumps({
+                        'event': 'ERROR',
+                        'data': {'message': 'No match is currently being played.'}
+                    }))
+                await self.channel_layer.group_add(f"match_{current_match.uuid}", self.channel_name)
 
         except json.JSONDecodeError:
             await self.send(text_data=json.dumps({
