@@ -2,7 +2,6 @@ from django.db import models
 from authentication.models import User
 from chat.models import Channel
 
-
 import uuid
 
 class MatchPlayer(models.Model):
@@ -15,26 +14,6 @@ class MatchPlayer(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     display_name = models.CharField()
 
-class Tournament(models.Model):
-    status_type = (
-        (1, "PENDING"),
-        (2, "ACTIVE"),
-        (3, "COMPLETED"),
-        (4, "CANCELLED"),
-    )
-    status = models.IntegerField(choices=status_type)
-    name = models.CharField(max_length=255)
-    start_date = models.DateTimeField()
-    end_date = models.DateTimeField()
-    is_active = models.BooleanField(default=True)
-    max_players = models.IntegerField()
-    max_score = models.IntegerField()
-    match_duration = models.IntegerField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    players = models.ManyToManyField(MatchPlayer, related_name='tournaments')
-    chat = models.OneToOneField(Channel, on_delete=models.CASCADE, null=True, blank=True)
-
 class Match(models.Model):
     status_type = (
         (1, "PENDING"),
@@ -43,7 +22,6 @@ class Match(models.Model):
         (4, "CANCELLED"),
     )
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    # tournament = models.ForeignKey(Tournament, null=True, blank=True, on_delete=models.SET_NULL)
     status = models.IntegerField(choices=status_type, default=1)
     player1 = models.ForeignKey(MatchPlayer, on_delete=models.CASCADE, related_name='player1')
     player2 = models.ForeignKey(MatchPlayer, on_delete=models.CASCADE, related_name='player2', null=True, blank=True)
@@ -56,31 +34,3 @@ class Match(models.Model):
     end_date = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-# Nouveau modèle pour les rounds
-class TournamentRound(models.Model):
-    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='rounds')
-    round_number = models.IntegerField()
-    status = models.IntegerField(choices=(
-        (1, "PENDING"),
-        (2, "IN_PROGRESS"),
-        (3, "COMPLETED")
-    ))
-    start_date = models.DateTimeField()
-    end_date = models.DateTimeField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        unique_together = ('tournament', 'round_number')
-        ordering = ['round_number']
-
-class TournamentMatch(models.Model):
-    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='tournament_matches')
-    round = models.ForeignKey(TournamentRound, on_delete=models.CASCADE, related_name='matches')
-    match = models.OneToOneField(Match, on_delete=models.CASCADE)
-    match_order = models.IntegerField()
-
-    class Meta:
-        unique_together = ('round', 'match_order')
-        ordering = ['match_order']

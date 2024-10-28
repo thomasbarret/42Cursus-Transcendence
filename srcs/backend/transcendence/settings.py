@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "chat",
     "websocket",
     "game",
+    "tournament",
 ]
 
 AUTH_USER_MODEL = "authentication.User"
