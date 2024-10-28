@@ -28,17 +28,17 @@ class GameState:
         self.paddle1_y = (self.canvas_height - self.paddle_height) / 2
         self.paddle2_y = (self.canvas_height - self.paddle_height) / 2
 
-        self.paddle_speed = 300
+        self.paddle_speed = 320
         self.player1_direction = 0 # -1: up, 0: IDLE, 1: down -> a changer ptetre
         self.player2_direction = 0
 
         self.ball_x = self.canvas_width / 2
         self.ball_y = self.canvas_height / 2
 
-        self.ball_velocity = 620
+        self.ball_velocity = 500
 
-        self.ball_vx = 200
-        self.ball_vy = 150
+        self.ball_vx = 400
+        self.ball_vy = 300
 
         self.player1_score = 0
         self.player2_score = 0
@@ -46,10 +46,12 @@ class GameState:
         self.max_angle_deviation = 45 * math.pi / 180
         self.initial_angle_deviation = 22.5 * math.pi / 180
 
+        self.ball_active = True
+
 
 class GameManager:
     def __init__(self):
-        self.games = {}
+        self.games: dict[str, GameState] = {}
 
     async def start_game(self, match_uuid, player1_uuid, player2_uuid, max_score, channel_layer):
         if match_uuid in self.games:
@@ -57,6 +59,10 @@ class GameManager:
         game_state = GameState(match_uuid, player1_uuid, player2_uuid, max_score)
         self.games[match_uuid] = game_state
         asyncio.create_task(self.game_loop(match_uuid, channel_layer))
+
+    async def activate_ball(self, game_state: GameState):
+        await asyncio.sleep(2);
+        game_state.ball_active = True
 
     async def game_loop(self, match_uuid, channel_layer):
         game_state = self.games[match_uuid]
@@ -80,6 +86,8 @@ class GameManager:
                         }
                     }
                 )
+                game_state.ball_active = False
+                asyncio.create_task(self.activate_ball(game_state))
 
             await channel_layer.group_send(
                 f"match_{match_uuid}",
@@ -117,15 +125,16 @@ class GameManager:
         game_state.paddle1_y = max(collision_buffer, min(game_state.canvas_height - game_state.paddle_height - collision_buffer, game_state.paddle1_y))
         game_state.paddle2_y = max(collision_buffer, min(game_state.canvas_height - game_state.paddle_height - collision_buffer, game_state.paddle2_y))
 
-        next_ball_x = game_state.ball_x + game_state.ball_vx * delta_time
-        next_ball_y = game_state.ball_y + game_state.ball_vy * delta_time
+        if game_state.ball_active:
+            next_ball_x = game_state.ball_x + game_state.ball_vx * delta_time
+            next_ball_y = game_state.ball_y + game_state.ball_vy * delta_time
 
-        self.check_paddle_collision(game_state, next_ball_x, next_ball_y)
+            self.check_paddle_collision(game_state, next_ball_x, next_ball_y)
 
-        self.check_wall_collision(game_state, next_ball_y)
+            self.check_wall_collision(game_state, next_ball_y)
 
-        game_state.ball_x += game_state.ball_vx * delta_time
-        game_state.ball_y += game_state.ball_vy * delta_time
+            game_state.ball_x += game_state.ball_vx * delta_time
+            game_state.ball_y += game_state.ball_vy * delta_time
 
         return self.check_scoring(game_state)
 

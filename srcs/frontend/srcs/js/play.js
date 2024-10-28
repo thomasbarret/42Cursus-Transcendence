@@ -98,13 +98,15 @@ export const lobbyHandler = (route, slug) => {
 	});
 
 	const matchFinish = (data) => {
-		waitingOverlay.classList.add("d-none");
-		winnerOverlay.classList.remove("d-none");
-		finalScore.textContent =
-			data.player1_score + " : " + data.player2_score;
-		winnerText.textContent = data.winner
-			? data.winner.display_name
-			: "Draw";
+		if (data.uuid === slug) {
+			waitingOverlay.classList.add("d-none");
+			winnerOverlay.classList.remove("d-none");
+			finalScore.textContent =
+				data.player1_score + " : " + data.player2_score;
+			winnerText.textContent = data.winner
+				? data.winner.display_name
+				: "Draw";
+		}
 	};
 
 	eventEmitter.on("GAME_MATCH_FINISHED", (data) => matchFinish(data));

@@ -137,24 +137,7 @@ export class Game {
 				1 / 60
 			);
 			this.lastTime = timestamp;
-		}
 
-		// if (this.remote) {
-		// 	this.ball.x = this.lerp(this.ball.x, this.ball.target.x, BALL_LERP);
-		// 	this.ball.y = this.lerp(this.ball.y, this.ball.target.y, BALL_LERP);
-		// 	this.player_1.y = this.lerp(
-		// 		this.player_1.y,
-		// 		this.player_1.target,
-		// 		PADDLE_LERP
-		// 	);
-		// 	this.player_2.y = this.lerp(
-		// 		this.player_2.y,
-		// 		this.player_2.target,
-		// 		PADDLE_LERP
-		// 	);
-		// }
-
-		if (!this.remote) {
 			if (this.ballActive) {
 				if (
 					!this.ball
@@ -222,7 +205,7 @@ export class Game {
 		} else {
 			document.addEventListener(
 				"keydown",
-				(this.keyDownListener = (event) => {
+				(keyDownListener = (event) => {
 					this.player_1.keyHandler(event, true);
 					this.player_2.keyHandler(event, true);
 				})
@@ -230,7 +213,7 @@ export class Game {
 
 			document.addEventListener(
 				"keyup",
-				(this.keyDownListener = (event) => {
+				(keyDownListener = (event) => {
 					this.player_1.keyHandler(event, false);
 					this.player_2.keyHandler(event, false);
 				})
@@ -253,6 +236,14 @@ export class Game {
 				this.player_1.points = data.p1_score;
 				this.player_2.points = data.p2_score;
 				this.setScore();
+			});
+
+			eventEmitter.on("GAME_MATCH_FINISHED", (data) => {
+				if (data.uuid === this.remote.uuid) {
+					this.finished = true;
+					document.removeEventListener("keydown", keyDownListener);
+					document.removeEventListener("keyup", keyUpListener);
+				}
 			});
 		}
 	}
