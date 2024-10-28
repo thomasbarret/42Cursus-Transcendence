@@ -192,11 +192,13 @@ export const messageBox = (content, time, current, uuid, avatar) => {
 					}),
 				});
 
-				const msg = await res.json();
-
 				if (res.ok) {
 					navigate("/lobby/" + invite.game);
-				} else Toast("Couldn't join lobby " + msg["error"], "danger");
+				} else
+					Toast(
+						"Couldn't join lobby please try again later.",
+						"danger"
+					);
 			};
 			return current
 				? matchInviteRight(time, callback, avatar)

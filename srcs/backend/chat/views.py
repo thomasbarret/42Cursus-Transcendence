@@ -85,10 +85,12 @@ class ChannelView(APIView):
         channel_layer = get_channel_layer()
         for user in channel.users.all():
             relation = UserRelation.objects.filter(
-                Q(user_1=request.user) | Q(user_2=request.user),
-                Q(user_1=user) | Q(user_2=user),
-                type=2,
-                )
+                (
+                    (Q(user_1=request.user) & Q(user_2=user)) |
+                    (Q(user_1=user) & Q(user_2=request.user))
+                ),
+                type=2
+            )
 
             async_to_sync(channel_layer.group_send)(
                 f"user_{str(user.uuid)}",
