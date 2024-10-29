@@ -1,10 +1,13 @@
-import { inviteBoxCard, Toast } from "./components.js";
+import { inviteBoxCard, matchPlayersCard, Toast } from "./components.js";
 import { BASE_URL } from "./handler.js";
 
 export const tournamentHandler = (_, slug) => {
 	console.log("tournament slug: ", slug);
 
 	const inviteBox = document.getElementById("invite-box");
+	const currentPlayers = document.getElementById("current-players");
+	const chatForm = document.getElementById("chat-form");
+	const chatInput = document.getElementById("chat-input");
 
 	const getTournamentData = async () => {
 		const res = await fetch(BASE_URL + "/game/tournament/" + slug);
@@ -15,9 +18,44 @@ export const tournamentHandler = (_, slug) => {
 		if (res.ok) {
 			getChatBox(data.channel);
 
-			data.players.forEach((player) => {
-				console.log(player);
+			data.players.forEach((matchPlayer) => {
+				currentPlayers.appendChild(
+					matchPlayersCard(matchPlayer.user, matchPlayer.user.uuid)
+				);
 			});
+
+			chatForm.onsubmit = async (event) => {
+				event.preventDefault();
+
+				// @ts-ignore
+				if (chatInput.value.length >= 1000) {
+					Toast("Message is too long", "warning");
+					return;
+				}
+
+				const res = await fetch(
+					BASE_URL + "/chat/" + data.channel.uuid,
+					{
+						method: "POST",
+						body: JSON.stringify({
+							// @ts-ignore
+							content: chatInput.value,
+						}),
+						headers: {
+							"Content-Type": "application/json",
+						},
+					}
+				);
+
+				const json = await res.json();
+				console.log(json);
+
+				if (res.ok) {
+					// @ts-ignore
+					chatInput.value = 0;
+				} else
+					Toast("Couldn't send message " + json["error"], "danger");
+			};
 		} else Toast("Couldn't get tournament data", "danger");
 	};
 

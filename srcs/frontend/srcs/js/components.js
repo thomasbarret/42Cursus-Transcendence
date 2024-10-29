@@ -566,7 +566,7 @@ export const inviteBoxCard = (user, matchId, update, tournament) => {
 	).cl("d-flex align-items-center mb-2");
 };
 
-export const matchPlayersCard = (user) => {
+export const matchPlayersCard = (user, uuid) => {
 	return div(
 		div(
 			img(user.avatar ? user.avatar : DEFAULT_AVATAR)
@@ -575,7 +575,7 @@ export const matchPlayersCard = (user) => {
 				.attr("style", "width: 30px; height: 30px"),
 			div(
 				span(user.display_name).cl("fw-bold fs-5"),
-				t("small", user.user.uuid).cl("text-muted")
+				uuid ? t("small", uuid).cl("text-muted") : ""
 			).cl("d-flex flex-column")
 		).cl("d-flex align-items-center")
 	).cl(

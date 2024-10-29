@@ -118,11 +118,17 @@ export const lobbyHandler = (route, slug) => {
 			} else if (matchData["status"] === 3) matchFinish(matchData);
 			if (matchData["player_1"])
 				currentPlayers.appendChild(
-					matchPlayersCard(matchData["player_1"])
+					matchPlayersCard(
+						matchData["player_1"],
+						matchData["player_1"].user.uuid
+					)
 				);
 			if (matchData["player_2"])
 				currentPlayers.appendChild(
-					matchPlayersCard(matchData["player_2"])
+					matchPlayersCard(
+						matchData["player_2"],
+						matchData["player_2"].user.uuid
+					)
 				);
 		} else
 			Toast("Match couldn't be found, please try again later.", "danger");
