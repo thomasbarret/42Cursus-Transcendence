@@ -54,10 +54,10 @@ class GetTournamentView(APIView):
         players_data = []
         for player in players:
             player_data = {
-                'uuid': player.user.publicuser.uuid,
+                'uuid': player.uuid,
                 'user': {
-                    'uuid': player.user.publicuser.uuid,
-                    'display_name': player.display_name,
+                    'uuid': player.user.uuid,
+                    'display_name': player.user.publicuser.display_name,
                     'avatar': get_avatar_url(player.user)
                 }
             }
@@ -71,8 +71,8 @@ class GetTournamentView(APIView):
             'creator': {
                 'uuid': creator_player.uuid,
                 'user': {
-                    'uuid': creator.publicuser.uuid,
-                    'display_name': creator.publicuser.display_name,
+                    'uuid': creator.user.uuid,
+                    'display_name': creator.user.publicuser.display_name,
                     'avatar': get_avatar_url(creator)
                 }
             },
@@ -113,8 +113,8 @@ class JoinTournamentView(APIView):
             player_data = {
                 'uuid': player.user.publicuser.uuid,
                 'user': {
-                    'uuid': player.user.publicuser.uuid,
-                    'display_name': player.display_name,
+                    'uuid': player.user.uuid,
+                    'display_name': player.user.publicuser.display_name,
                     'avatar': get_avatar_url(player.user)
                 }
             }
@@ -129,8 +129,8 @@ class JoinTournamentView(APIView):
             'creator': {
                 'uuid': creator_player.uuid,
                 'user': {
-                    'uuid': creator.publicuser.uuid,
-                    'display_name': creator.publicuser.display_name,
+                    'uuid': creator.user.uuid,
+                    'display_name': creator.user.publicuser.display_name,
                     'avatar': get_avatar_url(creator)
                 }
             },
