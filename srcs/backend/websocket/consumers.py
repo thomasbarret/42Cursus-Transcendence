@@ -292,6 +292,87 @@ class GameManager:
             }
         )
 
+        if match.tournament:
+            await sync_to_async(match.tournament.start_next_match)()
+            next_match = match.tournament.current_match
+
+            players = match.tournament.players.all()
+            players_data = []
+            for player in players:
+                player_data = {
+                    'uuid': player.uuid,
+                    'user': {
+                        'uuid': player.user.uuid,
+                        'display_name': player.user.publicuser.display_name,
+                        'avatar': get_avatar_url(player.user)
+                    }
+                }
+                players_data.append(player_data)
+
+            await channel_layer.group_send(
+                f"match_{match.tournament.current_match.uuid}",
+                {
+                    "type": "send_event",
+                    "event_name": "GAME_TOURNAMENT_NEXT_MATCH",
+                    "data": {
+                        'uuid': match.tournament.uuid,
+                        'max_score': match.tournament.max_score,
+                        'channel': {
+                            'uuid': match.tournament.channel.uuid,
+                            'type': match.tournament.channel.type,
+                            'created_at': match.tournament.channel.created_at,
+                        },
+                        'creator': {
+                            'uuid': match.tournament.creator.uuid,
+                            'user': {
+                                'uuid': match.tournament.creator.user.uuid,
+                                'display_name': match.tournament.creator.user.publicuser.display_name,
+                                'avatar': get_avatar_url(match.tournament.creator.user)
+                            }
+                        },
+                        'players': players_data,
+                        'current_match': {
+                            "uuid": match.tournament.current_match.uuid,
+                            "status": match.tournament.current_match.status,
+                            "player_1": {
+                                "uuid": match.tournament.current_match.player1.uuid,
+                                "display_name": match.tournament.current_match.player1.display_name,
+                                "user": {
+                                    "uuid": match.tournament.current_match.player1.user.uuid,
+                                    "display_name": match.tournament.current_match.player1.user.publicuser.display_name,
+                                    "avatar": get_avatar_url(match.tournament.current_match.player1.user)
+                                },
+                            },
+                            "player_2": {
+                                "uuid": match.tournament.current_match.player2.uuid,
+                                "display_name": match.tournament.current_match.player2.display_name,
+                                "user": {
+                                    "uuid": match.tournament.current_match.player2.user.uuid,
+                                    "display_name": match.tournament.current_match.player2.user.publicuser.display_name,
+                                    "avatar": get_avatar_url(match.tournament.current_match.player2.user)
+                                } if match.tournament.current_match.player2 and match.tournament.current_match.player2.user else None
+                            } if match.tournament.current_match.player2 else None,
+                            "player1_score": match.tournament.current_match.player1_score,
+                            "player2_score": match.tournament.current_match.player2_score,
+                            "winner": {
+                                "uuid": match.tournament.current_match.winner.uuid,
+                                "display_name": match.tournament.current_match.winner.display_name,
+                                "user": {
+                                    "uuid": match.tournament.current_match.winner.user.uuid,
+                                    "display_name": match.tournament.current_match.winner.user.publicuser.display_name,
+                                    "avatar": match.tournament.current_match.winner.user.publicuser.avatar.url if match.tournament.current_match.winner.user.publicuser.avatar else None,
+                                },
+                            } if match.tournament.current_match.winner else None,
+                            "max_score": match.tournament.current_match.max_score,
+                            "start_date": match.tournament.current_match.start_date,
+                            "end_date": match.tournament.current_match.end_date,
+                            "created_at": match.tournament.current_match.created_at,
+                            "updated_at": match.tournament.current_match.updated_at,
+                        } if match.tournament.current_match else None,
+                        'created_at': match.tournament.created_at,
+                    }
+                }
+            )
         self.stop_game(match_uuid)
 
     def stop_game(self, match_uuid):
@@ -442,8 +523,6 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
                         'data': {'message': 'Invalid match or user.'}
                     }))
 
-
-
                 if self.user == match.player1.user:
                     if cache.get(f"{match_uuid}_player1_ready"):
                         return await self.send(text_data=json.dumps({
@@ -526,7 +605,6 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
                         'data': {'message': 'You are not the creator of this tournament.'}
                     }))
 
-                # Crée tous les matchs (Assurez-vous que cette méthode est bien une méthode asynchrone)
                 await sync_to_async(tournament.create_all_matches)()
 
                 players = await database_sync_to_async(lambda: list(tournament.players.all()))()
@@ -564,10 +642,9 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
                         }
                     },
                     'players': players_data,
-                    'current_match': None,  # Initialise à None
+                    'current_match': None,
                 }
 
-                # Vérifie si current_match existe avant de tenter d'y accéder
                 if tournament.current_match:
                     response['current_match'] = {
                         'uuid': str(tournament.current_match.uuid),
@@ -588,11 +665,10 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
                             }
                         },
                     }
-                    # Modifie le statut du match actuel
-                    tournament.current_match.status = 2
-                    await database_sync_to_async(tournament.current_match.save)()  # Sauvegarde le match actuel
 
-                # Envoie le message à tous les joueurs
+                    tournament.current_match.status = 2
+                    await database_sync_to_async(tournament.current_match.save)()
+
                 for player in players:
                     await channel_layer.group_send(
                         f"user_{str(player.user.uuid)}",

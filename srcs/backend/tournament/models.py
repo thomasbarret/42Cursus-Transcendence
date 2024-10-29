@@ -14,11 +14,14 @@ class Tournament(models.Model):
     status = models.IntegerField(choices=status_type, default=1)
     players = models.ManyToManyField('game.MatchPlayer', related_name='tournaments')
     winner = models.ForeignKey('game.MatchPlayer', on_delete=models.CASCADE, related_name='tournament_winner', null=True, blank=True)
+
     start_date = models.DateTimeField(null=True, blank=True)
     end_date = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey('game.MatchPlayer', on_delete=models.CASCADE, related_name='created_tournaments')
+
+    channel = models.ForeignKey('chat.Channel', on_delete=models.CASCADE, related_name='tournament')
     current_match = models.ForeignKey('game.Match', on_delete=models.SET_NULL, related_name='current_tournament_match', null=True, blank=True)
     max_score = models.IntegerField(default=10)
     matches = models.ManyToManyField('game.Match', related_name='tournaments')
