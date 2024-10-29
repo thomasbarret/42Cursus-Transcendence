@@ -8,8 +8,9 @@ import {
 	settingsHandler,
 } from "./handler.js";
 import { messageHandler } from "./messages.js";
-import { lobbyMiddleware } from "./middleware.js";
+import { lobbyMiddleware, tournamentMiddleware } from "./middleware.js";
 import { lobbyHandler, playHandler } from "./play.js";
+import { tournamentHandler } from "./tournament.js";
 const urlPageTitle = "transcendence";
 export const routes = {
 	404: {
@@ -28,15 +29,25 @@ export const routes = {
 		title: "Play Pong | " + urlPageTitle,
 		description: "Pong Game Mode Selector",
 		handler: playHandler,
+		auth: true,
 	},
 	"/lobby": {
 		page: "/pages/lobby.html",
-		title: "Lobby | " + urlPageTitle,
+		title: "Game | " + urlPageTitle,
 		description: "Lobby for the Pong game",
 		handler: lobbyHandler,
 		slug: true,
 		no_slug_fallback: "/play",
 		middleware: lobbyMiddleware,
+	},
+	"/tournament": {
+		page: "/pages/tournament.html",
+		title: "Tournament | " + urlPageTitle,
+		description: "Tournament for the Pong Game",
+		handler: tournamentHandler,
+		slug: true,
+		no_slug_fallback: "/play",
+		middleware: tournamentMiddleware,
 	},
 	"/game": {
 		page: "/pages/game.html",

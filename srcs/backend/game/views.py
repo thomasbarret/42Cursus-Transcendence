@@ -295,7 +295,7 @@ class JoinMatchView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        match_uuid = request.data.get('match_uuid')
+        match_uuid = request.data.get('uuid')
         display_name = request.data.get('display_name')
 
         if not match_uuid:

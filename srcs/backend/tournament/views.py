@@ -84,7 +84,7 @@ class JoinTournamentView(APIView):
 
     def post(self, request):
 
-        tournament_uuid = request.data.get('tournament_uuid')
+        tournament_uuid = request.data.get('uuid')
         tournament = Tournament.objects.get(uuid=tournament_uuid)
 
 		#MatchPlayer

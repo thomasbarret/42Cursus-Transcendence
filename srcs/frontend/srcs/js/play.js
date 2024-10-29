@@ -56,6 +56,9 @@ export const playHandler = (route) => {
 		console.log(data);
 
 		if (res.ok) {
+			tournamentModal.hide();
+			Toast("Created tournament: " + data.uuid, "primary");
+			navigate("/tournament/" + data.uuid);
 		} else Toast("Error occured, couldn't create tournament", "danger");
 	});
 };

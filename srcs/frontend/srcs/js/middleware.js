@@ -12,3 +12,14 @@ export const lobbyMiddleware = async (route, slug) => {
 	}
 	return true;
 };
+
+export const tournamentMiddleware = async (route, slug) => {
+	const res = await fetch(BASE_URL + "/game/tournament/" + slug);
+
+	if (!res.ok) {
+		Toast("Couldn't find tournament!", "danger");
+		navigate("/play");
+		return false;
+	}
+	return true;
+};

@@ -119,16 +119,21 @@ export const messageBoxLeft = (text, time, uuid, avatar) => {
 	return message;
 };
 
-export const matchInviteRight = (time, callback, avatar) => {
+export const matchInviteRight = (time, callback, avatar, tournament) => {
 	const image = img(avatar ? avatar : DEFAULT_AVATAR)
 		.attr("alt", "avatar 1")
 		.attr("style", "width: 35px; height: 35px")
 		.attr("class", "rounded-circle");
 	const content = div(
 		div(
-			h5("Play with me"),
+			h5(tournament ? "Join my Tournament" : "Play with me"),
 			button("Join Game")
-				.cl("btn btn-outline-primary rounded-2")
+				.cl(
+					"btn rounded-2 " +
+						(tournament
+							? "btn-outline-success"
+							: "btn-outline-primary")
+				)
 				.onclick$(callback)
 		).cl(
 			"container justify-content-center text-center bg-primary-subtle rounded-2 p-3"
@@ -145,7 +150,7 @@ export const matchInviteRight = (time, callback, avatar) => {
 	return message;
 };
 
-export const matchInviteLeft = (time, uuid, callback, avatar) => {
+export const matchInviteLeft = (time, uuid, callback, avatar, tournament) => {
 	const image = img(avatar ? avatar : DEFAULT_AVATAR)
 		.attr("alt", "avatar 1")
 		.attr("style", "width: 35px; height: 35px")
@@ -155,9 +160,14 @@ export const matchInviteLeft = (time, uuid, callback, avatar) => {
 
 	const content = div(
 		div(
-			h5("Play with me"),
+			h5(tournament ? "Join my Tournament" : "Play with me"),
 			button("Join Game")
-				.cl("btn btn-outline-primary rounded-2")
+				.cl(
+					"btn rounded-2 " +
+						(tournament
+							? "btn-outline-success"
+							: "btn-outline-primary")
+				)
 				.onclick$(callback)
 		).cl(
 			"container justify-content-center text-center bg-primary-subtle rounded-2 p-3"
@@ -177,23 +187,35 @@ export const matchInviteLeft = (time, uuid, callback, avatar) => {
 };
 
 export const messageBox = (content, time, current, uuid, avatar) => {
-	if (content.startsWith('{"game":')) {
+	if (
+		content.startsWith('{"game":') ||
+		content.startsWith('{"tournament":')
+	) {
 		try {
-			const invite = JSON.parse(content);
+			const { game, tournament } = JSON.parse(content);
+
+			const invite = game ? game : tournament;
 
 			const callback = async () => {
-				const res = await fetch(BASE_URL + "/game/match/join", {
+				const url =
+					BASE_URL +
+					(tournament ? "/game/tournament/join" : "/game/match/join");
+				const res = await fetch(url, {
 					method: "POST",
 					headers: {
 						"Content-Type": "application/json",
 					},
 					body: JSON.stringify({
-						match_uuid: invite.game,
+						uuid: invite,
 					}),
 				});
 
 				if (res.ok) {
-					navigate("/lobby/" + invite.game);
+					navigate(
+						tournament
+							? "/tournament/" + invite
+							: "/lobby/" + invite
+					);
 				} else
 					Toast(
 						"Couldn't join lobby please try again later.",
@@ -201,8 +223,8 @@ export const messageBox = (content, time, current, uuid, avatar) => {
 					);
 			};
 			return current
-				? matchInviteRight(time, callback, avatar)
-				: matchInviteLeft(time, uuid, callback, avatar);
+				? matchInviteRight(time, callback, avatar, tournament)
+				: matchInviteLeft(time, uuid, callback, avatar, tournament);
 		} catch (e) {}
 	}
 
@@ -494,7 +516,7 @@ export const matchHistory = (matches) => {
 		);
 };
 
-export const inviteBoxCard = (user, matchId, update) => {
+export const inviteBoxCard = (user, matchId, update, tournament) => {
 	return div(
 		img(user.avatar ? user.avatar : DEFAULT_AVATAR)
 			.attr("alt", "avatar")
@@ -516,9 +538,9 @@ export const inviteBoxCard = (user, matchId, update) => {
 
 				const channel = await res.json();
 
-				const invite = {
-					game: matchId,
-				};
+				const invite = {};
+
+				invite[tournament ? "tournament" : "game"] = matchId;
 
 				if (res.ok) {
 					const msg = await fetch(
