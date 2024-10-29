@@ -566,7 +566,7 @@ export const inviteBoxCard = (user, matchId, update, tournament) => {
 	).cl("d-flex align-items-center mb-2");
 };
 
-export const currentPlayerCard = (user) => {
+export const matchPlayersCard = (user) => {
 	return div(
 		div(
 			img(user.avatar ? user.avatar : DEFAULT_AVATAR)

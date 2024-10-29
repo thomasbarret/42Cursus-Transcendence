@@ -1,6 +1,6 @@
 import * as bootstrap from "bootstrap";
 import { BASE_URL } from "./handler.js";
-import { currentPlayerCard, inviteBoxCard, Toast } from "./components.js";
+import { matchPlayersCard, inviteBoxCard, Toast } from "./components.js";
 import { navigate } from "./main.js";
 import { gameHandler } from "./game/pong.js";
 import { eventEmitter } from "./eventemitter.js";
@@ -118,11 +118,11 @@ export const lobbyHandler = (route, slug) => {
 			} else if (matchData["status"] === 3) matchFinish(matchData);
 			if (matchData["player_1"])
 				currentPlayers.appendChild(
-					currentPlayerCard(matchData["player_1"])
+					matchPlayersCard(matchData["player_1"])
 				);
 			if (matchData["player_2"])
 				currentPlayers.appendChild(
-					currentPlayerCard(matchData["player_2"])
+					matchPlayersCard(matchData["player_2"])
 				);
 		} else
 			Toast("Match couldn't be found, please try again later.", "danger");

@@ -13,6 +13,11 @@ export const tournamentHandler = (_, slug) => {
 
 		console.log(data);
 		if (res.ok) {
+			getChatBox(data.channel);
+
+			data.players.forEach((player) => {
+				console.log(player);
+			});
 		} else Toast("Couldn't get tournament data", "danger");
 	};
 
@@ -33,6 +38,16 @@ export const tournamentHandler = (_, slug) => {
 		} else {
 			Toast("Error occured: " + data["error"], "danger");
 		}
+	};
+
+	const getChatBox = async (channel) => {
+		const res = await fetch(BASE_URL + "/chat/" + channel.uuid);
+
+		const data = await res.json();
+
+		if (res.ok) {
+		} else Toast("Tournament chat error " + data["error"], "danger");
+		console.log(data);
 	};
 
 	getTournamentData();
