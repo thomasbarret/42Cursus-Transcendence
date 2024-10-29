@@ -75,7 +75,7 @@ OAUTH2_42_CLIENT_ID = (
 OAUTH2_42_CLIENT_SECRET = (
     "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"
 )
-OAUTH2_42_REDIRECT_URI = "http://localhost:8000/api/oauth/42/callback"
+OAUTH2_42_REDIRECT_URI = "http://localhost:8080/api/oauth/42/callback"
 
 APPEND_SLASH=True
 
