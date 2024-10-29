@@ -255,7 +255,7 @@ class RelationView(APIView):
 
             channel_layer = get_channel_layer()
             async_to_sync(channel_layer.group_send)(
-                f"notification_{user_2.user.uuid}",
+                f"user_{user_2.user.uuid}",
                 {
                     "type": "send_event",
                     "event_name": "FRIEND_REQUEST_ACCEPT",
@@ -288,7 +288,7 @@ class RelationView(APIView):
         relation.save()
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
-            f"notification_{user_2.user.uuid}",
+            f"user_{user_2.user.uuid}",
             {
                 "type": "send_event",
                 "event_name": "FRIEND_REQUEST_CREATE",
@@ -396,7 +396,7 @@ class ProfilMatchView(APIView):
 
         matches = Match.objects.filter(
             Q(player1=player) | Q(player2=player)
-        ).order_by('-start_date')
+        ).order_by('start_date')
 
         return JsonResponse({
             'matches': [{

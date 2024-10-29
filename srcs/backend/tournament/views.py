@@ -9,44 +9,217 @@ from authentication.views import TokenFromCookieAuthentication
 from rest_framework.response import Response
 from rest_framework import status
 
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+
 from django.db.models import Q
 
 def get_avatar_url(user):
     return user.publicuser.avatar.url if user.publicuser.avatar else None
 
-class TournamentView(APIView):
+class CreateTournamentView(APIView):
     authentication_classes = [TokenFromCookieAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(seft, request):
-        name = request.data.get('name')
-        max_players = request.data.get('max_players')
-        max_score = request.data.get('max_score')
-        max_rounds = request.data.get('max_rounds')
-
-        if not name or not max_players or not max_score or not max_rounds:
-            return Response({
-                'error': 'name, max_players, max_score and max_rounds are required'
-            }, status=status.HTTP_400_BAD)
-
         creator_player, created = MatchPlayer.objects.get_or_create(
             user=request.user,
             defaults={'display_name': request.user.publicuser.display_name}
         )
 
-
         tournament = Tournament.objects.create(
-            name=name,
-            max_players=max_players,
-            max_score=max_score,
+            status=1,
             created_by=creator_player
         )
 
-        return JsonResponse({
+        tournament.players.add(creator_player)
+
+        return Response({
+            'uuid': tournament.uuid,
+            'created_at': tournament.created_at,
+        })
+
+
+class GetTournamentView(APIView):
+    authentication_classes = [TokenFromCookieAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, tournament_uuid):
+        tournament = Tournament.objects.get(uuid=tournament_uuid)
+        creator = tournament.created_by.user
+
+        creator_player = MatchPlayer.objects.get(user=creator)
+
+        players = tournament.players.all()
+        players_data = []
+        for player in players:
+            player_data = {
+                'uuid': player.user.publicuser.uuid,
+                'user': {
+                    'uuid': player.user.publicuser.uuid,
+                    'display_name': player.display_name,
+                    'avatar': get_avatar_url(player.user)
+                }
+            }
+            players_data.append(player_data)
+
+        return Response({
+            'uuid': tournament.uuid,
+            'name': tournament.name,
+            'max_score': tournament.max_score,
+            'created_at': tournament.created_at,
+            'creator': {
+                'uuid': creator_player.uuid,
+                'user': {
+                    'uuid': creator.publicuser.uuid,
+                    'display_name': creator.publicuser.display_name,
+                    'avatar': get_avatar_url(creator)
+                }
+            },
+            'players': players_data,
+            'current_match': tournament.current_match.uuid if tournament.current_match else None,
+        })
+
+class JoinTournamentView(APIView):
+    authentication_classes = [TokenFromCookieAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+
+        tournament_uuid = request.data.get('tournament_uuid')
+        tournament = Tournament.objects.get(uuid=tournament_uuid)
+
+        creator = tournament.created_by.user
+
+        creator_player = MatchPlayer.objects.get(user=creator)
+
+        if tournament.status != 1:
+            return Response({
+                'error': 'This tournament is not open for registration'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        player, created = MatchPlayer.objects.get_or_create(
+            user=request.user,
+            defaults={'display_name': request.user.publicuser.display_name}
+        )
+
+        players = tournament.players.all()
+        players_data = []
+
+        if created or player not in players:
+            tournament.players.add(player)
+
+        for player in players:
+            player_data = {
+                'uuid': player.user.publicuser.uuid,
+                'user': {
+                    'uuid': player.user.publicuser.uuid,
+                    'display_name': player.display_name,
+                    'avatar': get_avatar_url(player.user)
+                }
+            }
+            players_data.append(player_data)
+
+        return Response({
             'uuid': tournament.uuid,
             'name': tournament.name,
             'max_players': tournament.max_players,
-            'max_rounds': tournament.max_rounds,
             'max_score': tournament.max_score,
             'created_at': tournament.created_at,
+            'creator': {
+                'uuid': creator_player.uuid,
+                'user': {
+                    'uuid': creator.publicuser.uuid,
+                    'display_name': creator.publicuser.display_name,
+                    'avatar': get_avatar_url(creator)
+                }
+            },
+            'players': players_data,
+            'current_match': tournament.current_match.uuid if tournament.current_match else None,
         })
+
+# class StartTournamentView(APIView):
+#     authentication_classes = [TokenFromCookieAuthentication]
+#     permission_classes = [IsAuthenticated]
+#
+#     def post(self, request, tournament_uuid):
+#         tournament = Tournament.objects.get(uuid=tournament_uuid)
+#
+#         creator = tournament.created_by.user
+#
+#         creator_player = MatchPlayer.objects.get(user=creator)
+#
+#         if tournament.status != 1:
+#             return Response({
+#                 'error': 'This tournament is not open for registration'
+#             }, status=status.HTTP_400_BAD_REQUEST)
+#
+#         if tournament.players.count() < 2:
+#             return Response({
+#                 'error': 'This tournament needs at least 2 players to start'
+#             }, status=status.HTTP_400_BAD_REQUEST)
+#
+#         tournament.create_all_matches()
+#
+#         tournament.status = 2
+#         tournament.save()
+#
+#         players = tournament.players.all()
+#
+#         players_data = []
+#
+#         channel_layer = get_channel_layer()
+#
+#         for player in players:
+#             player_data = {
+#                 'uuid': player.user.publicuser.uuid,
+#                 'user': {
+#                     'uuid': player.user.publicuser.uuid,
+#                     'display_name': player.display_name,
+#                     'avatar': get_avatar_url(player.user)
+#                 }
+#             }
+#             players_data.append(player_data)
+#
+#         response = {
+#             'uuid': tournament.uuid,
+#             'name': tournament.name,
+#             'max_players': tournament.max_players,
+#             'max_score': tournament.max_score,
+#             'created_at': tournament.created_at,
+#             'creator': {
+#                 'uuid': creator_player.uuid,
+#                 'user': {
+#                     'uuid': creator.publicuser.uuid,
+#                     'display_name': creator.publicuser.display_name,
+#                     'avatar': get_avatar_url(creator)
+#                 }
+#             },
+#             'players': players_data,
+#             'current_match': {
+#                 'uuid': tournament.current_match.uuid,
+#                 'player1': {
+#                     'uuid': tournament.current_match.player1.user.publicuser.uuid,
+#                     'display_name': tournament.current_match.player1.display_name,
+#                     'avatar': get_avatar_url(tournament.current_match.player1.user)
+#                 },
+#                 'player2': {
+#                     'uuid': tournament.current_match.player2.user.publicuser.uuid,
+#                     'display_name': tournament.current_match.player2.display_name,
+#                     'avatar': get_avatar_url(tournament.current_match.player2.user)
+#                 },
+#             } if tournament.current_match else None,
+#         }
+#
+#         for player in players:
+#             async_to_sync(channel_layer.group_send)(
+#                 f"user_{str(player.user.uuid)}",
+#                 {
+#                     "type": "send_event",
+#                     "event_name": "TOURNAMENT_START",
+#                     "data": response
+#                 }
+#             )
+#
+#         return JsonResponse(response)
+

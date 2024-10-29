@@ -11,7 +11,7 @@ class MatchPlayer(models.Model):
     )
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     status = models.IntegerField(choices=status_type, default=1)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     display_name = models.CharField()
 
 class Match(models.Model):
@@ -34,3 +34,11 @@ class Match(models.Model):
     end_date = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    tournament = models.ForeignKey(
+        'tournament.Tournament',
+        on_delete=models.CASCADE,
+        related_name='tournament_matches',
+        null=True,
+        blank=True
+    )
