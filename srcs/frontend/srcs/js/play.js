@@ -10,21 +10,17 @@ export const playHandler = (route) => {
 	let timerId = 0;
 
 	const tournamentMode = document.getElementById("tournament-mode");
-	const oneVsOne = document.getElementById("one-vs-one");
-	const waitingTime = document.getElementById("waiting-time");
-	const cancelMatchmaking = document.getElementById("cancel-matchmaking");
+	const oneMode = document.getElementById("one-vs-one");
+
+	const tournamentModal = new bootstrap.Modal("#tournamentModal");
+	const createTournament = document.getElementById("create-tournament");
+	const joinTournament = document.getElementById("join-tournament");
+
+	const createJoinModal = new bootstrap.Modal("#createJoinModal");
 	const createGame = document.getElementById("create-game");
-	const matchmakingModal = new bootstrap.Modal("#matchmakingModal", {
-		keyboard: false,
-		backdrop: "static",
-	});
+	const joinGame = document.getElementById("join-game");
 
-	const createJoinModal = new bootstrap.Modal("#createJoinModal", {
-		keyboard: false,
-		backdrop: "static",
-	});
-
-	oneVsOne.addEventListener("click", () => {
+	oneMode.addEventListener("click", () => {
 		createJoinModal.show();
 	});
 
@@ -47,26 +43,21 @@ export const playHandler = (route) => {
 	});
 
 	tournamentMode.addEventListener("click", () => {
-		matchmakingModal.show();
-		let timePassed = 1;
-
-		timerId = setInterval(() => {
-			const minutes = Math.floor(timePassed / 60);
-			const seconds = timePassed % 60;
-			waitingTime.textContent = `Time waiting: ${String(minutes).padStart(
-				2,
-				"0"
-			)}:${String(seconds).padStart(2, "0")}`;
-			timePassed++;
-		}, 1000);
+		tournamentModal.show();
 	});
 
-	cancelMatchmaking.addEventListener("click", () => {
-		matchmakingModal.hide();
-		waitingTime.textContent = "Time waiting: 00:00";
-		clearInterval(timerId);
+	createTournament.addEventListener("click", async () => {
+		const res = await fetch(BASE_URL + "/game/tournament/create", {
+			method: "POST",
+		});
+
+		const data = await res.json();
+
+		console.log(data);
+
+		if (res.ok) {
+		} else Toast("Error occured, couldn't create tournament", "danger");
 	});
-	console.log("player handler");
 };
 
 export const lobbyHandler = (route, slug) => {

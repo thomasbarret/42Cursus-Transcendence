@@ -301,13 +301,15 @@ class GameManager:
 game_manager = GameManager()
 
 class EventGatewayConsumer(AsyncWebsocketConsumer):
-
-    match_player_ready = {}
-
     async def connect(self):
         self.group_name = None  # Initialise à None
 
-        self.user = await self.get_user_from_cookie(self.scope)
+        self.user = None
+        try:
+            self.user = await self.get_user_from_cookie(self.scope)
+        except:
+            await self.close()
+            return
 
         if self.user and self.user.is_authenticated:
             print(f"User {self.user.uuid} {self.user.username} connected.")

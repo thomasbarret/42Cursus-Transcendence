@@ -27,7 +27,7 @@
 	</div>
 </div>
 
-<div
+<!-- <div
 	class="modal fade"
 	id="matchmakingModal"
 	tabindex="-1"
@@ -65,7 +65,7 @@
 			</div>
 		</div>
 	</div>
-</div>
+</div> -->
 
 <!-- Create or Join Game Modal -->
 <div
@@ -102,6 +102,55 @@
 					id="join-game"
 				>
 					Join Game
+				</button>
+			</div>
+			<div class="modal-footer">
+				<button
+					type="button"
+					class="btn btn-secondary"
+					data-bs-dismiss="modal"
+				>
+					Close
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div
+	class="modal fade"
+	id="tournamentModal"
+	tabindex="-1"
+	aria-labelledby="createJoinModalLabel"
+	aria-hidden="true"
+>
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title fs-3" id="createJoinModalLabel">
+					Create or Join Tournament
+				</h5>
+				<button
+					type="button"
+					class="btn-close"
+					data-bs-dismiss="modal"
+					aria-label="Close"
+				></button>
+			</div>
+			<div class="modal-body text-center fs-4">
+				<button
+					type="button"
+					class="btn btn-primary btn-lg mb-4 w-100"
+					id="create-tournament"
+				>
+					Create Tournament
+				</button>
+				<button
+					type="button"
+					class="btn btn-success btn-lg w-100"
+					id="join-tournament"
+				>
+					Join Tournament
 				</button>
 			</div>
 			<div class="modal-footer">
