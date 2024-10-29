@@ -46,9 +46,8 @@ class GetTournamentView(APIView):
 
     def get(self, request, tournament_uuid):
         tournament = Tournament.objects.get(uuid=tournament_uuid)
-        creator = tournament.created_by.user
-
-        creator_player = MatchPlayer.objects.get(user=creator)
+        #MatchPlayer
+        creator = tournament.created_by
 
         players = tournament.players.all()
         players_data = []
@@ -65,15 +64,14 @@ class GetTournamentView(APIView):
 
         return Response({
             'uuid': tournament.uuid,
-            'name': tournament.name,
             'max_score': tournament.max_score,
             'created_at': tournament.created_at,
             'creator': {
-                'uuid': creator_player.uuid,
+                'uuid': creator.uuid,
                 'user': {
                     'uuid': creator.user.uuid,
                     'display_name': creator.user.publicuser.display_name,
-                    'avatar': get_avatar_url(creator)
+                    'avatar': get_avatar_url(creator.user)
                 }
             },
             'players': players_data,
@@ -89,9 +87,8 @@ class JoinTournamentView(APIView):
         tournament_uuid = request.data.get('tournament_uuid')
         tournament = Tournament.objects.get(uuid=tournament_uuid)
 
-        creator = tournament.created_by.user
-
-        creator_player = MatchPlayer.objects.get(user=creator)
+		#MatchPlayer
+        creator = tournament.created_by
 
         if tournament.status != 1:
             return Response({
@@ -111,7 +108,7 @@ class JoinTournamentView(APIView):
 
         for player in players:
             player_data = {
-                'uuid': player.user.publicuser.uuid,
+                'uuid': player.uuid,
                 'user': {
                     'uuid': player.user.uuid,
                     'display_name': player.user.publicuser.display_name,
@@ -122,16 +119,14 @@ class JoinTournamentView(APIView):
 
         return Response({
             'uuid': tournament.uuid,
-            'name': tournament.name,
-            'max_players': tournament.max_players,
             'max_score': tournament.max_score,
             'created_at': tournament.created_at,
             'creator': {
-                'uuid': creator_player.uuid,
+                'uuid': creator.uuid,
                 'user': {
                     'uuid': creator.user.uuid,
                     'display_name': creator.user.publicuser.display_name,
-                    'avatar': get_avatar_url(creator)
+                    'avatar': get_avatar_url(creator.user)
                 }
             },
             'players': players_data,
@@ -183,8 +178,6 @@ class JoinTournamentView(APIView):
 #
 #         response = {
 #             'uuid': tournament.uuid,
-#             'name': tournament.name,
-#             'max_players': tournament.max_players,
 #             'max_score': tournament.max_score,
 #             'created_at': tournament.created_at,
 #             'creator': {
