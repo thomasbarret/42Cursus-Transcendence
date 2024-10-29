@@ -8,6 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from authentication.views import TokenFromCookieAuthentication
 from rest_framework.response import Response
 from rest_framework import status
+from chat.models import Channel
 
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
@@ -29,13 +30,22 @@ class CreateTournamentView(APIView):
 
         tournament = Tournament.objects.create(
             status=1,
+            channel=Channel.objects.create(
+                type=2
+            ),
             created_by=creator_player
         )
 
         tournament.players.add(creator_player)
+        tournament.save()
 
         return Response({
             'uuid': tournament.uuid,
+            'channel': {
+                'uuid': tournament.channel.uuid,
+                'type': tournament.channel.type,
+                'created_at': tournament.channel.created_at,
+            },
             'created_at': tournament.created_at,
         })
 
@@ -45,38 +55,91 @@ class GetTournamentView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, tournament_uuid):
-        tournament = Tournament.objects.get(uuid=tournament_uuid)
-        #MatchPlayer
-        creator = tournament.created_by
+        try:
+            tournament = Tournament.objects.get(uuid=tournament_uuid)
 
-        players = tournament.players.all()
-        players_data = []
-        for player in players:
-            player_data = {
-                'uuid': player.uuid,
-                'user': {
-                    'uuid': player.user.uuid,
-                    'display_name': player.user.publicuser.display_name,
-                    'avatar': get_avatar_url(player.user)
-                }
-            }
-            players_data.append(player_data)
+            if not tournament:
+                return Response({
+                    'error': 'Tournament not found'
+                }, status=status.HTTP_404_NOT_FOUND)
 
-        return Response({
-            'uuid': tournament.uuid,
-            'max_score': tournament.max_score,
-            'created_at': tournament.created_at,
-            'creator': {
-                'uuid': creator.uuid,
-                'user': {
-                    'uuid': creator.user.uuid,
-                    'display_name': creator.user.publicuser.display_name,
-                    'avatar': get_avatar_url(creator.user)
+            creator = tournament.created_by
+
+            players = tournament.players.all()
+            players_data = []
+            for player in players:
+                player_data = {
+                    'uuid': player.uuid,
+                    'user': {
+                        'uuid': player.user.uuid,
+                        'display_name': player.user.publicuser.display_name,
+                        'avatar': get_avatar_url(player.user)
+                    }
                 }
-            },
-            'players': players_data,
-            'current_match': tournament.current_match.uuid if tournament.current_match else None,
-        })
+                players_data.append(player_data)
+
+            match = tournament.current_match
+            return Response({
+                'uuid': tournament.uuid,
+                'max_score': tournament.max_score,
+                'channel': {
+                    'uuid': tournament.channel.uuid,
+                    'type': tournament.channel.type,
+                    'created_at': tournament.channel.created_at,
+                },
+                'creator': {
+                    'uuid': creator.uuid,
+                    'user': {
+                        'uuid': creator.user.uuid,
+                        'display_name': creator.user.publicuser.display_name,
+                        'avatar': get_avatar_url(creator.user)
+                    }
+                },
+                'players': players_data,
+                'current_match': {
+                    "uuid": match.uuid,
+                    "status": match.status,
+                    "player_1": {
+                        "uuid": match.player1.uuid,
+                        "display_name": match.player1.display_name,
+                        "user": {
+                            "uuid": match.player1.user.uuid,
+                            "display_name": match.player1.user.publicuser.display_name,
+                            "avatar": get_avatar_url(match.player1.user)
+                        },
+                    },
+                    "player_2": {
+                        "uuid": match.player2.uuid,
+                        "display_name": match.player2.display_name,
+                        "user": {
+                            "uuid": match.player2.user.uuid,
+                            "display_name": match.player2.user.publicuser.display_name,
+                            "avatar": get_avatar_url(match.player2.user)
+                        } if match.player2 and match.player2.user else None
+                    } if match.player2 else None,
+                    "player1_score": match.player1_score,
+                    "player2_score": match.player2_score,
+                    "winner": {
+                        "uuid": match.winner.uuid,
+                        "display_name": match.winner.display_name,
+                        "user": {
+                            "uuid": match.winner.user.uuid,
+                            "display_name": match.winner.user.publicuser.display_name,
+                            "avatar": match.winner.user.publicuser.avatar.url if match.winner.user.publicuser.avatar else None,
+                        },
+                    } if match.winner else None,
+                    "max_score": match.max_score,
+                    "start_date": match.start_date,
+                    "end_date": match.end_date,
+                    "created_at": match.created_at,
+                    "updated_at": match.updated_at,
+                } if tournament.current_match else None,
+                'created_at': tournament.created_at,
+            })
+        except Tournament.DoesNotExist:
+            return Response({
+                'error': 'Tournament not found'
+            }, status=status.HTTP_404_NOT_FOUND)
 
 class JoinTournamentView(APIView):
     authentication_classes = [TokenFromCookieAuthentication]
@@ -84,10 +147,9 @@ class JoinTournamentView(APIView):
 
     def post(self, request):
 
-        tournament_uuid = request.data.get('tournament_uuid')
+        tournament_uuid = request.data.get('uuid')
         tournament = Tournament.objects.get(uuid=tournament_uuid)
 
-		#MatchPlayer
         creator = tournament.created_by
 
         if tournament.status != 1:
@@ -120,7 +182,11 @@ class JoinTournamentView(APIView):
         return Response({
             'uuid': tournament.uuid,
             'max_score': tournament.max_score,
-            'created_at': tournament.created_at,
+            'channel': {
+                'uuid': tournament.channel.uuid,
+                'type': tournament.channel.type,
+                'created_at': tournament.channel.created_at,
+            },
             'creator': {
                 'uuid': creator.uuid,
                 'user': {
@@ -130,7 +196,8 @@ class JoinTournamentView(APIView):
                 }
             },
             'players': players_data,
-            'current_match': tournament.current_match.uuid if tournament.current_match else None,
+            'current_match': None,
+            'created_at': tournament.created_at,
         })
 
 # class StartTournamentView(APIView):
