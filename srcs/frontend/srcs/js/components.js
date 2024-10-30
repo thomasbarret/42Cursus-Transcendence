@@ -582,3 +582,9 @@ export const matchPlayersCard = (user, uuid) => {
 		"d-flex flex-column align-items-start mb-2 p-2 bg-primary-subtle rounded"
 	);
 };
+
+export const messageTournament = (message) => {
+	return div(p(message.user.display_name + ": " + message.content)).cl(
+		"text-muted"
+	);
+};

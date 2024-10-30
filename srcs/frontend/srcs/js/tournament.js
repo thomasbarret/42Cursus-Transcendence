@@ -1,4 +1,9 @@
-import { inviteBoxCard, matchPlayersCard, Toast } from "./components.js";
+import {
+	inviteBoxCard,
+	matchPlayersCard,
+	messageTournament,
+	Toast,
+} from "./components.js";
 import { eventEmitter } from "./eventemitter.js";
 import { BASE_URL } from "./handler.js";
 import { socket } from "./socket.js";
@@ -11,6 +16,8 @@ export const tournamentHandler = (_, slug) => {
 	const currentPlayers = document.getElementById("current-players");
 	const chatForm = document.getElementById("chat-form");
 	const chatInput = document.getElementById("chat-input");
+
+	const chatBox = document.getElementById("chat-box");
 
 	const startTournament = document.getElementById("start-tournament");
 
@@ -28,6 +35,9 @@ export const tournamentHandler = (_, slug) => {
 	};
 
 	eventEmitter.on("GAME_TOURNAMENT_READY", () => watchTournamentGame());
+	eventEmitter.on("GAME_MESSAGE_CREATE", (data) =>
+		chatBox.appendChild(messageTournament(data))
+	);
 
 	const getTournamentData = async () => {
 		const res = await fetch(BASE_URL + "/game/tournament/" + slug);
@@ -38,6 +48,9 @@ export const tournamentHandler = (_, slug) => {
 
 		if (res.ok) {
 			getChatBox(data.channel);
+			socket.addEventListener("open", () => watchTournamentGame(), {
+				once: true,
+			});
 			if (socket.readyState === WebSocket.OPEN) {
 				watchTournamentGame();
 			}
@@ -90,7 +103,7 @@ export const tournamentHandler = (_, slug) => {
 
 				if (res.ok) {
 					// @ts-ignore
-					chatInput.value = 0;
+					chatInput.value = "";
 				} else
 					Toast("Couldn't send message " + json["error"], "danger");
 			};
@@ -122,6 +135,11 @@ export const tournamentHandler = (_, slug) => {
 		const data = await res.json();
 
 		if (res.ok) {
+			const fragment = document.createDocumentFragment();
+			data.messages.forEach((message) => {
+				fragment.appendChild(messageTournament(message));
+			});
+			chatBox.appendChild(fragment);
 		} else Toast("Tournament chat error " + data["error"], "danger");
 		console.log(data);
 	};

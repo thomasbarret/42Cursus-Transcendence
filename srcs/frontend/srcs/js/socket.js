@@ -37,10 +37,11 @@ export const connectWebSocket = () => {
 			window.location.host
 		}/ws/gateway/`
 	);
-	socket.onopen = () => {
-		socketReconnectTry = 0;
+
+	socket.addEventListener("open", () => {
 		console.log("WebSocket connection established.");
-	};
+	});
+
 	socket.onclose = () => {
 		console.warn("WebSocket connection closed.");
 		// keep trying to reconnect for now
@@ -65,6 +66,7 @@ export const connectWebSocket = () => {
 		const data = JSON.parse(event.data);
 		if (data.event !== "GAME_STATE_UPDATE")
 			console.log("received socket message: ", data);
+		else console.log("GAME_STATE_UPDATE RECEIVED");
 		if (data.event === "GAME_START_MATCH") {
 			gameStartMatch(data.data);
 		}

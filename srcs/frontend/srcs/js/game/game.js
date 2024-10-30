@@ -58,7 +58,6 @@ export class Game {
 					: this.player_2;
 			this.authoritative = this.currentPlayer === this.player_1;
 		}
-		this.start();
 	}
 
 	start() {
