@@ -305,7 +305,8 @@ class GameManager:
 
             await database_sync_to_async(match.tournament.refresh_from_db)()
 
-            players = match.tournament.players.all()
+            # players = match.tournament.players.all()
+            players = await database_sync_to_async(lambda: list(match.tournament.players.all()))()
             players_data = []
             for player in players:
                 player_data = {
@@ -627,8 +628,6 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
 
                 players_data = []
 
-                channel_layer = get_channel_layer()
-
                 for player in players:
                     player_data = {
                         'uuid': str(player.uuid),
@@ -682,7 +681,7 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
                     await database_sync_to_async(tournament.current_match.save)()
 
                 for player in players:
-                    await channel_layer.group_send(
+                    await self.channel_layer.group_send(
                         f"user_{str(player.user.uuid)}",
                         {
                             "type": "send_event",
@@ -693,7 +692,7 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
                 cache.get(f"{tournament.current_match.uuid}_player1_ready", True)
                 cache.get(f"{tournament.current_match.uuid}_player2_ready", True)
 
-                await game_manager.start_game(tournament.current_match.uuid, str(tournament.current_match.player1.uuid), str(tournament.current_match.player2.uuid), tournament.max_score, channel_layer)
+                await game_manager.start_game(str(tournament.current_match.uuid), str(tournament.current_match.player1.uuid), str(tournament.current_match.player2.uuid), tournament.max_score, self.channel_layer)
 
             elif event == "GAME_TOURNAMENT_WATCH":
                 tournament_uuid = data.get('uuid')

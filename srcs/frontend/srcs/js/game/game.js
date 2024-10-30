@@ -71,12 +71,14 @@ export class Game {
 		this.player_2.draw();
 
 		if (this.remote) {
-			if (this.remote.status === 3) this.finished = true;
-
 			this.player_1.points = this.remote.player1_score;
 			this.player_2.points = this.remote.player2_score;
 			this.setScore();
-			return;
+
+			if (this.remote.status === 3) {
+				this.finished = true;
+				return;
+			}
 		}
 
 		this.animationFrame = window.requestAnimationFrame(
