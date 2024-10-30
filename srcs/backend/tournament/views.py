@@ -37,6 +37,7 @@ class CreateTournamentView(APIView):
         )
 
         tournament.players.add(creator_player)
+        tournament.channel.users.add(request.user)
         tournament.save()
 
         return Response({
@@ -167,6 +168,9 @@ class JoinTournamentView(APIView):
 
         if created or player not in players:
             tournament.players.add(player)
+
+        tournament.channel.users.add(request.user)
+        tournament.save()
 
         for player in players:
             player_data = {
