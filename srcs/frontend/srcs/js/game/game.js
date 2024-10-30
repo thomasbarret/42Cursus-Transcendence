@@ -2,13 +2,7 @@ import { eventEmitter } from "../eventemitter.js";
 import { socket } from "../socket.js";
 import { getCurrentUser, isDarkMode } from "../storage.js";
 import { Ball } from "./ball.js";
-import {
-	BALL_LERP,
-	MATCH_UPDATE_INTERVAL,
-	PADDLE_LERP,
-	REFERENCE_HEIGHT,
-	REFERENCE_WIDTH,
-} from "./constants.js";
+import { REFERENCE_HEIGHT, REFERENCE_WIDTH } from "./constants.js";
 import { Paddle } from "./paddle.js";
 
 export let keyDownListener = null;
@@ -16,6 +10,9 @@ export let keyUpListener = null;
 
 export class Game {
 	constructor(remote) {
+		document.removeEventListener("keydown", keyDownListener);
+		document.removeEventListener("keyup", keyUpListener);
+
 		this.animationFrame = null;
 		this.finished = false;
 		this.remote = remote;
@@ -48,16 +45,22 @@ export class Game {
 			this.remote
 		);
 
+		if (this.remote) {
+			this.isPlaying =
+				this.user.uuid === this.remote.player_1.user.uuid ||
+				this.user.uuid === this.remote.player_2.user.uuid;
+
+			if (this.isPlaying) {
+				this.currentPlayer =
+					this.user.uuid === this.remote.player_1.user.uuid
+						? this.player_1
+						: this.player_2;
+			}
+		}
+
 		this.setColor();
 		this.eventListeners();
-
-		if (this.remote) {
-			this.currentPlayer =
-				this.user.uuid === this.remote.player_1.user.uuid
-					? this.player_1
-					: this.player_2;
-			this.authoritative = this.currentPlayer === this.player_1;
-		}
+		this.start();
 	}
 
 	start() {
@@ -73,6 +76,7 @@ export class Game {
 			this.player_1.points = this.remote.player1_score;
 			this.player_2.points = this.remote.player2_score;
 			this.setScore();
+			return;
 		}
 
 		this.animationFrame = window.requestAnimationFrame(
@@ -172,7 +176,7 @@ export class Game {
 			document.addEventListener(
 				"keydown",
 				(keyDownListener = (event) => {
-					if (!this.finished) {
+					if (!this.finished && this.isPlaying) {
 						if (
 							this.currentPlayer.keyHandler(event, true) !== false
 						) {
@@ -188,7 +192,7 @@ export class Game {
 			document.addEventListener(
 				"keyup",
 				(keyUpListener = (event) => {
-					if (!this.finished) {
+					if (!this.finished && this.isPlaying) {
 						if (
 							this.currentPlayer.keyHandler(event, false) !==
 							false

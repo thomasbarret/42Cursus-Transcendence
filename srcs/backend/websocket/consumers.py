@@ -305,18 +305,6 @@ class GameManager:
 
             await database_sync_to_async(match.tournament.refresh_from_db)()
 
-			# get next match au cas ou
-            next_match = match.tournament.current_match
-            if next_match:
-                next_match = await database_sync_to_async(
-                    Match.objects.filter(id=next_match.id)
-                    .select_related(
-                        'player1__user__publicuser',
-                        'player2__user__publicuser',
-                        'winner__user__publicuser'
-                    ).first
-                )()
-
             players = match.tournament.players.all()
             players_data = []
             for player in players:
@@ -627,8 +615,6 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
                         'data': {'message': 'You are not the creator of this tournament.'}
                     }))
 
-                await sync_to_async(tournament.create_all_matches)()
-
                 players = await database_sync_to_async(lambda: list(tournament.players.all()))()
 
                 if len(players) < 2:
@@ -636,6 +622,9 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
                         'event': 'ERROR',
                         'data': {'message': 'Not enough players in the tournament.'}
                     }))
+
+                await sync_to_async(tournament.create_all_matches)()
+
                 players_data = []
 
                 channel_layer = get_channel_layer()
@@ -671,7 +660,7 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
                 if tournament.current_match:
                     response['current_match'] = {
                         'uuid': str(tournament.current_match.uuid),
-                        'player1': {
+                        'player_1': {
                             'uuid': str(tournament.current_match.player1.uuid),
                             'user': {
                                 'uuid': str(tournament.current_match.player1.user.uuid),
@@ -679,7 +668,7 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
                                 'avatar': get_avatar_url(tournament.current_match.player1.user)
                             }
                         },
-                        'player2': {
+                        'player_2': {
                             'uuid': str(tournament.current_match.player2.uuid),
                             'user': {
                                 'uuid': str(tournament.current_match.player2.user.uuid),

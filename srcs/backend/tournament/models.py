@@ -48,8 +48,8 @@ class Tournament(models.Model):
         self.save()
 
     def start_next_match(self):
-        if not self.current_match or not self.current_match.winner:
-            raise ValueError("The current match is not finished or does not exist")
+        # if not self.current_match or not self.current_match.winner:
+        #     raise ValueError("The current match is not finished or does not exist")
 
         next_match = self.matches.exclude(id=self.current_match.id).filter(winner__isnull=True).first()
 

@@ -5,12 +5,15 @@ import {
 	Toast,
 } from "./components.js";
 import { eventEmitter } from "./eventemitter.js";
+import { Game } from "./game/game.js";
 import { BASE_URL } from "./handler.js";
 import { socket } from "./socket.js";
 import { getCurrentUser } from "./storage.js";
 
 export const tournamentHandler = (_, slug) => {
 	console.log("tournament slug: ", slug);
+
+	let game;
 
 	const inviteBox = document.getElementById("invite-box");
 	const currentPlayers = document.getElementById("current-players");
@@ -23,6 +26,8 @@ export const tournamentHandler = (_, slug) => {
 
 	const user = getCurrentUser();
 
+	const waitingOverlay = document.getElementById("waiting-overlay");
+
 	const watchTournamentGame = () => {
 		socket.send(
 			JSON.stringify({
@@ -34,7 +39,13 @@ export const tournamentHandler = (_, slug) => {
 		);
 	};
 
-	eventEmitter.on("GAME_TOURNAMENT_READY", () => watchTournamentGame());
+	eventEmitter.on("GAME_TOURNAMENT_READY", (data) => {
+		console.log("tournament ready: ", data);
+		watchTournamentGame();
+		waitingOverlay.classList.add("d-none");
+		if (data.current_match) game = new Game(data.current_match);
+	});
+
 	eventEmitter.on("GAME_MESSAGE_CREATE", (data) =>
 		chatBox.appendChild(messageTournament(data))
 	);
@@ -47,13 +58,13 @@ export const tournamentHandler = (_, slug) => {
 		console.log("TOURNAMENT DATA: ", data);
 
 		if (res.ok) {
+			if (data.status === 2) waitingOverlay.classList.add("d-none");
+			if (data.current_match) game = new Game(data.current_match);
 			getChatBox(data.channel);
+
 			socket.addEventListener("open", () => watchTournamentGame(), {
 				once: true,
 			});
-			if (socket.readyState === WebSocket.OPEN) {
-				watchTournamentGame();
-			}
 
 			data.players.forEach((matchPlayer) => {
 				currentPlayers.appendChild(

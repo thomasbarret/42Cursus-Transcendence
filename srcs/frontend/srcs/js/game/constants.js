@@ -6,8 +6,8 @@ export const MAX_ANGLE_DEVIATION = 45;
 
 export const PADDLE_VELOCITY = 8 * 40;
 
-export const REFERENCE_WIDTH = 840;
-export const REFERENCE_HEIGHT = 500;
+export const REFERENCE_WIDTH = 800;
+export const REFERENCE_HEIGHT = 600;
 
 export const MATCH_UPDATE_INTERVAL = 1000 / 50;
 export const BALL_LERP = 0.1;
