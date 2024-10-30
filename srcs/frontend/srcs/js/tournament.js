@@ -1,5 +1,7 @@
 import { inviteBoxCard, matchPlayersCard, Toast } from "./components.js";
 import { BASE_URL } from "./handler.js";
+import { socket } from "./socket.js";
+import { getCurrentUser } from "./storage.js";
 
 export const tournamentHandler = (_, slug) => {
 	console.log("tournament slug: ", slug);
@@ -9,12 +11,16 @@ export const tournamentHandler = (_, slug) => {
 	const chatForm = document.getElementById("chat-form");
 	const chatInput = document.getElementById("chat-input");
 
+	const startTournament = document.getElementById("start-tournament");
+
+	const user = getCurrentUser();
+
 	const getTournamentData = async () => {
 		const res = await fetch(BASE_URL + "/game/tournament/" + slug);
 
 		const data = await res.json();
 
-		console.log(data);
+		console.log("TOURNAMENT DATA: ", data);
 		if (res.ok) {
 			getChatBox(data.channel);
 
@@ -23,6 +29,20 @@ export const tournamentHandler = (_, slug) => {
 					matchPlayersCard(matchPlayer.user, matchPlayer.user.uuid)
 				);
 			});
+
+			if (user.uuid === data.creator.user.uuid) {
+				startTournament.classList.remove("d-none");
+				startTournament.onclick = () => {
+					socket.send(
+						JSON.stringify({
+							event: "TOURNAMENT_START",
+							data: {
+								uuid: slug,
+							},
+						})
+					);
+				};
+			}
 
 			chatForm.onsubmit = async (event) => {
 				event.preventDefault();

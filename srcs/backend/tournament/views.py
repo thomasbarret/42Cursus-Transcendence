@@ -82,6 +82,7 @@ class GetTournamentView(APIView):
             return Response({
                 'uuid': tournament.uuid,
                 'max_score': tournament.max_score,
+                'status': tournament.status,
                 'channel': {
                     'uuid': tournament.channel.uuid,
                     'type': tournament.channel.type,

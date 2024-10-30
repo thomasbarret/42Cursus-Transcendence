@@ -28,13 +28,30 @@
 		</div>
 		<div class="row flex-grow-1">
 			<div
-				class="col-lg-8 col-md-7 col-sm-12 d-flex justify-content-center align-items-center bg-body-secondary p-3 rounded"
+				class="col-lg-8 col-md-7 col-sm-12 d-flex justify-content-center align-items-center bg-body-secondary p-3 rounded position-relative"
 			>
 				<canvas
 					id="gameCanvas"
 					class="w-100 h-100"
 					style="max-height: 600px"
 				></canvas>
+				<div
+					id="waiting-overlay"
+					class="position-absolute top-50 start-50 translate-middle w-100 h-100 d-flex justify-content-center align-items-center"
+					style="background: rgba(0, 0, 0, 0.7)"
+				>
+					<div class="text-center text-white">
+						<h2>Waiting for tournament to start...</h2>
+
+						<button
+							type="button"
+							class="btn btn-primary mt-3 d-none"
+							id="start-tournament"
+						>
+							Start Tournament
+						</button>
+					</div>
+				</div>
 			</div>
 			<div class="col-lg-4 col-md-5 col-sm-12 d-flex flex-column">
 				<div

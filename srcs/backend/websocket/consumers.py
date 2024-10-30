@@ -414,7 +414,8 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
 
     async def disconnect(self, close_code):
         if self.group_name:
-            from game.models import Match, MatchPlayer, Tournament
+            from game.models import Match, MatchPlayer
+            from tournament.models import Tournament
             from django.db.models import Q
 
             await self.channel_layer.group_discard(self.group_name, self.channel_name)
@@ -632,7 +633,7 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
                 response = {
                     'uuid': str(tournament.uuid),
                     'max_score': tournament.max_score,
-                    'created_at': tournament.created_at.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+                    'created_at': tournament.created_at.isoformat(),
                     'creator': {
                         'uuid': str(tournament.created_by.uuid),
                         'user': {
