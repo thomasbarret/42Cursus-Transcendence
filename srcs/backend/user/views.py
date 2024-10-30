@@ -255,12 +255,12 @@ class RelationView(APIView):
 
             channel_layer = get_channel_layer()
             async_to_sync(channel_layer.group_send)(
-                f"user_{user_2.user.uuid}",
+                f"user_{str(user_2.user.uuid)}",
                 {
                     "type": "send_event",
                     "event_name": "FRIEND_REQUEST_ACCEPT",
                     "data": {
-                        "uuid": relation_already_exists.uuid,
+                        "uuid": str(relation_already_exists.uuid),
                         "type": relation_already_exists.type,
                         "status": relation_already_exists.status,
                         "author": {
@@ -288,12 +288,12 @@ class RelationView(APIView):
         relation.save()
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
-            f"user_{user_2.user.uuid}",
+            f"user_{str(user_2.user.uuid)}",
             {
                 "type": "send_event",
                 "event_name": "FRIEND_REQUEST_CREATE",
                 "data": {
-                    "uuid": relation.uuid,
+                    "uuid": str(relation.uuid),
                     "type": relation.type,
                     "status": relation.status,
                     "author": {
@@ -335,7 +335,7 @@ class RelationView(APIView):
 
             channel_layer = get_channel_layer()
             async_to_sync(channel_layer.group_send)(
-                f"notification_{relation.author.uuid}",
+                f"notification_{str(relation.author.uuid)}",
                 {
                     "type": "send_event",
                     "event_name": "FRIEND_REQUEST_ACCEPT",
