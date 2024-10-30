@@ -1,4 +1,5 @@
 import { inviteBoxCard, matchPlayersCard, Toast } from "./components.js";
+import { eventEmitter } from "./eventemitter.js";
 import { BASE_URL } from "./handler.js";
 import { socket } from "./socket.js";
 import { getCurrentUser } from "./storage.js";
@@ -15,14 +16,31 @@ export const tournamentHandler = (_, slug) => {
 
 	const user = getCurrentUser();
 
+	const watchTournamentGame = () => {
+		socket.send(
+			JSON.stringify({
+				event: "GAME_TOURNAMENT_WATCH",
+				data: {
+					uuid: slug,
+				},
+			})
+		);
+	};
+
+	eventEmitter.on("GAME_TOURNAMENT_READY", () => watchTournamentGame());
+
 	const getTournamentData = async () => {
 		const res = await fetch(BASE_URL + "/game/tournament/" + slug);
 
 		const data = await res.json();
 
 		console.log("TOURNAMENT DATA: ", data);
+
 		if (res.ok) {
 			getChatBox(data.channel);
+			if (socket.readyState === WebSocket.OPEN) {
+				watchTournamentGame();
+			}
 
 			data.players.forEach((matchPlayer) => {
 				currentPlayers.appendChild(

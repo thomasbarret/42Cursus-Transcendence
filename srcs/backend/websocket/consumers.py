@@ -234,8 +234,16 @@ class GameManager:
 
         from game.models import Match, MatchPlayer
 
-        match = await database_sync_to_async(Match.objects.filter(uuid=match_uuid).select_related('player1__user__publicuser', 'player2__user__publicuser').first)()
-        winner = await database_sync_to_async(MatchPlayer.objects.filter(uuid=winner_uuid).select_related('user__publicuser').first)()
+        match = await database_sync_to_async(Match.objects.filter(uuid=match_uuid).select_related(
+            'player1__user__publicuser', 'player2__user__publicuser',
+            'tournament__created_by__user__publicuser',
+            'tournament__channel',
+            'tournament__current_match'
+            )
+            .prefetch_related("tournament__players__user__publicuser").first)()
+        winner = await database_sync_to_async(
+            MatchPlayer.objects.filter(uuid=winner_uuid)
+            .select_related('user__publicuser').first)()
 
         match.player1_score = game_state.player1_score
         match.player2_score = game_state.player2_score
@@ -294,7 +302,20 @@ class GameManager:
 
         if match.tournament:
             await sync_to_async(match.tournament.start_next_match)()
+
+            await database_sync_to_async(match.tournament.refresh_from_db)()
+
+			# get next match au cas ou
             next_match = match.tournament.current_match
+            if next_match:
+                next_match = await database_sync_to_async(
+                    Match.objects.filter(id=next_match.id)
+                    .select_related(
+                        'player1__user__publicuser',
+                        'player2__user__publicuser',
+                        'winner__user__publicuser'
+                    ).first
+                )()
 
             players = match.tournament.players.all()
             players_data = []
@@ -316,6 +337,7 @@ class GameManager:
                     "event_name": "GAME_TOURNAMENT_NEXT_MATCH",
                     "data": {
                         'uuid': match.tournament.uuid,
+                        'status': match.tournament.status,
                         'max_score': match.tournament.max_score,
                         'channel': {
                             'uuid': match.tournament.channel.uuid,
@@ -323,11 +345,11 @@ class GameManager:
                             'created_at': match.tournament.channel.created_at,
                         },
                         'creator': {
-                            'uuid': match.tournament.creator.uuid,
+                            'uuid': match.tournament.created_by.uuid,
                             'user': {
-                                'uuid': match.tournament.creator.user.uuid,
-                                'display_name': match.tournament.creator.user.publicuser.display_name,
-                                'avatar': get_avatar_url(match.tournament.creator.user)
+                                'uuid': match.tournament.created_by.user.uuid,
+                                'display_name': match.tournament.created_by.user.publicuser.display_name,
+                                'avatar': get_avatar_url(match.tournament.created_by.user)
                             }
                         },
                         'players': players_data,
@@ -632,6 +654,7 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
 
                 response = {
                     'uuid': str(tournament.uuid),
+                    'status': tournament.status,
                     'max_score': tournament.max_score,
                     'created_at': tournament.created_at.isoformat(),
                     'creator': {
@@ -695,7 +718,11 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
 
                 from tournament.models import Tournament
 
-                tournament = await database_sync_to_async(Tournament.objects.filter(uuid=tournament_uuid).select_related('creator__user__publicuser').first)()
+                tournament = await database_sync_to_async(
+                    Tournament.objects.filter(uuid=tournament_uuid)
+                    .select_related('created_by__user__publicuser',
+                                    'current_match')
+                                    .first)()
 
                 if not tournament:
                     return await self.send(text_data=json.dumps({
@@ -703,7 +730,10 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
                         'data': {'message': 'Invalid tournament.'}
                     }))
 
-                players = await database_sync_to_async(lambda: list(tournament.players.all()))()
+                players = await database_sync_to_async(
+                    lambda: list(tournament.players
+                                 .select_related('user__publicuser')
+                                 .all()))()
 
                 if self.user not in [player.user for player in players]:
                     return await self.send(text_data=json.dumps({

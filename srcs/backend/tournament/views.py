@@ -182,6 +182,7 @@ class JoinTournamentView(APIView):
 
         return Response({
             'uuid': tournament.uuid,
+            'status': tournament.status,
             'max_score': tournament.max_score,
             'channel': {
                 'uuid': tournament.channel.uuid,
