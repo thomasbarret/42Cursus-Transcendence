@@ -652,7 +652,7 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
                         'player1': {
                             'uuid': str(tournament.current_match.player1.uuid),
                             'user': {
-                                'uuid': str(tournament.current_match.player1.user.publicuser.uuid),
+                                'uuid': str(tournament.current_match.player1.user.uuid),
                                 'display_name': tournament.current_match.player1.display_name,
                                 'avatar': get_avatar_url(tournament.current_match.player1.user)
                             }
@@ -660,7 +660,7 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
                         'player2': {
                             'uuid': str(tournament.current_match.player2.uuid),
                             'user': {
-                                'uuid': str(tournament.current_match.player2.user.publicuser.uuid),
+                                'uuid': str(tournament.current_match.player2.user.uuid),
                                 'display_name': tournament.current_match.player2.display_name,
                                 'avatar': get_avatar_url(tournament.current_match.player2.user)
                             }
@@ -682,7 +682,7 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
                 cache.get(f"{tournament.current_match.uuid}_player1_ready", True)
                 cache.get(f"{tournament.current_match.uuid}_player2_ready", True)
 
-                game_manager.start_game(tournament.current_match.uuid, str(tournament.current_match.player1.uuid), str(tournament.current_match.player2.uuid), tournament.max_score, channel_layer)
+                await game_manager.start_game(tournament.current_match.uuid, str(tournament.current_match.player1.uuid), str(tournament.current_match.player2.uuid), tournament.max_score, channel_layer)
 
             elif event == "GAME_TOURNAMENT_WATCH":
                 tournament_uuid = data.get('uuid')
