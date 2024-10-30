@@ -414,7 +414,7 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
 
     async def disconnect(self, close_code):
         if self.group_name:
-            from game.models import Match, MatchPlayer, Tournament
+            from game.models import Match, MatchPlayer
             from django.db.models import Q
 
             await self.channel_layer.group_discard(self.group_name, self.channel_name)
