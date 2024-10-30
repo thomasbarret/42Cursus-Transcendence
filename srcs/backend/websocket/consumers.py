@@ -305,8 +305,11 @@ class GameManager:
 
             await database_sync_to_async(match.tournament.refresh_from_db)()
 
-            # players = match.tournament.players.all()
-            players = await database_sync_to_async(lambda: list(match.tournament.players.all()))()
+            players = await database_sync_to_async(
+                lambda: list(match.tournament.players
+                .select_related('user__publicuser')
+                .all()))()
+
             players_data = []
             for player in players:
                 player_data = {
@@ -320,7 +323,7 @@ class GameManager:
                 players_data.append(player_data)
 
             await channel_layer.group_send(
-                f"match_{match.tournament.current_match.uuid}",
+                f"match_{str(match.tournament.current_match.uuid)}",
                 {
                     "type": "send_event",
                     "event_name": "GAME_TOURNAMENT_NEXT_MATCH",

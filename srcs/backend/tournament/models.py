@@ -23,7 +23,7 @@ class Tournament(models.Model):
 
     channel = models.ForeignKey('chat.Channel', on_delete=models.CASCADE, related_name='tournament')
     current_match = models.ForeignKey('game.Match', on_delete=models.SET_NULL, related_name='current_tournament_match', null=True, blank=True)
-    max_score = models.IntegerField(default=10)
+    max_score = models.IntegerField(default=3)
     matches = models.ManyToManyField('game.Match', related_name='tournaments')
 
     def create_all_matches(self):
