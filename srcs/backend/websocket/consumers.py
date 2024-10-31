@@ -17,7 +17,10 @@ def get_avatar_url(user):
     return user.publicuser.avatar.url if user.publicuser.avatar else None
 
 class GameState:
-    def __init__(self, match_uuid, player1_uuid, player2_uuid, max_score=5):
+    def __init__(self, match_uuid, player1_uuid, player2_uuid, max_score=5, tournament_uuid = None):
+
+        self.tournament_uuid = tournament_uuid
+
         self.max_score = max_score
         self.match_uuid = match_uuid
         self.player1_uuid = player1_uuid
@@ -57,10 +60,10 @@ class GameManager:
     def __init__(self):
         self.games: dict[str, GameState] = {}
 
-    async def start_game(self, match_uuid, player1_uuid, player2_uuid, max_score, channel_layer):
+    async def start_game(self, match_uuid, player1_uuid, player2_uuid, max_score, channel_layer, tournament_uuid = None):
         if match_uuid in self.games:
             return
-        game_state = GameState(match_uuid, player1_uuid, player2_uuid, max_score)
+        game_state = GameState(match_uuid, player1_uuid, player2_uuid, max_score, tournament_uuid)
         self.games[match_uuid] = game_state
         asyncio.create_task(self.game_loop(match_uuid, channel_layer))
 
@@ -90,23 +93,48 @@ class GameManager:
                         }
                     }
                 )
+                if game_state.tournament_uuid:
+                    await channel_layer.group_send(
+                        f"tournament_{game_state.tournament_uuid}",
+                        {
+                            "type": "send_event",
+                            "event_name": "GAME_SCORE_UPDATE",
+                            "data": {
+                                'uuid': str(game_state.match_uuid),
+                                'p1_score': game_state.player1_score,
+                                'p2_score': game_state.player2_score
+                            }
+                        }
+                    )
                 game_state.ball_active = False
                 asyncio.create_task(self.activate_ball(game_state))
+
+            state_update = {
+                'uuid': str(match_uuid),
+                "p1_pos": game_state.paddle1_y,
+                "p2_pos": game_state.paddle2_y,
+                "b_x": game_state.ball_x,
+                "b_y": game_state.ball_y,
+            }
 
             await channel_layer.group_send(
                 f"match_{match_uuid}",
                 {
                     "type": "send_event",
                     "event_name": "GAME_STATE_UPDATE",
-                    "data": {
-                        'uuid': str(match_uuid),
-                        "p1_pos": game_state.paddle1_y,
-                        "p2_pos": game_state.paddle2_y,
-                        "b_x": game_state.ball_x,
-                        "b_y": game_state.ball_y,
-                    }
+                    "data": state_update
                 }
             )
+
+            if game_state.tournament_uuid:
+                await channel_layer.group_send(
+                    f"tournament_{game_state.tournament_uuid}",
+                    {
+                        "type": "send_event",
+                        "event_name": "GAME_STATE_UPDATE",
+                        "data": state_update
+                    }
+                )
 
             if game_state.player1_score >= game_state.max_score or game_state.player2_score >= game_state.max_score:
                 winner_uuid = game_state.player1_uuid if game_state.player1_score >= game_state.max_score else game_state.player2_uuid
@@ -314,7 +342,6 @@ class GameManager:
                                 'current_match__winner__user__publicuser',
                                 'winner__user__publicuser').first)()
 
-
             players = await database_sync_to_async(
                 lambda: list(tournament.players
                 .select_related('user__publicuser')
@@ -333,7 +360,7 @@ class GameManager:
                 players_data.append(player_data)
 
             await channel_layer.group_send(
-                f"match_{str(tournament.current_match.uuid)}",
+                f"tournament_{game_state.tournament_uuid}",
                 {
                     "type": "send_event",
                     "event_name": "GAME_TOURNAMENT_NEXT_MATCH",
@@ -407,6 +434,19 @@ class GameManager:
                     }
                 }
             )
+
+            if tournament.current_match:
+                await game_manager.start_game(
+                    str(tournament.current_match.uuid),
+                    str(tournament.current_match.player1.uuid),
+                    str(tournament.current_match.player2.uuid),
+                    tournament.max_score,
+                    channel_layer,
+                    str(game_state.tournament_uuid)
+                    )
+
+
+
         self.stop_game(match_uuid)
 
     def stop_game(self, match_uuid):
@@ -715,7 +755,14 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
                 cache.get(f"{tournament.current_match.uuid}_player1_ready", True)
                 cache.get(f"{tournament.current_match.uuid}_player2_ready", True)
 
-                await game_manager.start_game(str(tournament.current_match.uuid), str(tournament.current_match.player1.uuid), str(tournament.current_match.player2.uuid), tournament.max_score, self.channel_layer)
+                await game_manager.start_game(
+                    str(tournament.current_match.uuid),
+                    str(tournament.current_match.player1.uuid),
+                    str(tournament.current_match.player2.uuid),
+                    tournament.max_score,
+                    self.channel_layer,
+                    str(tournament.uuid)
+                    )
 
             elif event == "GAME_TOURNAMENT_WATCH":
                 tournament_uuid = data.get('uuid')
@@ -751,14 +798,18 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
                         'data': {'message': 'You are not in this tournament.'}
                     }))
 
-                current_match = tournament.current_match
+                await self.channel_layer.group_add(f"tournament_{tournament_uuid}", self.channel_name)
 
-                if not current_match:
-                    return await self.send(text_data=json.dumps({
-                        'event': 'ERROR',
-                        'data': {'message': 'No match is currently being played.'}
-                    }))
-                await self.channel_layer.group_add(f"match_{current_match.uuid}", self.channel_name)
+
+
+                # current_match = tournament.current_match
+
+                # if not current_match:
+                #     return await self.send(text_data=json.dumps({
+                #         'event': 'ERROR',
+                #         'data': {'message': 'No match is currently being played.'}
+                #     }))
+                # await self.channel_layer.group_add(f"match_{current_match.uuid}", self.channel_name)
 
         except json.JSONDecodeError:
             await self.send(text_data=json.dumps({
