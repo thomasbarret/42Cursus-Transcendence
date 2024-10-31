@@ -75,6 +75,15 @@ export const lobbyHandler = (route, slug) => {
 
 	const readyGame = document.getElementById("ready-game");
 
+	const gameUUID = document.getElementById("game-id");
+
+	gameUUID.textContent = slug;
+
+	gameUUID.addEventListener("click", () => {
+		navigator.clipboard.writeText(slug);
+		Toast("Copied game ID to clipboard!", "success");
+	});
+
 	eventEmitter.on("GAME_START_MATCH", () => {
 		waitingOverlay.classList.add("d-none");
 		getMatchData();

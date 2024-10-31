@@ -516,7 +516,7 @@ export const matchHistory = (matches) => {
 		);
 };
 
-export const inviteBoxCard = (user, matchId, update, tournament) => {
+export const inviteBoxCard = (user, matchId, update, tournament = false) => {
 	return div(
 		img(user.avatar ? user.avatar : DEFAULT_AVATAR)
 			.attr("alt", "avatar")
@@ -587,4 +587,8 @@ export const messageTournament = (message) => {
 	return div(p(message.user.display_name + ": " + message.content)).cl(
 		"text-muted"
 	);
+};
+
+export const messageInformation = (message) => {
+	return div(p(message)).cl("text-info");
 };

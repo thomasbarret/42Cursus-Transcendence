@@ -436,6 +436,7 @@ class GameManager:
             )
 
             if tournament.current_match:
+                await asyncio.sleep(3)
                 await game_manager.start_game(
                     str(tournament.current_match.uuid),
                     str(tournament.current_match.player1.uuid),
@@ -444,8 +445,6 @@ class GameManager:
                     channel_layer,
                     str(game_state.tournament_uuid)
                     )
-
-
 
         self.stop_game(match_uuid)
 

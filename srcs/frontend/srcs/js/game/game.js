@@ -8,8 +8,20 @@ import { Paddle } from "./paddle.js";
 export let keyDownListener = null;
 export let keyUpListener = null;
 
+export const defaultCustomization = {
+	ball: {
+		light_color: "black",
+		dark_color: "white",
+	},
+	paddle: {
+		light_color: "#ff33ec",
+		dark_color: "#ff33ec",
+		// color: "rgb(255, 51, 236)",
+	},
+};
+
 export class Game {
-	constructor(remote) {
+	constructor(remote, customization = defaultCustomization) {
 		document.removeEventListener("keydown", keyDownListener);
 		document.removeEventListener("keyup", keyUpListener);
 
@@ -18,6 +30,8 @@ export class Game {
 		this.remote = remote;
 		this.canvas = document.querySelector("canvas");
 		this.ctx = this.canvas.getContext("2d");
+
+		this.customization = customization;
 
 		this.scoreText = document.getElementById("score-text");
 		this.scale = {
@@ -95,6 +109,11 @@ export class Game {
 		const elementColor = isDarkMode() ? "white" : "black";
 		this.player_1.color = elementColor;
 		this.player_2.color = elementColor;
+		if (this.remote && this.isPlaying) {
+			this.currentPlayer.color = isDarkMode()
+				? this.customization.paddle.dark_color
+				: this.customization.paddle.light_color;
+		}
 		this.ball.color = elementColor;
 	}
 

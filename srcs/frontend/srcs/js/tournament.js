@@ -1,6 +1,7 @@
 import {
 	inviteBoxCard,
 	matchPlayersCard,
+	messageInformation,
 	messageTournament,
 	Toast,
 } from "./components.js";
@@ -67,6 +68,15 @@ export const tournamentHandler = (_, slug) => {
 		if (data.status === 3) {
 			setFinished(data);
 		} else {
+			chatBox.appendChild(
+				messageInformation(
+					"Next match is starting, the players are: " +
+						data.current_match.player_1.display_name +
+						" vs " +
+						data.current_match.player_2.display_name
+				)
+			);
+			Toast("Next match starting!", "info");
 			game = new Game(data.current_match);
 			watchTournamentGame();
 		}
