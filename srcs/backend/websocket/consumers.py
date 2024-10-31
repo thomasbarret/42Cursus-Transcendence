@@ -233,12 +233,12 @@ class GameManager:
             return
 
         from game.models import Match, MatchPlayer
+        from tournament.models import Tournament
 
         match = await database_sync_to_async(Match.objects.filter(uuid=match_uuid).select_related(
-            'player1__user__publicuser', 'player2__user__publicuser',
-            'tournament__created_by__user__publicuser',
-            'tournament__channel',
-            'tournament__current_match'
+            'player1__user__publicuser',
+            'player2__user__publicuser',
+            'tournament'
             )
             .prefetch_related("tournament__players__user__publicuser").first)()
         winner = await database_sync_to_async(
@@ -305,17 +305,27 @@ class GameManager:
 
             await database_sync_to_async(match.tournament.refresh_from_db)()
 
+            tournament = await database_sync_to_async(
+                Tournament.objects.filter(uuid=match.tournament.uuid)
+                .select_related('channel',
+                                'created_by__user__publicuser',
+                                'current_match__player1__user__publicuser',
+                                'current_match__player2__user__publicuser',
+                                'current_match__winner__user__publicuser',
+                                'winner__user__publicuser').first)()
+
+
             players = await database_sync_to_async(
-                lambda: list(match.tournament.players
+                lambda: list(tournament.players
                 .select_related('user__publicuser')
                 .all()))()
 
             players_data = []
             for player in players:
                 player_data = {
-                    'uuid': player.uuid,
+                    'uuid': str(player.uuid),
                     'user': {
-                        'uuid': player.user.uuid,
+                        'uuid': str(player.user.uuid),
                         'display_name': player.user.publicuser.display_name,
                         'avatar': get_avatar_url(player.user)
                     }
@@ -323,67 +333,77 @@ class GameManager:
                 players_data.append(player_data)
 
             await channel_layer.group_send(
-                f"match_{str(match.tournament.current_match.uuid)}",
+                f"match_{str(tournament.current_match.uuid)}",
                 {
                     "type": "send_event",
                     "event_name": "GAME_TOURNAMENT_NEXT_MATCH",
                     "data": {
-                        'uuid': match.tournament.uuid,
-                        'status': match.tournament.status,
-                        'max_score': match.tournament.max_score,
+                        'uuid': str(tournament.uuid),
+                        'status': tournament.status,
+                        'max_score': tournament.max_score,
                         'channel': {
-                            'uuid': match.tournament.channel.uuid,
-                            'type': match.tournament.channel.type,
-                            'created_at': match.tournament.channel.created_at,
+                            'uuid': str(tournament.channel.uuid),
+                            'type': tournament.channel.type,
+                            'created_at': tournament.channel.created_at.isoformat(),
                         },
                         'creator': {
-                            'uuid': match.tournament.created_by.uuid,
+                            'uuid': str(tournament.created_by.uuid),
                             'user': {
-                                'uuid': match.tournament.created_by.user.uuid,
-                                'display_name': match.tournament.created_by.user.publicuser.display_name,
-                                'avatar': get_avatar_url(match.tournament.created_by.user)
+                                'uuid': str(tournament.created_by.user.uuid),
+                                'display_name': tournament.created_by.user.publicuser.display_name,
+                                'avatar': get_avatar_url(tournament.created_by.user)
                             }
                         },
                         'players': players_data,
+                        'winner' : {
+                            "uuid": str(tournament.winner.uuid),
+                            "display_name": tournament.winner.display_name,
+                            "user": {
+                                "uuid": str(tournament.winner.user.uuid),
+                                "display_name": tournament.winner.user.publicuser.display_name,
+                                "avatar": get_avatar_url(tournament.winner.user)
+                            },
+
+                        } if tournament.winner else None,
                         'current_match': {
-                            "uuid": match.tournament.current_match.uuid,
-                            "status": match.tournament.current_match.status,
+                            "uuid": str(tournament.current_match.uuid),
+                            "status": tournament.current_match.status,
                             "player_1": {
-                                "uuid": match.tournament.current_match.player1.uuid,
-                                "display_name": match.tournament.current_match.player1.display_name,
+                                "uuid": str(tournament.current_match.player1.uuid),
+                                "display_name": tournament.current_match.player1.display_name,
                                 "user": {
-                                    "uuid": match.tournament.current_match.player1.user.uuid,
-                                    "display_name": match.tournament.current_match.player1.user.publicuser.display_name,
-                                    "avatar": get_avatar_url(match.tournament.current_match.player1.user)
+                                    "uuid": str(tournament.current_match.player1.user.uuid),
+                                    "display_name": tournament.current_match.player1.user.publicuser.display_name,
+                                    "avatar": get_avatar_url(tournament.current_match.player1.user)
                                 },
                             },
                             "player_2": {
-                                "uuid": match.tournament.current_match.player2.uuid,
-                                "display_name": match.tournament.current_match.player2.display_name,
+                                "uuid": str(tournament.current_match.player2.uuid),
+                                "display_name": tournament.current_match.player2.display_name,
                                 "user": {
-                                    "uuid": match.tournament.current_match.player2.user.uuid,
-                                    "display_name": match.tournament.current_match.player2.user.publicuser.display_name,
-                                    "avatar": get_avatar_url(match.tournament.current_match.player2.user)
-                                } if match.tournament.current_match.player2 and match.tournament.current_match.player2.user else None
-                            } if match.tournament.current_match.player2 else None,
-                            "player1_score": match.tournament.current_match.player1_score,
-                            "player2_score": match.tournament.current_match.player2_score,
+                                    "uuid": str(tournament.current_match.player2.user.uuid),
+                                    "display_name": tournament.current_match.player2.user.publicuser.display_name,
+                                    "avatar": get_avatar_url(tournament.current_match.player2.user)
+                                } if tournament.current_match.player2 and tournament.current_match.player2.user else None
+                            } if tournament.current_match.player2 else None,
+                            "player1_score": tournament.current_match.player1_score,
+                            "player2_score": tournament.current_match.player2_score,
                             "winner": {
-                                "uuid": match.tournament.current_match.winner.uuid,
-                                "display_name": match.tournament.current_match.winner.display_name,
+                                "uuid": str(tournament.current_match.winner.uuid),
+                                "display_name": tournament.current_match.winner.display_name,
                                 "user": {
-                                    "uuid": match.tournament.current_match.winner.user.uuid,
-                                    "display_name": match.tournament.current_match.winner.user.publicuser.display_name,
-                                    "avatar": match.tournament.current_match.winner.user.publicuser.avatar.url if match.tournament.current_match.winner.user.publicuser.avatar else None,
+                                    "uuid": str(tournament.current_match.winner.user.uuid),
+                                    "display_name": tournament.current_match.winner.user.publicuser.display_name,
+                                    "avatar": tournament.current_match.winner.user.publicuser.avatar.url if tournament.current_match.winner.user.publicuser.avatar else None,
                                 },
-                            } if match.tournament.current_match.winner else None,
-                            "max_score": match.tournament.current_match.max_score,
-                            "start_date": match.tournament.current_match.start_date,
-                            "end_date": match.tournament.current_match.end_date,
-                            "created_at": match.tournament.current_match.created_at,
-                            "updated_at": match.tournament.current_match.updated_at,
-                        } if match.tournament.current_match else None,
-                        'created_at': match.tournament.created_at,
+                            } if tournament.current_match.winner else None,
+                            "max_score": tournament.current_match.max_score,
+                            "start_date": tournament.current_match.start_date.isoformat() if tournament.current_match.start_date else None,
+                            "end_date": tournament.current_match.end_date.isoformat() if tournament.current_match.end_date else None,
+                            "created_at": tournament.current_match.created_at.isoformat(),
+                            "updated_at": tournament.current_match.updated_at.isoformat(),
+                        } if tournament.current_match else None,
+                        'created_at': tournament.created_at.isoformat(),
                     }
                 }
             )

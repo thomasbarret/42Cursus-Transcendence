@@ -58,6 +58,29 @@
 						</button>
 					</div>
 				</div>
+
+				<div
+					id="finished-overlay"
+					class="position-absolute top-50 start-50 translate-middle w-100 h-100 d-none d-flex justify-content-center align-items-center"
+					style="background: rgba(0, 0, 0, 0.7)"
+				>
+					<div class="text-center text-white">
+						<h2 id="winner-text"></h2>
+						<p id="finalScore" class="fs-4 mt-2">
+							Tournament winner:
+							<span id="tournament-winner"></span>
+						</p>
+						<a
+							type="button"
+							class="btn btn-primary mt-3"
+							id="play-again"
+							href="/play"
+							data-router-navigation="true"
+						>
+							Go to Lobby
+						</a>
+					</div>
+				</div>
 			</div>
 			<div class="col-lg-4 col-md-5 col-sm-12 d-flex flex-column">
 				<div

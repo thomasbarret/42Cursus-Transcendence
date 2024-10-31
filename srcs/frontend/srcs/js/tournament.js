@@ -27,6 +27,7 @@ export const tournamentHandler = (_, slug) => {
 	const user = getCurrentUser();
 
 	const waitingOverlay = document.getElementById("waiting-overlay");
+	const finishedOverlay = document.getElementById("finished-overlay");
 
 	const watchTournamentGame = () => {
 		socket.send(
@@ -50,6 +51,27 @@ export const tournamentHandler = (_, slug) => {
 		chatBox.appendChild(messageTournament(data))
 	);
 
+	const setFinished = (data) => {
+		waitingOverlay.classList.add("d-none");
+		finishedOverlay.classList.remove("d-none");
+		if (data.winner) {
+			// TODO: show winner information on screen instead of a Toast
+			Toast(
+				"Tournament finished! Winner: " + data.winner.display_name,
+				"success"
+			);
+		}
+	};
+
+	eventEmitter.on("GAME_TOURNAMENT_NEXT_MATCH", (data) => {
+		if (data.status === 3) {
+			setFinished(data);
+		} else {
+			game = new Game(data.current_match);
+			watchTournamentGame();
+		}
+	});
+
 	const getTournamentData = async () => {
 		const res = await fetch(BASE_URL + "/game/tournament/" + slug);
 
@@ -58,8 +80,10 @@ export const tournamentHandler = (_, slug) => {
 		console.log("TOURNAMENT DATA: ", data);
 
 		if (res.ok) {
-			if (data.status === 2) waitingOverlay.classList.add("d-none");
-			if (data.current_match) game = new Game(data.current_match);
+			if (data.status === 2) {
+				waitingOverlay.classList.add("d-none");
+				if (data.current_match) game = new Game(data.current_match);
+			} else if (data.status === 3) setFinished(data);
 			getChatBox(data.channel);
 
 			socket.addEventListener("open", () => watchTournamentGame(), {
