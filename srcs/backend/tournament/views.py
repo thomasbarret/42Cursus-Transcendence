@@ -184,7 +184,7 @@ class JoinTournamentView(APIView):
             }
             players_data.append(player_data)
 
-        return Response({
+        response = {
             'uuid': tournament.uuid,
             'status': tournament.status,
             'max_score': tournament.max_score,
@@ -204,7 +204,22 @@ class JoinTournamentView(APIView):
             'players': players_data,
             'current_match': None,
             'created_at': tournament.created_at,
-        })
+        }
+
+        channel_layer = get_channel_layer()
+        for player in players:
+            async_to_sync(channel_layer.group_send)(
+                f"user_{str(player.user.uuid)}",
+                {
+                    "type": "send_event",
+                    "event_name": "TOURNAMENT_PLAYER_JOIN",
+                    "data": response
+                }
+            )
+
+
+
+        return Response(response)
 
 # class StartTournamentView(APIView):
 #     authentication_classes = [TokenFromCookieAuthentication]

@@ -12,6 +12,7 @@ from channels.layers import get_channel_layer
 
 from .models import UserRelation
 from game.models import Match, MatchPlayer
+from tournament.models import Tournament
 from django.db.models import Q
 
 def get_avatar_url(user):
@@ -433,4 +434,102 @@ class ProfilMatchView(APIView):
             } for match in matches]
         })
 
+class ProfilTournamentView(APIView):
+    authentication_classes = [TokenFromCookieAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get_public_user(self, user_uuid=None):
+        if user_uuid is None or user_uuid == '@me':
+            if self.request.user.is_authenticated:
+                return self.request.user.publicuser
+            else:
+                return None
+        return get_object_or_404(PublicUser, user__uuid=user_uuid)
+
+    def get(self, request, user_uuid=None):
+        public_user = self.get_public_user(user_uuid)
+
+        if public_user is None:
+            return Response({"error": "Authentication required for '@me'"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        user = public_user.user
+        player = MatchPlayer.objects.filter(user=user).first()
+
+        if player is None:
+            return Response({"error": "Player not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        tournaments = Tournament.objects.filter(
+            players=player
+        ).order_by('start_date')
+
+        return JsonResponse({
+            'tournaments': [
+                {
+                    'uuid': tournament.uuid,
+                    'max_score': tournament.max_score,
+                    'status': tournament.status,
+                    'channel': {
+                        'uuid': tournament.channel.uuid,
+                        'type': tournament.channel.type,
+                        'created_at': tournament.channel.created_at,
+                    },
+                    'creator': {
+                        'uuid': tournament.created_by.uuid,
+                        'user': {
+                            'uuid': tournament.created_by.uuid,
+                            'display_name': tournament.created_by.user.publicuser.display_name,
+                            'avatar': get_avatar_url(tournament.created_by.user),
+                        }
+                    },
+                    'players': [
+                        {
+                            'uuid': player.uuid,
+                            'user': {
+                                'uuid': player.user.uuid,
+                                'display_name': player.user.publicuser.display_name,
+                                'avatar': get_avatar_url(player.user)
+                            }
+                        } for player in tournament.players.all()
+                    ],
+                    'current_match': {
+                        "uuid": tournament.current_match.uuid,
+                        "status": tournament.current_match.status,
+                        "player_1": {
+                            "uuid": tournament.current_match.player1.uuid,
+                            "display_name": tournament.current_match.player1.display_name,
+                            "user": {
+                                "uuid": tournament.current_match.player1.user.uuid,
+                                "display_name": tournament.current_match.player1.user.publicuser.display_name,
+                                "avatar": get_avatar_url(tournament.current_match.player1.user)
+                            },
+                        },
+                        "player_2": {
+                            "uuid": tournament.current_match.player2.uuid,
+                            "display_name": tournament.current_match.player2.display_name,
+                            "user": {
+                                "uuid": tournament.current_match.player2.user.uuid,
+                                "display_name": tournament.current_match.player2.user.publicuser.display_name,
+                                "avatar": get_avatar_url(tournament.current_match.player2.user)
+                            } if tournament.current_match.player2 and tournament.current_match.player2.user else None
+                        } if tournament.current_match.player2 else None,
+                        "player1_score": tournament.current_match.player1_score,
+                        "player2_score": tournament.current_match.player2_score,
+                        "winner": {
+                            "uuid": tournament.current_match.winner.uuid,
+                            "display_name": tournament.current_match.winner.display_name,
+                            "user": {
+                                "uuid": tournament.current_match.winner.user.uuid,
+                                "display_name": tournament.current_match.winner.user.publicuser.display_name,
+                                "avatar": tournament.current_match.winner.user.publicuser.avatar.url if tournament.current_match.winner.user.publicuser.avatar else None,
+                            },
+                        } if tournament.current_match.winner else None,
+                        "max_score": tournament.max_score,
+                        "start_date": tournament.start_date,
+                        "end_date": tournament.end_date,
+                        "created_at": tournament.created_at,
+                        "updated_at": tournament.updated_at,
+                    } if tournament.current_match else None,
+                    'created_at': tournament.created_at,
+                } for tournament in tournaments],
+        })
 
