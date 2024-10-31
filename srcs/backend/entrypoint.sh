@@ -2,8 +2,6 @@
 
 python manage.py makemigrations
 
-python manage.py migrate tournament zero
-
 
 python manage.py migrate
 
