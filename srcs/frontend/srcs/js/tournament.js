@@ -29,6 +29,7 @@ export const tournamentHandler = (_, slug) => {
 
 	const waitingOverlay = document.getElementById("waiting-overlay");
 	const finishedOverlay = document.getElementById("finished-overlay");
+	const tournamentWinner = document.getElementById("tournament-winner");
 
 	const watchTournamentGame = () => {
 		socket.send(
@@ -56,7 +57,7 @@ export const tournamentHandler = (_, slug) => {
 		waitingOverlay.classList.add("d-none");
 		finishedOverlay.classList.remove("d-none");
 		if (data.winner) {
-			// TODO: show winner information on screen instead of a Toast
+			tournamentWinner.textContent = data.winner.display_name;
 			Toast(
 				"Tournament finished! Winner: " + data.winner.display_name,
 				"success"
@@ -82,6 +83,18 @@ export const tournamentHandler = (_, slug) => {
 		}
 	});
 
+	eventEmitter.on("TOURNAMENT_PLAYER_JOIN", (data) => {
+		updateCurrentUsers(data);
+	});
+
+	const updateCurrentUsers = (data) => {
+		data.players.forEach((matchPlayer) => {
+			currentPlayers.appendChild(
+				matchPlayersCard(matchPlayer.user, matchPlayer.user.uuid)
+			);
+		});
+	};
+
 	const getTournamentData = async () => {
 		const res = await fetch(BASE_URL + "/game/tournament/" + slug);
 
@@ -100,11 +113,7 @@ export const tournamentHandler = (_, slug) => {
 				once: true,
 			});
 
-			data.players.forEach((matchPlayer) => {
-				currentPlayers.appendChild(
-					matchPlayersCard(matchPlayer.user, matchPlayer.user.uuid)
-				);
-			});
+			updateCurrentUsers(data);
 
 			if (user.uuid === data.creator.user.uuid) {
 				startTournament.classList.remove("d-none");

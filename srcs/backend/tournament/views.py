@@ -97,6 +97,16 @@ class GetTournamentView(APIView):
                         'avatar': get_avatar_url(creator.user)
                     }
                 },
+                'winner' : {
+                    "uuid": str(tournament.winner.uuid),
+                    "display_name": tournament.winner.display_name,
+                    "user": {
+                        "uuid": str(tournament.winner.user.uuid),
+                        "display_name": tournament.winner.user.publicuser.display_name,
+                        "avatar": get_avatar_url(tournament.winner.user)
+                    },
+
+                } if tournament.winner else None,
                 'players': players_data,
                 'current_match': {
                     "uuid": match.uuid,
