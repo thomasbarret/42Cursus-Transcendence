@@ -175,9 +175,9 @@ class JoinTournamentView(APIView):
 
         for player in players:
             player_data = {
-                'uuid': player.uuid,
+                'uuid': str(player.uuid),
                 'user': {
-                    'uuid': player.user.uuid,
+                    'uuid': str(player.user.uuid),
                     'display_name': player.user.publicuser.display_name,
                     'avatar': get_avatar_url(player.user)
                 }
@@ -185,25 +185,25 @@ class JoinTournamentView(APIView):
             players_data.append(player_data)
 
         response = {
-            'uuid': tournament.uuid,
+            'uuid': str(tournament.uuid),
             'status': tournament.status,
             'max_score': tournament.max_score,
             'channel': {
-                'uuid': tournament.channel.uuid,
+                'uuid': str(tournament.channel.uuid),
                 'type': tournament.channel.type,
-                'created_at': tournament.channel.created_at,
+                'created_at': tournament.channel.created_at.isoformat(),
             },
             'creator': {
-                'uuid': creator.uuid,
+                'uuid': str(creator.uuid),
                 'user': {
-                    'uuid': creator.user.uuid,
+                    'uuid': str(creator.user.uuid),
                     'display_name': creator.user.publicuser.display_name,
                     'avatar': get_avatar_url(creator.user)
                 }
             },
             'players': players_data,
             'current_match': None,
-            'created_at': tournament.created_at,
+            'created_at': tournament.created_at.isoformat(),
         }
 
         channel_layer = get_channel_layer()

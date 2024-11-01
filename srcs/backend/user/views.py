@@ -465,49 +465,49 @@ class ProfilTournamentView(APIView):
         return JsonResponse({
             'tournaments': [
                 {
-                    'uuid': tournament.uuid,
+                    'uuid': str(tournament.uuid),
                     'max_score': tournament.max_score,
                     'status': tournament.status,
                     'channel': {
-                        'uuid': tournament.channel.uuid,
+                        'uuid': str(tournament.channel.uuid),
                         'type': tournament.channel.type,
-                        'created_at': tournament.channel.created_at,
+                        'created_at': tournament.channel.created_at.isoformat(),
                     },
                     'creator': {
-                        'uuid': tournament.created_by.uuid,
+                        'uuid': str(tournament.created_by.uuid),
                         'user': {
-                            'uuid': tournament.created_by.uuid,
+                            'uuid': str(tournament.created_by.uuid),
                             'display_name': tournament.created_by.user.publicuser.display_name,
                             'avatar': get_avatar_url(tournament.created_by.user),
                         }
                     },
                     'players': [
                         {
-                            'uuid': player.uuid,
+                            'uuid': str(player.uuid),
                             'user': {
-                                'uuid': player.user.uuid,
+                                'uuid': str(player.user.uuid),
                                 'display_name': player.user.publicuser.display_name,
                                 'avatar': get_avatar_url(player.user)
                             }
                         } for player in tournament.players.all()
                     ],
                     'current_match': {
-                        "uuid": tournament.current_match.uuid,
+                        "uuid": str(tournament.current_match.uuid),
                         "status": tournament.current_match.status,
                         "player_1": {
-                            "uuid": tournament.current_match.player1.uuid,
+                            "uuid": str(tournament.current_match.player1.uuid),
                             "display_name": tournament.current_match.player1.display_name,
                             "user": {
-                                "uuid": tournament.current_match.player1.user.uuid,
+                                "uuid": str(tournament.current_match.player1.user.uuid),
                                 "display_name": tournament.current_match.player1.user.publicuser.display_name,
                                 "avatar": get_avatar_url(tournament.current_match.player1.user)
                             },
                         },
                         "player_2": {
-                            "uuid": tournament.current_match.player2.uuid,
+                            "uuid": str(tournament.current_match.player2.uuid),
                             "display_name": tournament.current_match.player2.display_name,
                             "user": {
-                                "uuid": tournament.current_match.player2.user.uuid,
+                                "uuid": str(tournament.current_match.player2.user.uuid),
                                 "display_name": tournament.current_match.player2.user.publicuser.display_name,
                                 "avatar": get_avatar_url(tournament.current_match.player2.user)
                             } if tournament.current_match.player2 and tournament.current_match.player2.user else None
@@ -515,21 +515,21 @@ class ProfilTournamentView(APIView):
                         "player1_score": tournament.current_match.player1_score,
                         "player2_score": tournament.current_match.player2_score,
                         "winner": {
-                            "uuid": tournament.current_match.winner.uuid,
+                            "uuid": str(tournament.current_match.winner.uuid),
                             "display_name": tournament.current_match.winner.display_name,
                             "user": {
-                                "uuid": tournament.current_match.winner.user.uuid,
+                                "uuid": str(tournament.current_match.winner.user.uuid),
                                 "display_name": tournament.current_match.winner.user.publicuser.display_name,
                                 "avatar": tournament.current_match.winner.user.publicuser.avatar.url if tournament.current_match.winner.user.publicuser.avatar else None,
                             },
                         } if tournament.current_match.winner else None,
                         "max_score": tournament.max_score,
-                        "start_date": tournament.start_date,
-                        "end_date": tournament.end_date,
-                        "created_at": tournament.created_at,
-                        "updated_at": tournament.updated_at,
+                        "start_date": tournament.start_date.isoformat() if tournament.start_date else None,
+                        "end_date": tournament.end_date.isoformat() if tournament.end_date else None,
+                        "created_at": tournament.created_at.isoformat(),
+                        "updated_at": tournament.updated_at.isoformat() if tournament.updated_at else None,
                     } if tournament.current_match else None,
-                    'created_at': tournament.created_at,
+                    'created_at': tournament.created_at.isoformat(),
                 } for tournament in tournaments],
         })
 
