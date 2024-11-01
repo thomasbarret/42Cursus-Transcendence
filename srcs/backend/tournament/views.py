@@ -79,7 +79,8 @@ class GetTournamentView(APIView):
                 }
                 players_data.append(player_data)
 
-            match = tournament.current_match
+            current_match = tournament.current_match
+            
             return Response({
                 'uuid': tournament.uuid,
                 'max_score': tournament.max_score,
@@ -109,6 +110,44 @@ class GetTournamentView(APIView):
                 } if tournament.winner else None,
                 'players': players_data,
                 'current_match': {
+                    "uuid": str(current_match.uuid),
+                    "status": current_match.status,
+                    "player_1": {
+                        "uuid": current_match.player1.uuid,
+                        "display_name": current_match.player1.display_name,
+                        "user": {
+                            "uuid": current_match.player1.user.uuid,
+                            "display_name": current_match.player1.user.publicuser.display_name,
+                            "avatar": get_avatar_url(current_match.player1.user)
+                        },
+                    },
+                    "player_2": {
+                        "uuid": current_match.player2.uuid,
+                        "display_name": current_match.player2.display_name,
+                        "user": {
+                            "uuid": current_match.player2.user.uuid,
+                            "display_name": current_match.player2.user.publicuser.display_name,
+                            "avatar": get_avatar_url(current_match.player2.user)
+                        } if current_match.player2 and current_match.player2.user else None
+                    } if current_match.player2 else None,
+                    "player1_score": current_match.player1_score,
+                    "player2_score": current_match.player2_score,
+                    "winner": {
+                        "uuid": current_match.winner.uuid,
+                        "display_name": current_match.winner.display_name,
+                        "user": {
+                            "uuid": current_match.winner.user.uuid,
+                            "display_name": current_match.winner.user.publicuser.display_name,
+                            "avatar": current_match.winner.user.publicuser.avatar.url if current_match.winner.user.publicuser.avatar else None,
+                        },
+                    } if current_match.winner else None,
+                    "max_score": current_match.max_score,
+                    "start_date": current_match.start_date,
+                    "end_date": current_match.end_date,
+                    "created_at": current_match.created_at,
+                    "updated_at": current_match.updated_at,
+                } if tournament.current_match else None,
+                'matches': [{
                     "uuid": match.uuid,
                     "status": match.status,
                     "player_1": {
@@ -145,7 +184,7 @@ class GetTournamentView(APIView):
                     "end_date": match.end_date,
                     "created_at": match.created_at,
                     "updated_at": match.updated_at,
-                } if tournament.current_match else None,
+                } for match in tournament.matches.all()],
                 'created_at': tournament.created_at,
             })
         except Tournament.DoesNotExist:
@@ -288,16 +327,16 @@ class JoinTournamentView(APIView):
 #             },
 #             'players': players_data,
 #             'current_match': {
-#                 'uuid': tournament.current_match.uuid,
+#                 'uuid': tournament.current_current_match.uuid,
 #                 'player1': {
-#                     'uuid': tournament.current_match.player1.user.publicuser.uuid,
-#                     'display_name': tournament.current_match.player1.display_name,
-#                     'avatar': get_avatar_url(tournament.current_match.player1.user)
+#                     'uuid': tournament.current_current_match.player1.user.publicuser.uuid,
+#                     'display_name': tournament.current_current_match.player1.display_name,
+#                     'avatar': get_avatar_url(tournament.current_current_match.player1.user)
 #                 },
 #                 'player2': {
-#                     'uuid': tournament.current_match.player2.user.publicuser.uuid,
-#                     'display_name': tournament.current_match.player2.display_name,
-#                     'avatar': get_avatar_url(tournament.current_match.player2.user)
+#                     'uuid': tournament.current_current_match.player2.user.publicuser.uuid,
+#                     'display_name': tournament.current_current_match.player2.display_name,
+#                     'avatar': get_avatar_url(tournament.current_current_match.player2.user)
 #                 },
 #             } if tournament.current_match else None,
 #         }
