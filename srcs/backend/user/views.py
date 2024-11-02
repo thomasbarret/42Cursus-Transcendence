@@ -48,10 +48,10 @@ class ProfilView(APIView):
         if player is not None:
             match_wins = Match.objects.filter(winner=player).count()
             match_loses = Match.objects.filter(
-                (Q(player1=player, winner=None) | Q(player2=player, winner=None)) & ~Q(winner=player, status__in=[1, 4])
+                (Q(player1=player, winner=None) | Q(player2=player, winner=None)) & ~Q(winner=player, status__in=[3])
             ).count()
             match_count = Match.objects.filter(
-                (Q(player1=player) | Q(player2=player)) & Q(status__in=[2, 3])
+                (Q(player1=player) | Q(player2=player)) & Q(status__in=[3])
             ).count()
 
         if user_uuid is None:
