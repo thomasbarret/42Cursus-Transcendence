@@ -2,6 +2,8 @@ import { eventEmitter } from "./eventemitter.js";
 import { BASE_URL } from "./handler.js";
 import { getCurrentUser, isDarkMode } from "./storage.js";
 
+import { Chart } from "chart.js";
+
 const winrate = (user, gameData) => {
 	const gamesWon = (() =>
 		gameData.filter(
@@ -18,49 +20,31 @@ const winrate = (user, gameData) => {
 	return { gamesWon, gamesLost, gamesDraw };
 };
 
-const drawPieChart = (
-	canvasId,
-	data = [{ length: 0, name: "placeholder" }]
-) => {
-	/**
-	 * @type {HTMLCanvasElement}
-	 */
-	// @ts-ignore
-	const canvas = document.getElementById(canvasId);
-	const ctx = canvas.getContext("2d");
-	const colors = ["#FF5733", "#33FF57", "#3357FF"];
+/**
+ *
+ * @param {Array<Object>} gameData
+ */
+const getLongestMatch = (gameData) => {
+	const getDuration = (game) =>
+		(new Date(game.end_date).getTime() -
+			new Date(game.start_date).getTime()) /
+		1000;
 
-	const total = data.reduce((prev, curr) => prev + curr.length, 0);
+	const matchesDuration = gameData
+		.filter((game) => game.start_date && game.end_date)
+		.map((game) => {
+			if (!game.start_date || !game.end_date) return 0;
+			return getDuration(game);
+		});
 
-	let startAngle = 0;
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
-	const radius = canvas.width / 6; // Adjust the radius to make the pie smaller
-	const centerX = canvas.width / 2;
-	const centerY = canvas.height / 2;
-
-	data.forEach(({ length, name }, index) => {
-		const sliceAngle = (length / total) * 2 * Math.PI;
-		const sliceMidAngle = startAngle + sliceAngle / 2;
-
-		ctx.beginPath();
-		ctx.moveTo(centerX, centerY);
-		ctx.arc(centerX, centerY, radius, startAngle, startAngle + sliceAngle);
-		ctx.closePath();
-		ctx.fillStyle = colors[index % colors.length];
-		ctx.fill();
-
-		const textX = centerX + (radius + 20) * Math.cos(sliceMidAngle);
-		const textY = centerY + (radius + 20) * Math.sin(sliceMidAngle);
-		ctx.fillStyle = isDarkMode() ? "white" : "black";
-		ctx.font = "14px Arial";
-		ctx.fillText(
-			`${name.toUpperCase()} ${((length / total) * 100).toFixed(1)}%`,
-			textX,
-			textY
-		);
-
-		startAngle += sliceAngle;
-	});
+	return {
+		longest: Math.max(...matchesDuration),
+		average:
+			matchesDuration.reduce((prev, curr) => prev + curr, 0) /
+			matchesDuration.length,
+		fastest: Math.min(...matchesDuration),
+		durations: matchesDuration,
+	};
 };
 
 export const dashboardHandler = async () => {
@@ -96,19 +80,60 @@ export const dashboardHandler = async () => {
 	const pieChartData = [
 		{
 			length: gamesWon.length,
-			name: "won",
+			name: "Won",
 		},
 		{
 			length: gamesLost.length,
-			name: "lost",
+			name: "Lost",
 		},
 		{
 			length: gamesDraw.length,
-			name: "draw",
+			name: "Draw",
 		},
 	];
+	const matchDurations = getLongestMatch(gameData);
+	console.log("Longest Match: ", matchDurations);
 
-	eventEmitter.on("theme", () => drawPieChart("wins-chart", pieChartData));
+	// drawLineChart("time-chart", matchDurations.durations, {
+	// 	longest: matchDurations.longest,
+	// 	average: matchDurations.average,
+	// 	fastest: matchDurations.fastest,
+	// });
+	winData(pieChartData);
+};
 
-	drawPieChart("wins-chart", pieChartData);
+const winData = (data) => {
+	const DATA_COUNT = 3;
+	const total = data.reduce((prev, curr) => prev + curr.length, 0);
+
+	const NUMBER_CFG = { count: DATA_COUNT, min: 0, max: total };
+
+	const ddata = {
+		datasets: [{}],
+	};
+	/**
+	 * @type {HTMLCanvasElement}
+	 */
+	// @ts-ignore
+	const winsChart = document.getElementById("wins-chart");
+	Chart.defaults.font.size = 25;
+	new Chart(winsChart, {
+		type: "pie",
+		data: {
+			labels: data.map((d) => d.name),
+			datasets: [
+				{
+					data: data.map((d) => d.length),
+				},
+			],
+		},
+		options: {
+			responsive: true,
+			plugins: {
+				legend: {
+					position: "top",
+				},
+			},
+		},
+	});
 };

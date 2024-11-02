@@ -39,14 +39,23 @@
 					class="bg-body border rounded p-3 flex-grow-1 d-flex flex-column"
 				>
 					<h5 class="fw-bold mb-3">Average Game Time</h5>
-					<div id="averageTimeChart" class="flex-grow-1"></div>
+					<div class="chart-container">
+						<canvas
+							id="time-chart"
+							class="flex-grow-1"
+							width="600"
+							height="400"
+						></canvas>
+					</div>
 				</div>
+
 				<div
 					class="bg-body border rounded p-3 flex-grow-1 d-flex flex-column"
 				>
 					<h5 class="fw-bold mb-3">Longest & Fastest Game</h5>
-					<p>Longest Game: 12 minutes 30 seconds</p>
-					<p>Fastest Game: 3 minutes 15 seconds</p>
+					<p>Longest Game: 1 minutes 30 seconds</p>
+					<p>Fastest Game: 0 minutes 25 seconds</p>
+					<p>etc...</p>
 				</div>
 				<div
 					class="bg-body border rounded p-3 flex-grow-1 d-flex flex-column"
