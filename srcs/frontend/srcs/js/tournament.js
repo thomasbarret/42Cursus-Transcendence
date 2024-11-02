@@ -38,6 +38,11 @@ export const tournamentHandler = (_, slug) => {
 
 	const tournamentMatches = document.getElementById("tournament-matches");
 
+	const intermissionCountdown = document.getElementById(
+		"intermission-countdown"
+	);
+	const intermissionOverlay = document.getElementById("intermission-overlay");
+
 	eventEmitter.on("GAME_TOURNAMENT_READY", (data) => {
 		console.log("tournament ready: ", data);
 		watchTournamentGame();
@@ -50,12 +55,33 @@ export const tournamentHandler = (_, slug) => {
 		chatBoxContainer.scrollTop = chatBoxContainer.scrollHeight;
 	});
 
+	eventEmitter.on("GAME_COUNTDOWN", (data) => {
+		intermissionCountdown.textContent = data;
+		intermissionCountdown.animate(
+			[
+				{ transform: "scale(1)", opacity: 1 },
+				{ transform: "scale(1.2)", opacity: 0.8 },
+				{ transform: "scale(1)", opacity: 1 },
+			],
+			{
+				duration: 500,
+				easing: "ease-in-out",
+				iterations: 1,
+			}
+		);
+		if (data === 0) {
+			intermissionCountdown.textContent = "GO!";
+			intermissionOverlay.classList.add("d-none");
+		}
+	});
+
 	eventEmitter.on("GAME_TOURNAMENT_NEXT_MATCH", (data) => {
 		game.reset();
 		setTournamentMatches(data.matches);
 		if (data.status === 3) {
 			setFinished(data);
 		} else {
+			intermissionOverlay.classList.remove("d-none");
 			chatBox.appendChild(
 				messageInformation(
 					"Next match is starting, the players are: " +

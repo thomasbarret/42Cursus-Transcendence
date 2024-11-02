@@ -481,7 +481,16 @@ class GameManager:
             )
 
             if tournament.current_match:
-                await asyncio.sleep(5)
+                for i in range(5, -1, -1):
+                    await channel_layer.group_send(
+                    f"tournament_{game_state.tournament_uuid}",
+                    {
+                        "type": "send_event",
+                        "event_name": "GAME_COUNTDOWN",
+                        "data": i
+                    })
+                    if i > 0:
+                        await asyncio.sleep(1)
                 await game_manager.start_game(
                     str(tournament.current_match.uuid),
                     str(tournament.current_match.player1.uuid),
