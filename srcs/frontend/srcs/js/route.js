@@ -1,4 +1,5 @@
 import { loginHandler, signUpHandler } from "./auth.js";
+import { dashboardHandler } from "./dashboard.js";
 import { friendsHandler } from "./friends.js";
 import { gameHandler } from "./game/pong.js";
 import {
@@ -100,6 +101,13 @@ export const routes = {
 		description: "This is the profile page",
 		handler: profileHandler,
 		slug: true,
+		auth: true,
+	},
+	"/dashboard": {
+		page: "/pages/dashboard.html",
+		title: "Dashboard | " + urlPageTitle,
+		description: "This is the dashboard page",
+		handler: dashboardHandler,
 		auth: true,
 	},
 };

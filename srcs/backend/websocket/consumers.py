@@ -66,8 +66,6 @@ class GameManager:
         game_state = GameState(match_uuid, player1_uuid, player2_uuid, max_score, tournament_uuid)
         self.games[match_uuid] = game_state
 
-        channel_layer = get_channel_layer()
-
         channel_layer.group_send((
             f"match_{game_state.match_uuid}",
             {
