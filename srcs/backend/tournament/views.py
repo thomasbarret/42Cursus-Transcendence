@@ -80,7 +80,7 @@ class GetTournamentView(APIView):
                 players_data.append(player_data)
 
             current_match = tournament.current_match
-            
+
             return Response({
                 'uuid': tournament.uuid,
                 'max_score': tournament.max_score,
@@ -214,7 +214,6 @@ class JoinTournamentView(APIView):
         )
 
         players = tournament.players.all()
-        players_data = []
 
         if created or player not in players:
             tournament.players.add(player)
@@ -222,38 +221,43 @@ class JoinTournamentView(APIView):
         tournament.channel.users.add(request.user)
         tournament.save()
 
-        for player in players:
-            player_data = {
-                'uuid': str(player.uuid),
-                'user': {
-                    'uuid': str(player.user.uuid),
-                    'display_name': player.user.publicuser.display_name,
-                    'avatar': get_avatar_url(player.user)
-                }
-            }
-            players_data.append(player_data)
 
-        response = {
-            'uuid': str(tournament.uuid),
-            'status': tournament.status,
-            'max_score': tournament.max_score,
-            'channel': {
-                'uuid': str(tournament.channel.uuid),
-                'type': tournament.channel.type,
-                'created_at': tournament.channel.created_at.isoformat(),
-            },
-            'creator': {
-                'uuid': str(creator.uuid),
-                'user': {
-                    'uuid': str(creator.user.uuid),
-                    'display_name': creator.user.publicuser.display_name,
-                    'avatar': get_avatar_url(creator.user)
+        def get_response():
+            players = tournament.players.all()
+
+            players_data = []
+            for player in players:
+                player_data = {
+                    'uuid': str(player.uuid),
+                    'user': {
+                        'uuid': str(player.user.uuid),
+                        'display_name': player.user.publicuser.display_name,
+                        'avatar': get_avatar_url(player.user)
+                    }
                 }
-            },
-            'players': players_data,
-            'current_match': None,
-            'created_at': tournament.created_at.isoformat(),
-        }
+                players_data.append(player_data)
+
+            return {
+                'uuid': str(tournament.uuid),
+                'status': tournament.status,
+                'max_score': tournament.max_score,
+                'channel': {
+                    'uuid': str(tournament.channel.uuid),
+                    'type': tournament.channel.type,
+                    'created_at': tournament.channel.created_at.isoformat(),
+                },
+                'creator': {
+                    'uuid': str(creator.uuid),
+                    'user': {
+                        'uuid': str(creator.user.uuid),
+                        'display_name': creator.user.publicuser.display_name,
+                        'avatar': get_avatar_url(creator.user)
+                    }
+                },
+                'players': players_data,
+                'current_match': None,
+                'created_at': tournament.created_at.isoformat(),
+            }
 
         channel_layer = get_channel_layer()
         for player in players:
@@ -262,13 +266,11 @@ class JoinTournamentView(APIView):
                 {
                     "type": "send_event",
                     "event_name": "TOURNAMENT_PLAYER_JOIN",
-                    "data": response
+                    "data": get_response()
                 }
             )
 
-
-
-        return Response(response)
+        return Response(get_response())
 
 # class StartTournamentView(APIView):
 #     authentication_classes = [TokenFromCookieAuthentication]

@@ -592,3 +592,20 @@ export const messageTournament = (message) => {
 export const messageInformation = (message) => {
 	return div(p(message)).cl("text-info");
 };
+
+export const tournamentMatchCard = (match) => {
+	const winnerPlayer1 =
+		match.player1_score > match.player2_score ? true : false;
+	return div(
+		span(
+			span(match.player_1.display_name)
+				.cl(winnerPlayer1 ? "text-success-emphasis" : "")
+				.cl("fw-bold"),
+			" vs ",
+			span(match.player_2.display_name)
+				.cl(winnerPlayer1 ? "" : "text-success-emphasis")
+				.cl("fw-bold")
+		).cl("me-1"),
+		span(match.player1_score + ":" + match.player2_score).cl("text-muted")
+	).cl("d-flex align-items-center border-end pe-3");
+};

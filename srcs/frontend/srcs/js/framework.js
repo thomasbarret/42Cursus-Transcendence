@@ -11,6 +11,7 @@ export const t = (name, ...child) => {
 		return result;
 	};
 	result.cl = (value) => {
+		if (value.length === 0) return result;
 		const vals = value.split(" ");
 		result.classList.add(...vals);
 		return result;

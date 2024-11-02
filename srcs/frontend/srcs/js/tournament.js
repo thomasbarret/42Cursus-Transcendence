@@ -4,6 +4,7 @@ import {
 	messageInformation,
 	messageTournament,
 	Toast,
+	tournamentMatchCard,
 } from "./components.js";
 import { eventEmitter } from "./eventemitter.js";
 import { Game } from "./game/game.js";
@@ -30,6 +31,8 @@ export const tournamentHandler = (_, slug) => {
 	const waitingOverlay = document.getElementById("waiting-overlay");
 	const finishedOverlay = document.getElementById("finished-overlay");
 	const tournamentWinner = document.getElementById("tournament-winner");
+
+	const tournamentMatches = document.getElementById("tournament-matches");
 
 	const watchTournamentGame = () => {
 		socket.send(
@@ -66,6 +69,7 @@ export const tournamentHandler = (_, slug) => {
 	};
 
 	eventEmitter.on("GAME_TOURNAMENT_NEXT_MATCH", (data) => {
+		setTournamentMatches(data.matches);
 		if (data.status === 3) {
 			setFinished(data);
 		} else {
@@ -84,17 +88,26 @@ export const tournamentHandler = (_, slug) => {
 	});
 
 	eventEmitter.on("TOURNAMENT_PLAYER_JOIN", (data) => {
-		updateCurrentUsers(data);
+		updateCurrentUsers(data.players);
 	});
 
-	const updateCurrentUsers = (data) => {
-		data.players.forEach((matchPlayer) => {
+	const setTournamentMatches = (matches) => {
+		tournamentMatches.textContent = "";
+		matches.forEach((match) => {
+			tournamentMatches.appendChild(tournamentMatchCard(match));
+		});
+	};
+
+	const updateCurrentUsers = (players) => {
+		currentPlayers.textContent = "";
+		players.forEach((matchPlayer) => {
 			currentPlayers.appendChild(
 				matchPlayersCard(matchPlayer.user, matchPlayer.user.uuid)
 			);
 		});
 	};
 
+	//TODO: list past matches of the tournament too
 	const getTournamentData = async () => {
 		const res = await fetch(BASE_URL + "/game/tournament/" + slug);
 
@@ -109,11 +122,13 @@ export const tournamentHandler = (_, slug) => {
 			} else if (data.status === 3) setFinished(data);
 			getChatBox(data.channel);
 
+			setTournamentMatches(data.matches);
+
 			socket.addEventListener("open", () => watchTournamentGame(), {
 				once: true,
 			});
 
-			updateCurrentUsers(data);
+			updateCurrentUsers(data.players);
 
 			if (user.uuid === data.creator.user.uuid) {
 				startTournament.classList.remove("d-none");
