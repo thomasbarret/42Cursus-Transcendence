@@ -481,7 +481,7 @@ class GameManager:
             )
 
             if tournament.current_match:
-                await asyncio.sleep(3)
+                await asyncio.sleep(5)
                 await game_manager.start_game(
                     str(tournament.current_match.uuid),
                     str(tournament.current_match.player1.uuid),

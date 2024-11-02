@@ -131,11 +131,13 @@ export class Game {
 		this.player_2.reset();
 		this.setScore();
 
-		this.ballActive = false;
-		this.ball.reset();
-		setTimeout(() => {
-			this.ballActive = true;
-		}, 1500);
+		if (!this.remote) {
+			this.ballActive = false;
+			this.ball.reset();
+			setTimeout(() => {
+				this.ballActive = true;
+			}, 1500);
+		}
 	}
 
 	sendRemote(event, state) {

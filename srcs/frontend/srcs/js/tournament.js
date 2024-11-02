@@ -15,6 +15,9 @@ import { getCurrentUser } from "./storage.js";
 export const tournamentHandler = (_, slug) => {
 	console.log("tournament slug: ", slug);
 
+	/**
+	 * @type {Game}
+	 */
 	let game;
 
 	const inviteBox = document.getElementById("invite-box");
@@ -23,6 +26,7 @@ export const tournamentHandler = (_, slug) => {
 	const chatInput = document.getElementById("chat-input");
 
 	const chatBox = document.getElementById("chat-box");
+	const chatBoxContainer = document.getElementById("chat-box-container");
 
 	const startTournament = document.getElementById("start-tournament");
 
@@ -34,6 +38,43 @@ export const tournamentHandler = (_, slug) => {
 
 	const tournamentMatches = document.getElementById("tournament-matches");
 
+	eventEmitter.on("GAME_TOURNAMENT_READY", (data) => {
+		console.log("tournament ready: ", data);
+		watchTournamentGame();
+		waitingOverlay.classList.add("d-none");
+		if (data.current_match) game = new Game(data.current_match);
+	});
+
+	eventEmitter.on("GAME_MESSAGE_CREATE", (data) => {
+		chatBox.appendChild(messageTournament(data));
+		chatBoxContainer.scrollTop = chatBoxContainer.scrollHeight;
+	});
+
+	eventEmitter.on("GAME_TOURNAMENT_NEXT_MATCH", (data) => {
+		game.reset();
+		setTournamentMatches(data.matches);
+		if (data.status === 3) {
+			setFinished(data);
+		} else {
+			chatBox.appendChild(
+				messageInformation(
+					"Next match is starting, the players are: " +
+						data.current_match.player_1.display_name +
+						" vs " +
+						data.current_match.player_2.display_name
+				)
+			);
+			chatBoxContainer.scrollTop = chatBoxContainer.scrollHeight;
+			Toast("Next match starting!", "info");
+			game = new Game(data.current_match);
+			watchTournamentGame();
+		}
+	});
+
+	eventEmitter.on("TOURNAMENT_PLAYER_JOIN", (data) => {
+		updateCurrentUsers(data.players);
+	});
+
 	const watchTournamentGame = () => {
 		socket.send(
 			JSON.stringify({
@@ -44,17 +85,6 @@ export const tournamentHandler = (_, slug) => {
 			})
 		);
 	};
-
-	eventEmitter.on("GAME_TOURNAMENT_READY", (data) => {
-		console.log("tournament ready: ", data);
-		watchTournamentGame();
-		waitingOverlay.classList.add("d-none");
-		if (data.current_match) game = new Game(data.current_match);
-	});
-
-	eventEmitter.on("GAME_MESSAGE_CREATE", (data) =>
-		chatBox.appendChild(messageTournament(data))
-	);
 
 	const setFinished = (data) => {
 		waitingOverlay.classList.add("d-none");
@@ -68,31 +98,13 @@ export const tournamentHandler = (_, slug) => {
 		}
 	};
 
-	eventEmitter.on("GAME_TOURNAMENT_NEXT_MATCH", (data) => {
-		setTournamentMatches(data.matches);
-		if (data.status === 3) {
-			setFinished(data);
-		} else {
-			chatBox.appendChild(
-				messageInformation(
-					"Next match is starting, the players are: " +
-						data.current_match.player_1.display_name +
-						" vs " +
-						data.current_match.player_2.display_name
-				)
-			);
-			Toast("Next match starting!", "info");
-			game = new Game(data.current_match);
-			watchTournamentGame();
-		}
-	});
-
-	eventEmitter.on("TOURNAMENT_PLAYER_JOIN", (data) => {
-		updateCurrentUsers(data.players);
-	});
-
+	/**
+	 *
+	 * @param {Array} matches
+	 */
 	const setTournamentMatches = (matches) => {
 		tournamentMatches.textContent = "";
+		matches = matches.filter((match) => match.status === 3);
 		matches.forEach((match) => {
 			tournamentMatches.appendChild(tournamentMatchCard(match));
 		});
@@ -209,6 +221,7 @@ export const tournamentHandler = (_, slug) => {
 				fragment.appendChild(messageTournament(message));
 			});
 			chatBox.appendChild(fragment);
+			chatBoxContainer.scrollTop = chatBoxContainer.scrollHeight;
 		} else Toast("Tournament chat error " + data["error"], "danger");
 		console.log(data);
 	};
