@@ -431,6 +431,7 @@ class ProfilMatchView(APIView):
                 } if match.winner is not None else None,
                 'status': match.status,
                 'start_date': match.start_date,
+                'end_date': match.end_date,
             } for match in matches]
         })
 
