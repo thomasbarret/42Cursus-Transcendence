@@ -13,6 +13,9 @@ from chat.models import Channel
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
+from django.shortcuts import get_object_or_404
+
+
 from django.db.models import Q
 
 def get_avatar_url(user):
@@ -57,7 +60,7 @@ class GetTournamentView(APIView):
 
     def get(self, request, tournament_uuid):
         try:
-            tournament = Tournament.objects.get(uuid=tournament_uuid)
+            tournament = get_object_or_404(Tournament, uuid=tournament_uuid)
 
             if not tournament:
                 return Response({
@@ -199,7 +202,18 @@ class JoinTournamentView(APIView):
     def post(self, request):
 
         tournament_uuid = request.data.get('uuid')
-        tournament = Tournament.objects.get(uuid=tournament_uuid)
+
+        if not tournament_uuid:
+            return Response({
+                'error': 'Tournament UUID is required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        tournament = get_object_or_404(Tournament, uuid=tournament_uuid)
+
+        if not tournament:
+            return Response({
+                'error': 'Tournament not found'
+            }, status=status.HTTP_404_NOT_FOUND)
 
         creator = tournament.created_by
 
