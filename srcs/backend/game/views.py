@@ -169,7 +169,14 @@ class GetMatchView(APIView):
         winner_uuid = request.data.get('winner_uuid')
         score = request.data.get('score')
 
-        match = Match.objects.get(uuid=match_uuid)
+        match = None
+
+        try:
+            match = Match.objects.get(uuid=match_uuid)
+        except:
+            return Response({
+                "error": "Match not found",
+            }, status=status.HTTP_404_NOT_FOUND)
 
         if match.status != 2:
             return Response({
@@ -306,7 +313,13 @@ class JoinMatchView(APIView):
         if display_name is None:
             display_name = request.user.publicuser.display_name
 
-        match = Match.objects.get(uuid=match_uuid)
+        match = None
+        try:
+            match = Match.objects.get(uuid=match_uuid)
+        except:
+            return Response({
+                "error": "Match not found",
+            }, status=status.HTTP_404_NOT_FOUND)
 
         if match.status != 1:
             return Response({
