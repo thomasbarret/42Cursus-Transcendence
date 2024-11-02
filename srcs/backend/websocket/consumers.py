@@ -65,6 +65,21 @@ class GameManager:
             return
         game_state = GameState(match_uuid, player1_uuid, player2_uuid, max_score, tournament_uuid)
         self.games[match_uuid] = game_state
+
+        channel_layer = get_channel_layer()
+
+        channel_layer.group_send((
+            f"match_{game_state.match_uuid}",
+            {
+                "type": "send_event",
+                "event_name": "GAME_START",
+                "data": {
+                    'uuid': str(game_state.match_uuid),
+                    'p1_score': game_state.player1_score,
+                    'p2_score': game_state.player2_score
+                }
+            }
+        ))
         asyncio.create_task(self.game_loop(match_uuid, channel_layer))
 
     async def activate_ball(self, game_state: GameState):
@@ -480,7 +495,7 @@ class GameManager:
                 }
             )
 
-            if tournament.current_match:
+            if tournament.current_match and not tournament.winner:
                 for i in range(5, -1, -1):
                     await channel_layer.group_send(
                     f"tournament_{game_state.tournament_uuid}",

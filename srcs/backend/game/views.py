@@ -12,6 +12,8 @@ from django.db.models import Q
 from django.utils import timezone
 import random
 
+from django.shortcuts import get_object_or_404
+
 from .models import Match, MatchPlayer
 
 def get_avatar_url(user):
@@ -120,7 +122,13 @@ class GetMatchView(APIView):
             return Response({
                 "error": "Match not found",
             }, status=status.HTTP_404_NOT_FOUND)
-        match = Match.objects.get(uuid=match_uuid)
+        match = None
+        try:
+            match = get_object_or_404(Match, uuid=match_uuid)
+        except:
+            return Response({
+                "error": "Match not found",
+            }, status=status.HTTP_404_NOT_FOUND)
 
         return Response({
             "uuid": match.uuid,
@@ -315,8 +323,13 @@ class JoinMatchView(APIView):
 
         match = None
         try:
-            match = Match.objects.get(uuid=match_uuid)
+            match = get_object_or_404(Match, uuid=match_uuid)
         except:
+            return Response({
+                "error": "Match not found",
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        if not match:
             return Response({
                 "error": "Match not found",
             }, status=status.HTTP_404_NOT_FOUND)
