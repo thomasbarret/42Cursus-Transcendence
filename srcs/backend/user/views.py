@@ -393,7 +393,7 @@ class ProfilMatchView(APIView):
         player = MatchPlayer.objects.filter(user=user).first()
 
         if player is None:
-            return Response({"error": "Player not found"}, status=status.HTTP_404_NOT_FOUND)
+            return JsonResponse({'matches': []})
 
         matches = Match.objects.filter(
             Q(player1=player) | Q(player2=player)
@@ -456,7 +456,7 @@ class ProfilTournamentView(APIView):
         player = MatchPlayer.objects.filter(user=user).first()
 
         if player is None:
-            return Response({"error": "Player not found"}, status=status.HTTP_404_NOT_FOUND)
+            return JsonResponse({'tournaments': []})
 
         tournaments = Tournament.objects.filter(
             players=player
