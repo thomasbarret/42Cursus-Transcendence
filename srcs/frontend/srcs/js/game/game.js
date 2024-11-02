@@ -2,25 +2,36 @@ import { eventEmitter } from "../eventemitter.js";
 import { socket } from "../socket.js";
 import { getCurrentUser, isDarkMode } from "../storage.js";
 import { Ball } from "./ball.js";
-import {
-	BALL_LERP,
-	MATCH_UPDATE_INTERVAL,
-	PADDLE_LERP,
-	REFERENCE_HEIGHT,
-	REFERENCE_WIDTH,
-} from "./constants.js";
+import { REFERENCE_HEIGHT, REFERENCE_WIDTH } from "./constants.js";
 import { Paddle } from "./paddle.js";
 
 export let keyDownListener = null;
 export let keyUpListener = null;
 
+export const defaultCustomization = {
+	ball: {
+		light_color: "black",
+		dark_color: "white",
+	},
+	paddle: {
+		light_color: "#ff33ec",
+		dark_color: "#ff33ec",
+		// color: "rgb(255, 51, 236)",
+	},
+};
+
 export class Game {
-	constructor(remote) {
+	constructor(remote, customization = defaultCustomization) {
+		document.removeEventListener("keydown", keyDownListener);
+		document.removeEventListener("keyup", keyUpListener);
+
 		this.animationFrame = null;
 		this.finished = false;
 		this.remote = remote;
 		this.canvas = document.querySelector("canvas");
 		this.ctx = this.canvas.getContext("2d");
+
+		this.customization = customization;
 
 		this.scoreText = document.getElementById("score-text");
 		this.scale = {
@@ -48,16 +59,21 @@ export class Game {
 			this.remote
 		);
 
+		if (this.remote) {
+			this.isPlaying =
+				this.user.uuid === this.remote.player_1.user.uuid ||
+				this.user.uuid === this.remote.player_2.user.uuid;
+
+			if (this.isPlaying) {
+				this.currentPlayer =
+					this.user.uuid === this.remote.player_1.user.uuid
+						? this.player_1
+						: this.player_2;
+			}
+		}
+
 		this.setColor();
 		this.eventListeners();
-
-		if (this.remote) {
-			this.currentPlayer =
-				this.user.uuid === this.remote.player_1.user.uuid
-					? this.player_1
-					: this.player_2;
-			this.authoritative = this.currentPlayer === this.player_1;
-		}
 		this.start();
 	}
 
@@ -69,11 +85,14 @@ export class Game {
 		this.player_2.draw();
 
 		if (this.remote) {
-			if (this.remote.status === 3) this.finished = true;
-
 			this.player_1.points = this.remote.player1_score;
 			this.player_2.points = this.remote.player2_score;
 			this.setScore();
+
+			if (this.remote.status === 3) {
+				this.finished = true;
+				return;
+			}
 		}
 
 		this.animationFrame = window.requestAnimationFrame(
@@ -90,6 +109,11 @@ export class Game {
 		const elementColor = isDarkMode() ? "white" : "black";
 		this.player_1.color = elementColor;
 		this.player_2.color = elementColor;
+		if (this.remote && this.isPlaying) {
+			this.currentPlayer.color = isDarkMode()
+				? this.customization.paddle.dark_color
+				: this.customization.paddle.light_color;
+		}
 		this.ball.color = elementColor;
 	}
 
@@ -107,11 +131,13 @@ export class Game {
 		this.player_2.reset();
 		this.setScore();
 
-		this.ballActive = false;
-		this.ball.reset();
-		setTimeout(() => {
-			this.ballActive = true;
-		}, 1500);
+		if (!this.remote) {
+			this.ballActive = false;
+			this.ball.reset();
+			setTimeout(() => {
+				this.ballActive = true;
+			}, 1500);
+		}
 	}
 
 	sendRemote(event, state) {
@@ -137,24 +163,7 @@ export class Game {
 				1 / 60
 			);
 			this.lastTime = timestamp;
-		}
 
-		// if (this.remote) {
-		// 	this.ball.x = this.lerp(this.ball.x, this.ball.target.x, BALL_LERP);
-		// 	this.ball.y = this.lerp(this.ball.y, this.ball.target.y, BALL_LERP);
-		// 	this.player_1.y = this.lerp(
-		// 		this.player_1.y,
-		// 		this.player_1.target,
-		// 		PADDLE_LERP
-		// 	);
-		// 	this.player_2.y = this.lerp(
-		// 		this.player_2.y,
-		// 		this.player_2.target,
-		// 		PADDLE_LERP
-		// 	);
-		// }
-
-		if (!this.remote) {
 			if (this.ballActive) {
 				if (
 					!this.ball
@@ -190,7 +199,7 @@ export class Game {
 			document.addEventListener(
 				"keydown",
 				(keyDownListener = (event) => {
-					if (!this.finished) {
+					if (!this.finished && this.isPlaying) {
 						if (
 							this.currentPlayer.keyHandler(event, true) !== false
 						) {
@@ -206,7 +215,7 @@ export class Game {
 			document.addEventListener(
 				"keyup",
 				(keyUpListener = (event) => {
-					if (!this.finished) {
+					if (!this.finished && this.isPlaying) {
 						if (
 							this.currentPlayer.keyHandler(event, false) !==
 							false
@@ -222,7 +231,7 @@ export class Game {
 		} else {
 			document.addEventListener(
 				"keydown",
-				(this.keyDownListener = (event) => {
+				(keyDownListener = (event) => {
 					this.player_1.keyHandler(event, true);
 					this.player_2.keyHandler(event, true);
 				})
@@ -230,7 +239,7 @@ export class Game {
 
 			document.addEventListener(
 				"keyup",
-				(this.keyDownListener = (event) => {
+				(keyDownListener = (event) => {
 					this.player_1.keyHandler(event, false);
 					this.player_2.keyHandler(event, false);
 				})
@@ -253,6 +262,14 @@ export class Game {
 				this.player_1.points = data.p1_score;
 				this.player_2.points = data.p2_score;
 				this.setScore();
+			});
+
+			eventEmitter.on("GAME_MATCH_FINISHED", (data) => {
+				if (data.uuid === this.remote.uuid) {
+					this.finished = true;
+					document.removeEventListener("keydown", keyDownListener);
+					document.removeEventListener("keyup", keyUpListener);
+				}
 			});
 		}
 	}

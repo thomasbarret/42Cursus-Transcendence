@@ -1,6 +1,6 @@
 import * as bootstrap from "bootstrap";
 import { BASE_URL } from "./handler.js";
-import { currentPlayerCard, inviteBoxCard, Toast } from "./components.js";
+import { matchPlayersCard, inviteBoxCard, Toast } from "./components.js";
 import { navigate } from "./main.js";
 import { gameHandler } from "./game/pong.js";
 import { eventEmitter } from "./eventemitter.js";
@@ -10,21 +10,17 @@ export const playHandler = (route) => {
 	let timerId = 0;
 
 	const tournamentMode = document.getElementById("tournament-mode");
-	const oneVsOne = document.getElementById("one-vs-one");
-	const waitingTime = document.getElementById("waiting-time");
-	const cancelMatchmaking = document.getElementById("cancel-matchmaking");
+	const oneMode = document.getElementById("one-vs-one");
+
+	const tournamentModal = new bootstrap.Modal("#tournamentModal");
+	const createTournament = document.getElementById("create-tournament");
+	const joinTournament = document.getElementById("join-tournament");
+
+	const createJoinModal = new bootstrap.Modal("#createJoinModal");
 	const createGame = document.getElementById("create-game");
-	const matchmakingModal = new bootstrap.Modal("#matchmakingModal", {
-		keyboard: false,
-		backdrop: "static",
-	});
+	const joinGame = document.getElementById("join-game");
 
-	const createJoinModal = new bootstrap.Modal("#createJoinModal", {
-		keyboard: false,
-		backdrop: "static",
-	});
-
-	oneVsOne.addEventListener("click", () => {
+	oneMode.addEventListener("click", () => {
 		createJoinModal.show();
 	});
 
@@ -47,26 +43,24 @@ export const playHandler = (route) => {
 	});
 
 	tournamentMode.addEventListener("click", () => {
-		matchmakingModal.show();
-		let timePassed = 1;
-
-		timerId = setInterval(() => {
-			const minutes = Math.floor(timePassed / 60);
-			const seconds = timePassed % 60;
-			waitingTime.textContent = `Time waiting: ${String(minutes).padStart(
-				2,
-				"0"
-			)}:${String(seconds).padStart(2, "0")}`;
-			timePassed++;
-		}, 1000);
+		tournamentModal.show();
 	});
 
-	cancelMatchmaking.addEventListener("click", () => {
-		matchmakingModal.hide();
-		waitingTime.textContent = "Time waiting: 00:00";
-		clearInterval(timerId);
+	createTournament.addEventListener("click", async () => {
+		const res = await fetch(BASE_URL + "/game/tournament/create", {
+			method: "POST",
+		});
+
+		const data = await res.json();
+
+		console.log(data);
+
+		if (res.ok) {
+			tournamentModal.hide();
+			Toast("Created tournament: " + data.uuid, "primary");
+			navigate("/tournament/" + data.uuid);
+		} else Toast("Error occured, couldn't create tournament", "danger");
 	});
-	console.log("player handler");
 };
 
 export const lobbyHandler = (route, slug) => {
@@ -80,6 +74,15 @@ export const lobbyHandler = (route, slug) => {
 	const winnerText = document.getElementById("winner-text");
 
 	const readyGame = document.getElementById("ready-game");
+
+	const gameUUID = document.getElementById("game-id");
+
+	gameUUID.textContent = slug;
+
+	gameUUID.addEventListener("click", () => {
+		navigator.clipboard.writeText(slug);
+		Toast("Copied game ID to clipboard!", "success");
+	});
 
 	eventEmitter.on("GAME_START_MATCH", () => {
 		waitingOverlay.classList.add("d-none");
@@ -98,13 +101,15 @@ export const lobbyHandler = (route, slug) => {
 	});
 
 	const matchFinish = (data) => {
-		waitingOverlay.classList.add("d-none");
-		winnerOverlay.classList.remove("d-none");
-		finalScore.textContent =
-			data.player1_score + " : " + data.player2_score;
-		winnerText.textContent = data.winner
-			? data.winner.display_name
-			: "Draw";
+		if (data.uuid === slug) {
+			waitingOverlay.classList.add("d-none");
+			winnerOverlay.classList.remove("d-none");
+			finalScore.textContent =
+				data.player1_score + " : " + data.player2_score;
+			winnerText.textContent = data.winner
+				? data.winner.display_name
+				: "Draw";
+		}
 	};
 
 	eventEmitter.on("GAME_MATCH_FINISHED", (data) => matchFinish(data));
@@ -122,11 +127,17 @@ export const lobbyHandler = (route, slug) => {
 			} else if (matchData["status"] === 3) matchFinish(matchData);
 			if (matchData["player_1"])
 				currentPlayers.appendChild(
-					currentPlayerCard(matchData["player_1"])
+					matchPlayersCard(
+						matchData["player_1"],
+						matchData["player_1"].user.uuid
+					)
 				);
 			if (matchData["player_2"])
 				currentPlayers.appendChild(
-					currentPlayerCard(matchData["player_2"])
+					matchPlayersCard(
+						matchData["player_2"],
+						matchData["player_2"].user.uuid
+					)
 				);
 		} else
 			Toast("Match couldn't be found, please try again later.", "danger");

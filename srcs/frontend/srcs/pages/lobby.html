@@ -5,6 +5,10 @@
 				class="col bg-body border rounded py-3 px-4 d-flex align-items-center"
 			>
 				<div class="fw-bold fs-4" id="score-text">Score: 0 : 0</div>
+				<div class="vr mx-3"></div>
+				<div class="fw-medium fs-4 text-primary-emphasis" role="button">
+					Game ID: <span class="text-body" id="game-id"></span>
+				</div>
 			</div>
 		</div>
 		<div class="row flex-grow-1 position-relative">
@@ -14,8 +18,8 @@
 				<canvas
 					id="game-board"
 					width="800"
-					style="max-height: 600px"
 					height="600"
+					style="max-height: 600px"
 				></canvas>
 				<div
 					id="waiting-overlay"
@@ -24,13 +28,6 @@
 				>
 					<div class="text-center text-white">
 						<h2>Waiting for game to start...</h2>
-						<!-- <button
-							type="button"
-							class="btn btn-primary mt-3"
-							id="ready-game"
-						>
-							Ready
-						</button> -->
 					</div>
 				</div>
 				<div
@@ -72,7 +69,7 @@
 					<div id="current-players"></div>
 				</div>
 				<div
-					class="invite-box bg-body border rounded p-2 overflow-auto flex-grow-1"
+					class="bg-body border rounded p-2 overflow-auto flex-grow-1"
 				>
 					<div class="fw-bold mb-2">Invite Players</div>
 					<div id="invite-box"></div>

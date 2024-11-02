@@ -4,85 +4,127 @@
 			<div
 				class="col bg-body border rounded py-1 px-2 d-flex align-items-center"
 			>
-				<div class="fw-bold ms-3">User1 vs User2</div>
-				<div class="vr mx-3"></div>
-				<div class="d-flex flex-wrap gap-2 flex-grow-1">
-					<div
-						class="btn btn-primary d-flex align-items-center px-2 py-1"
-					>
-						<img
-							src="https://picsum.photos/30"
-							alt="Avatar"
-							class="rounded-circle me-2"
-							style="width: 40px; height: 40px"
-						/>
-						<span>User1</span>
-					</div>
-					<div
-						class="btn btn-primary d-flex align-items-center px-2 py-1"
-					>
-						<img
-							src="https://picsum.photos/30"
-							alt="Avatar"
-							class="rounded-circle me-2"
-							style="width: 30px; height: 30px"
-						/>
-						<span>User2</span>
-					</div>
-					<div class="btn btn-primary d-flex align-items-center">
-						<img
-							src="https://picsum.photos/30"
-							alt="Avatar"
-							class="rounded-circle me-2"
-							style="width: 30px; height: 30px"
-						/>
-						<span>User3</span>
-					</div>
+				<div class="fw-bold ms-3">Tournament Score</div>
+				<div
+					class="fw-bold ms-3 text-primary-emphasis h5"
+					id="score-text"
+				>
+					0 : 0
 				</div>
+				<div class="vr mx-3"></div>
+				<div
+					class="d-flex flex-nowrap gap-3 flex-grow-1"
+					style="overflow-x: auto; white-space: nowrap"
+					id="tournament-matches"
+				></div>
 			</div>
 		</div>
 		<div class="row flex-grow-1">
 			<div
-				class="col-lg-8 col-md-7 col-sm-12 d-flex justify-content-center align-items-center bg-body-secondary p-3 rounded"
+				class="col-lg-8 col-md-7 col-sm-12 d-flex justify-content-center align-items-center bg-body-secondary p-3 rounded position-relative"
 			>
 				<canvas
-					id="gameCanvas"
-					class="w-100 h-100"
+					id="game-board"
+					width="800"
+					height="600"
 					style="max-height: 600px"
-					><h1>hello world</h1></canvas
+				></canvas>
+				<div
+					id="waiting-overlay"
+					class="position-absolute top-50 start-50 translate-middle w-100 h-100 d-flex justify-content-center align-items-center"
+					style="background: rgba(0, 0, 0, 0.7)"
 				>
+					<div class="text-center text-white">
+						<h2>Waiting for tournament to start...</h2>
+
+						<button
+							type="button"
+							class="btn btn-primary mt-3 d-none"
+							id="start-tournament"
+						>
+							Start Tournament
+						</button>
+					</div>
+				</div>
+
+				<div
+					id="intermission-overlay"
+					class="position-absolute top-50 start-50 translate-middle w-100 h-100 d-flex justify-content-center align-items-center d-none"
+					style="background: rgba(0, 0, 0, 0.7)"
+				>
+					<div class="text-center text-white">
+						<h2
+							class="fs-1 animate-pulse"
+							id="intermission-countdown"
+						>
+							5
+						</h2>
+					</div>
+				</div>
+
+				<div
+					id="finished-overlay"
+					class="position-absolute top-50 start-50 translate-middle w-100 h-100 d-none d-flex justify-content-center align-items-center"
+					style="background: rgba(0, 0, 0, 0.7)"
+				>
+					<div class="text-center text-white">
+						<h2 id="winner-text"></h2>
+						<p id="finalScore" class="fs-4 mt-2">
+							Tournament winner:
+							<span
+								id="tournament-winner"
+								class="text-success"
+							></span>
+						</p>
+						<a
+							type="button"
+							class="btn btn-primary mt-3"
+							id="play-again"
+							href="/play"
+							data-router-navigation="true"
+						>
+							Go to Lobby
+						</a>
+					</div>
+				</div>
 			</div>
 			<div class="col-lg-4 col-md-5 col-sm-12 d-flex flex-column">
 				<div
-					class="invite-box bg-body border rounded p-2 mb-3 overflow-auto"
-					id="invite-box"
-					style="height: 150px"
-				></div>
-				<div
-					class="chat-box bg-body border rounded flex-grow-1 mb-3 overflow-auto"
-					id="chatBox"
-					style="height: 250px"
+					class="bg-body border rounded p-2 mb-3 overflow-auto"
+					style="height: 250px; overflow-y: auto"
 				>
-					<div class="p-2">
-						<div class="text-muted">
-							<small>User1: wow wowowowwowowo!</small>
-						</div>
-						<div class="text-muted">
-							<small>User2: bonsoir</small>
-						</div>
-					</div>
+					<div class="fw-bold mb-2">Current Players</div>
+					<div id="current-players"></div>
 				</div>
-				<div class="input-group">
+				<div
+					class="bg-body border rounded p-2 mb-3 overflow-auto"
+					style="height: 150px; overflow-y: auto"
+				>
+					<div class="fw-bold mb-2">Invite Players</div>
+					<div id="invite-box"></div>
+				</div>
+				<div
+					class="bg-body border rounded flex-grow-1 mb-3 overflow-auto"
+					style="height: 250px; overflow-y: auto"
+					id="chat-box-container"
+				>
+					<div class="p-2" id="chat-box"></div>
+				</div>
+				<form class="input-group" id="chat-form">
 					<input
 						type="text"
 						class="form-control"
 						placeholder="Type a message..."
-						id="chatInput"
+						id="chat-input"
 					/>
-					<button class="btn btn-primary" id="sendChatButton">
+					<button
+						type="submit"
+						class="btn btn-primary"
+						id="send-chat-button"
+					>
 						Send
 					</button>
-				</div>
+				</form>
 			</div>
 		</div>
 	</div>

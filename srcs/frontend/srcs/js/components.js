@@ -119,16 +119,21 @@ export const messageBoxLeft = (text, time, uuid, avatar) => {
 	return message;
 };
 
-export const matchInviteRight = (time, callback, avatar) => {
+export const matchInviteRight = (time, callback, avatar, tournament) => {
 	const image = img(avatar ? avatar : DEFAULT_AVATAR)
 		.attr("alt", "avatar 1")
 		.attr("style", "width: 35px; height: 35px")
 		.attr("class", "rounded-circle");
 	const content = div(
 		div(
-			h5("Play with me"),
+			h5(tournament ? "Join my Tournament" : "Play with me"),
 			button("Join Game")
-				.cl("btn btn-outline-primary rounded-2")
+				.cl(
+					"btn rounded-2 " +
+						(tournament
+							? "btn-outline-success"
+							: "btn-outline-primary")
+				)
 				.onclick$(callback)
 		).cl(
 			"container justify-content-center text-center bg-primary-subtle rounded-2 p-3"
@@ -145,7 +150,7 @@ export const matchInviteRight = (time, callback, avatar) => {
 	return message;
 };
 
-export const matchInviteLeft = (time, uuid, callback, avatar) => {
+export const matchInviteLeft = (time, uuid, callback, avatar, tournament) => {
 	const image = img(avatar ? avatar : DEFAULT_AVATAR)
 		.attr("alt", "avatar 1")
 		.attr("style", "width: 35px; height: 35px")
@@ -155,9 +160,14 @@ export const matchInviteLeft = (time, uuid, callback, avatar) => {
 
 	const content = div(
 		div(
-			h5("Play with me"),
+			h5(tournament ? "Join my Tournament" : "Play with me"),
 			button("Join Game")
-				.cl("btn btn-outline-primary rounded-2")
+				.cl(
+					"btn rounded-2 " +
+						(tournament
+							? "btn-outline-success"
+							: "btn-outline-primary")
+				)
 				.onclick$(callback)
 		).cl(
 			"container justify-content-center text-center bg-primary-subtle rounded-2 p-3"
@@ -177,23 +187,35 @@ export const matchInviteLeft = (time, uuid, callback, avatar) => {
 };
 
 export const messageBox = (content, time, current, uuid, avatar) => {
-	if (content.startsWith('{"game":')) {
+	if (
+		content.startsWith('{"game":') ||
+		content.startsWith('{"tournament":')
+	) {
 		try {
-			const invite = JSON.parse(content);
+			const { game, tournament } = JSON.parse(content);
+
+			const invite = game ? game : tournament;
 
 			const callback = async () => {
-				const res = await fetch(BASE_URL + "/game/match/join", {
+				const url =
+					BASE_URL +
+					(tournament ? "/game/tournament/join" : "/game/match/join");
+				const res = await fetch(url, {
 					method: "POST",
 					headers: {
 						"Content-Type": "application/json",
 					},
 					body: JSON.stringify({
-						match_uuid: invite.game,
+						uuid: invite,
 					}),
 				});
 
 				if (res.ok) {
-					navigate("/lobby/" + invite.game);
+					navigate(
+						tournament
+							? "/tournament/" + invite
+							: "/lobby/" + invite
+					);
 				} else
 					Toast(
 						"Couldn't join lobby please try again later.",
@@ -201,8 +223,8 @@ export const messageBox = (content, time, current, uuid, avatar) => {
 					);
 			};
 			return current
-				? matchInviteRight(time, callback, avatar)
-				: matchInviteLeft(time, uuid, callback, avatar);
+				? matchInviteRight(time, callback, avatar, tournament)
+				: matchInviteLeft(time, uuid, callback, avatar, tournament);
 		} catch (e) {}
 	}
 
@@ -494,7 +516,7 @@ export const matchHistory = (matches) => {
 		);
 };
 
-export const inviteBoxCard = (user, matchId, update) => {
+export const inviteBoxCard = (user, matchId, update, tournament = false) => {
 	return div(
 		img(user.avatar ? user.avatar : DEFAULT_AVATAR)
 			.attr("alt", "avatar")
@@ -516,9 +538,9 @@ export const inviteBoxCard = (user, matchId, update) => {
 
 				const channel = await res.json();
 
-				const invite = {
-					game: matchId,
-				};
+				const invite = {};
+
+				invite[tournament ? "tournament" : "game"] = matchId;
 
 				if (res.ok) {
 					const msg = await fetch(
@@ -544,7 +566,7 @@ export const inviteBoxCard = (user, matchId, update) => {
 	).cl("d-flex align-items-center mb-2");
 };
 
-export const currentPlayerCard = (user) => {
+export const matchPlayersCard = (user, uuid) => {
 	return div(
 		div(
 			img(user.avatar ? user.avatar : DEFAULT_AVATAR)
@@ -553,10 +575,37 @@ export const currentPlayerCard = (user) => {
 				.attr("style", "width: 30px; height: 30px"),
 			div(
 				span(user.display_name).cl("fw-bold fs-5"),
-				t("small", user.user.uuid).cl("text-muted")
+				uuid ? t("small", uuid).cl("text-muted") : ""
 			).cl("d-flex flex-column")
 		).cl("d-flex align-items-center")
 	).cl(
 		"d-flex flex-column align-items-start mb-2 p-2 bg-primary-subtle rounded"
 	);
+};
+
+export const messageTournament = (message) => {
+	return div(p(message.user.display_name + ": " + message.content)).cl(
+		"text-muted"
+	);
+};
+
+export const messageInformation = (message) => {
+	return div(p(message)).cl("text-info");
+};
+
+export const tournamentMatchCard = (match) => {
+	const winnerPlayer1 =
+		match.player1_score > match.player2_score ? true : false;
+	return div(
+		span(
+			span(match.player_1.display_name)
+				.cl(winnerPlayer1 ? "text-success-emphasis" : "")
+				.cl("fw-bold"),
+			" vs ",
+			span(match.player_2.display_name)
+				.cl(winnerPlayer1 ? "" : "text-success-emphasis")
+				.cl("fw-bold")
+		).cl("me-1"),
+		span(match.player1_score + ":" + match.player2_score).cl("text-muted")
+	).cl("d-flex align-items-center border-end pe-3");
 };

@@ -295,7 +295,7 @@ class JoinMatchView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        match_uuid = request.data.get('match_uuid')
+        match_uuid = request.data.get('uuid')
         display_name = request.data.get('display_name')
 
         if not match_uuid:
@@ -381,55 +381,3 @@ class JoinMatchView(APIView):
         )
 
         return Response(response)
-
-
-GAME_TICK = 0.05  # Intervalle de mise à jour en secondes
-BALL_SPEED = 5  # Vitesse de la balle
-PADDLE_HEIGHT = 100  # Hauteur des raquettes
-
-class PongGameView(APIView):
-    authentication_classes = [TokenFromCookieAuthentication]
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        # Initialisation des joueurs et de la balle
-        player1_uuid = request.data.get('player1_uuid')
-        player2_uuid = request.data.get('player2_uuid')
-
-        # Définir les positions initiales
-        ball_position = {"x": 50, "y": 50}
-        ball_direction = {"x": 1, "y": 1}
-
-        channel_layer = get_channel_layer()
-
-        # Simulation de la boucle de jeu continue
-        while True:
-            # Mise à jour de la position de la balle
-            ball_position["x"] += ball_direction["x"] * BALL_SPEED
-            ball_position["y"] += ball_direction["y"] * BALL_SPEED
-
-            # Gérer les collisions avec les murs
-            if ball_position["y"] <= 0 or ball_position["y"] >= 100:  # Hauteur du terrain
-                ball_direction["y"] *= -1
-
-            # Envoyer la position mise à jour aux deux joueurs
-            response = {
-                "ball_position": ball_position,
-            }
-            async_to_sync(channel_layer.group_send)(
-                f"user_{player1_uuid}",
-                {"type": "send_event", "event_name": "BALL_UPDATE", "data": response}
-            )
-            async_to_sync(channel_layer.group_send)(
-                f"user_{player2_uuid}",
-                {"type": "send_event", "event_name": "BALL_UPDATE", "data": response}
-            )
-
-            # Condition de fin de partie (exemple)
-            if some_end_game_condition_met():
-                break
-
-            # Attendre le prochain tick
-            time.sleep(GAME_TICK)
-
-        return JsonResponse({"status": "Game has ended"})

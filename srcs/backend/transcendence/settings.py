@@ -20,13 +20,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
+# TODO: ADD TO ENVIRONMENT
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = "django-insecure-148c#t3qboq!#!9a#-$u)ez8cm9y@!_13qoea@1j#ckbg)vi!+"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"] if DEBUG else []
 
 
 # Application definition
@@ -65,14 +66,16 @@ OAUTH2_PROVIDER = {
 
 FRONTEND_URL = "http://localhost:8080"
 
+# TODO: ADD TO ENVIRONMENT
 # 42 OAuth2 settings
 OAUTH2_42_CLIENT_ID = (
     "u-s4t2ud-9d546fc4119947a4413baa6ec8a211bdcbf116c6689d875fa66a6218e2d75374"
 )
+# TODO: ADD TO ENVIRONMENT
 OAUTH2_42_CLIENT_SECRET = (
     "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"
 )
-OAUTH2_42_REDIRECT_URI = "http://localhost:8000/api/oauth/42/callback"
+OAUTH2_42_REDIRECT_URI = "http://localhost:8080/api/oauth/42/callback"
 
 APPEND_SLASH=True
 

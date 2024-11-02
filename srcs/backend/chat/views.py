@@ -175,7 +175,7 @@ class UserDirectChannelView(APIView):
         except User.DoesNotExist:
             return Response({"error": "Receiver not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        channel = Channel.objects.filter(users=sender_user).filter(users=receiver_user)
+        channel = Channel.objects.filter(users=sender_user).filter(users=receiver_user).filter(type=1)
 
         if not channel.exists():
             channel = Channel.objects.create(type=1)

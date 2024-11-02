@@ -1,5 +1,5 @@
 from django.db import models
-from game.models import Match, MatchPlayer
+from django.apps import apps
 import uuid
 from django.utils import timezone
 
@@ -12,20 +12,22 @@ class Tournament(models.Model):
     )
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     status = models.IntegerField(choices=status_type, default=1)
-    players = models.ManyToManyField(MatchPlayer, related_name='tournaments')
-    winner = models.ForeignKey(MatchPlayer, on_delete=models.CASCADE, related_name='tournament_winner', null=True, blank=True)
+    players = models.ManyToManyField('game.MatchPlayer', related_name='tournaments')
+    winner = models.ForeignKey('game.MatchPlayer', on_delete=models.CASCADE, related_name='tournament_winner', null=True, blank=True)
+
     start_date = models.DateTimeField(null=True, blank=True)
     end_date = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey('game.MatchPlayer', on_delete=models.CASCADE, related_name='created_tournaments')
 
-    max_players = models.IntegerField(default=4)
-    created_by = models.ForeignKey(MatchPlayer, on_delete=models.CASCADE, related_name='created_tournaments')
-
-    current_match = models.ForeignKey(Match, on_delete=models.SET_NULL, related_name='current_tournament_match', null=True, blank=True)
-    matches = models.ManyToManyField(Match, related_name='tournaments')
+    channel = models.ForeignKey('chat.Channel', on_delete=models.CASCADE, related_name='tournament')
+    current_match = models.ForeignKey('game.Match', on_delete=models.SET_NULL, related_name='current_tournament_match', null=True, blank=True)
+    max_score = models.IntegerField(default=3)
+    matches = models.ManyToManyField('game.Match', related_name='tournaments')
 
     def create_all_matches(self):
+        Match = apps.get_model('game', 'Match')  # Résout la dépendance circulaire
         players = list(self.players.all())
         matches = []
 
@@ -34,9 +36,10 @@ class Tournament(models.Model):
                 match = Match.objects.create(
                     player1=players[i],
                     player2=players[j],
-                    round_number=1,
-                    max_score=10
+                    max_score=self.max_score
                 )
+                match.tournament = self
+                match.save()
                 matches.append(match)
 
         self.matches.add(*matches)
@@ -45,8 +48,8 @@ class Tournament(models.Model):
         self.save()
 
     def start_next_match(self):
-        if not self.current_match or not self.current_match.winner:
-            raise ValueError("The current match is not finished or does not exist")
+        # if not self.current_match or not self.current_match.winner:
+        #     raise ValueError("The current match is not finished or does not exist")
 
         next_match = self.matches.exclude(id=self.current_match.id).filter(winner__isnull=True).first()
 
