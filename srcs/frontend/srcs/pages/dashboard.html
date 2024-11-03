@@ -1,76 +1,71 @@
-<div class="d-flex flex-grow-1 w-100 overflow-hidden">
-	<div class="container-fluid d-flex flex-column flex-grow-1 p-3">
-		<div class="row mb-4">
+<div class="container-fluid d-flex flex-column flex-grow-1 p-3 overflow-hidden">
+	<div class="row mb-4">
+		<div
+			class="col bg-body border rounded py-3 px-4 d-flex align-items-center"
+		>
+			<div class="fw-bold fs-4">Pong Game Statistics Dashboard</div>
+		</div>
+	</div>
+
+	<div class="row flex-grow-1 overflow-hidden">
+		<div class="col-lg-4 d-flex flex-column gap-3 overflow-hidden">
 			<div
-				class="col bg-body border rounded py-3 px-4 d-flex align-items-center"
+				class="bg-body border rounded p-3 d-flex flex-column"
+				style="flex: 0 1 auto"
 			>
-				<div class="fw-bold fs-4">Pong Game Statistics Dashboard</div>
+				<h5 class="fw-bold mb-3">Wins & Points</h5>
+				<div class="chart-container mb-3" style="height: 200px">
+					<canvas id="wins-chart" class="w-100 h-100"></canvas>
+				</div>
+				<p class="fs-5">Current Win-rate: <span id="winrate"></span></p>
+			</div>
+
+			<div class="bg-body border rounded p-3 d-flex flex-column">
+				<h5 class="fw-bold mb-3">Most Played Against</h5>
+				<div
+					id="most-played-against"
+					class="overflow-auto"
+					style="max-height: 400px"
+				></div>
 			</div>
 		</div>
-		<div class="row flex-grow-1">
-			<div class="col-lg-4 d-flex flex-column gap-3">
-				<div
-					class="bg-body border rounded p-3 flex-grow-1 d-flex flex-column"
-				>
-					<h5 class="fw-bold mb-3">Wins & Points</h5>
-					<div
-						class="chart-container"
-						style="position: relative; height: 40vh; width: 80%"
-					>
-						<canvas id="wins-chart" class="flex-grow-1"></canvas>
+
+		<div class="col-lg-8 d-flex flex-column gap-3 overflow-hidden">
+			<div
+				class="bg-body border rounded p-3 d-flex flex-column"
+				style="flex: 0 1 auto"
+			>
+				<h5 class="fw-bold mb-3">Average Game Time</h5>
+				<div class="d-flex mb-3" style="height: 200px">
+					<div class="chart-container me-3 flex-fill">
+						<canvas id="time-chart" class="w-100 h-100"></canvas>
 					</div>
-					<p class="mt-3 fs-5">
-						Current Win-rate: <span id="winrate"></span>
-					</p>
-				</div>
-				<div
-					class="bg-body border rounded p-3 flex-grow-1 d-flex flex-column"
-				>
-					<h5 class="fw-bold mb-3">Most Played Against</h5>
-					<div id="most-played-against" class="flex-grow-1"></div>
-				</div>
-			</div>
-			<div class="col-lg-8 d-flex flex-column gap-3">
-				<div
-					class="bg-body border rounded p-3 flex-grow-1 d-flex flex-column"
-				>
-					<h5 class="fw-bold mb-3">Average Game Time</h5>
-					<div class="d-flex">
-						<div
-							class="chart-container me-3"
-							style="position: relative; height: 30vh; width: 45%"
-						>
-							<canvas
-								id="time-chart"
-								class="flex-grow-1"
-							></canvas>
-						</div>
-						<div
-							class="chart-container"
-							style="position: relative; height: 30vh; width: 45%"
-						>
-							<canvas
-								id="vertical-bar-chart"
-								class="flex-grow-1"
-							></canvas>
-						</div>
+					<div class="chart-container flex-fill">
+						<canvas
+							id="vertical-bar-chart"
+							class="w-100 h-100"
+						></canvas>
 					</div>
+				</div>
+				<div class="d-flex gap-5 fw-bold">
 					<p id="average"></p>
 					<p id="longest"></p>
 					<p id="fastest"></p>
 				</div>
-				<div
-					class="bg-body border rounded p-3 flex-grow-1 d-flex flex-column"
-				>
-					<h5 class="fw-bold mb-3">Longest & Fastest Game</h5>
+			</div>
+
+			<div class="bg-body border rounded p-3 d-flex flex-column">
+				<h5 class="fw-bold mb-3">Longest & Fastest Game</h5>
+				<div class="overflow-auto" style="max-height: 150px">
 					<p>Longest Game: 1 minute 30 seconds</p>
 					<p>Fastest Game: 0 minutes 25 seconds</p>
-					<p>etc...</p>
+					<p>Additional statistics...</p>
 				</div>
-				<div
-					class="bg-body border rounded p-3 flex-grow-1 d-flex flex-column"
-				>
-					<h5 class="fw-bold mb-3">Most Points Scored</h5>
+			</div>
+
+			<div class="bg-body border rounded p-3 d-flex flex-column">
+				<h5 class="fw-bold mb-3">Most Points Scored</h5>
+				<div class="overflow-auto" style="max-height: 150px">
 					<p>Most Points in a Match: 15</p>
 					<p>
 						Most Points Scored in Least Time: 5 points in 1 minute

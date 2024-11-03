@@ -1,4 +1,4 @@
-import { matchPlayedAgainst, matchPlayersCard } from "./components.js";
+import { matchPlayedAgainst } from "./components.js";
 import { BASE_URL } from "./handler.js";
 import { getCurrentUser } from "./storage.js";
 
@@ -69,6 +69,7 @@ const winData = (data) => {
 		},
 		options: {
 			responsive: true,
+			maintainAspectRatio: false,
 			plugins: {
 				legend: {
 					position: "top",
@@ -133,6 +134,7 @@ const lineChart = (data) => {
 		},
 		options: {
 			responsive: true,
+			maintainAspectRatio: false,
 		},
 	});
 
@@ -150,6 +152,7 @@ const lineChart = (data) => {
 		},
 		options: {
 			responsive: true,
+			maintainAspectRatio: false,
 		},
 	});
 };
