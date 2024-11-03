@@ -51,19 +51,52 @@ const getLongestMatch = (gameData) => {
 		finished,
 	};
 };
-const winData = (data) => {
+const winData = (user, gameData) => {
 	/**
 	 * @type {HTMLCanvasElement}
 	 */
 	// @ts-ignore
 	const winsChart = document.getElementById("wins-chart");
+	const winrateDisplay = document.getElementById("winrate");
+
+	const { gamesWon, gamesLost, gamesDraw, winrate } = gameResults(
+		user,
+		gameData
+	);
+
+	winrateDisplay.textContent = `${(winrate * 100).toFixed(1)}%`;
+
+	console.log(
+		"Games Won: ",
+		gamesWon,
+		" Games Lost: ",
+		gamesLost,
+		" Games Draw: ",
+		gamesDraw
+	);
+
+	const pieChartData = [
+		{
+			length: gamesWon.length,
+			name: "Won",
+		},
+		{
+			length: gamesLost.length,
+			name: "Lost",
+		},
+		{
+			length: gamesDraw.length,
+			name: "Draw",
+		},
+	];
+
 	new Chart(winsChart, {
 		type: "pie",
 		data: {
-			labels: data.map((d) => d.name),
+			labels: pieChartData.map((d) => d.name),
 			datasets: [
 				{
-					data: data.map((d) => d.length),
+					data: pieChartData.map((d) => d.length),
 				},
 			],
 		},
@@ -143,6 +176,9 @@ const mostPlayed = (user, data) => {
 };
 
 const lineChart = (data) => {
+	const averageDisplay = document.getElementById("average");
+	const longestDisplay = document.getElementById("longest");
+	const fastestDisplay = document.getElementById("fastest");
 	/**
 	 * @type {HTMLCanvasElement}
 	 */
@@ -154,11 +190,23 @@ const lineChart = (data) => {
 	// @ts-ignore
 	const verticalBarChart = document.getElementById("vertical-bar-chart");
 
-	const labels = data.finished.map((game) => {
+	const durations = getLongestMatch(data);
+
+	const labels = durations.finished.map((game) => {
 		const player1 = game.player1?.user.display_name || "NO PLAYER";
 		const player2 = game.player2?.user.display_name || "NO PLAYER";
 		return `${player1} vs ${player2}`;
 	});
+
+	averageDisplay.textContent = `Average: ${durations.average.toFixed(
+		2
+	)} seconds`;
+	longestDisplay.textContent = `Longest: ${durations.longest.toFixed(
+		2
+	)} seconds`;
+	fastestDisplay.textContent = `Fastest: ${durations.fastest.toFixed(
+		2
+	)} seconds`;
 
 	new Chart(timeChart, {
 		type: "line",
@@ -167,7 +215,7 @@ const lineChart = (data) => {
 			datasets: [
 				{
 					label: "Matches Duration (seconds)",
-					data: data.finished.map((game) => getDuration(game)),
+					data: durations.finished.map((game) => getDuration(game)),
 				},
 			],
 		},
@@ -184,7 +232,11 @@ const lineChart = (data) => {
 			datasets: [
 				{
 					label: "Duration Data (seconds)",
-					data: [data.longest, data.average, data.fastest],
+					data: [
+						durations.average,
+						durations.longest,
+						durations.fastest,
+					],
 					backgroundColor: ["#FA8072", "#20B2AA", "#87CEEB"],
 				},
 			],
@@ -215,16 +267,20 @@ const calculatePoints = (user, data) => {
 	return { total, average, most, least };
 };
 
-const horizontalBarChart = (data) => {
+const horizontalBarChart = (user, gameData) => {
 	const totalPoints = document.getElementById("total-points");
 	const averagePoints = document.getElementById("average-points");
 	const mostPoints = document.getElementById("most-points");
 	const leastPoints = document.getElementById("least-points");
 
-	totalPoints.textContent = `Total: ${data.total}`;
-	averagePoints.textContent = `Average: ${data.average.toFixed(2)} per match`;
-	mostPoints.textContent = `Most: ${data.most}`;
-	leastPoints.textContent = `Least: ${data.least}`;
+	const points = calculatePoints(user, gameData);
+
+	totalPoints.textContent = `Total: ${points.total}`;
+	averagePoints.textContent = `Average: ${points.average.toFixed(
+		2
+	)} per match`;
+	mostPoints.textContent = `Most: ${points.most}`;
+	leastPoints.textContent = `Least: ${points.least}`;
 
 	/**
 	 * @type {HTMLCanvasElement}
@@ -235,11 +291,11 @@ const horizontalBarChart = (data) => {
 	new Chart(pointsChart, {
 		type: "bar",
 		data: {
-			labels: Object.keys(data),
+			labels: Object.keys(points),
 			datasets: [
 				{
 					label: "Point data",
-					data: [...Object.values(data)],
+					data: [...Object.values(points)],
 					backgroundColor: [
 						"#FFA07A",
 						"#00FF7F",
@@ -266,10 +322,7 @@ const horizontalBarChart = (data) => {
 export const dashboardHandler = async () => {
 	Chart.defaults.font.size = 25;
 
-	const winrateDisplay = document.getElementById("winrate");
-	const averageDisplay = document.getElementById("average");
-	const longestDisplay = document.getElementById("longest");
-	const fastestDisplay = document.getElementById("fastest");
+	const user = getCurrentUser();
 
 	const getGameData = async () => {
 		const req = await fetch(BASE_URL + "/user/@me/match");
@@ -280,7 +333,17 @@ export const dashboardHandler = async () => {
 		}
 		return false;
 	};
-	const user = getCurrentUser();
+
+	const getTournamentData = async () => {
+		const req = await fetch(BASE_URL + "/user/@me/tournament");
+		if (req.ok) {
+			const data = await req.json();
+			console.log("TOURNAMENT DATA: ", data);
+			return data;
+		}
+	};
+
+	await getTournamentData();
 
 	/**
 	 * @type {Array<Object>}
@@ -289,56 +352,11 @@ export const dashboardHandler = async () => {
 	if (!gameData)
 		return console.error("Couldn't get game data for user: ", user);
 
-	const { gamesWon, gamesLost, gamesDraw, winrate } = gameResults(
-		user,
-		gameData
-	);
+	winData(user, gameData);
 
-	console.log(
-		"Games Won: ",
-		gamesWon,
-		" Games Lost: ",
-		gamesLost,
-		" Games Draw: ",
-		gamesDraw
-	);
-
-	const pieChartData = [
-		{
-			length: gamesWon.length,
-			name: "Won",
-		},
-		{
-			length: gamesLost.length,
-			name: "Lost",
-		},
-		{
-			length: gamesDraw.length,
-			name: "Draw",
-		},
-	];
-
-	winData(pieChartData);
-	winrateDisplay.textContent = `${(winrate * 100).toFixed(1)}%`;
-
-	const matchesDurations = getLongestMatch(gameData);
-	console.log("Longest Match: ", matchesDurations);
-
-	lineChart(matchesDurations);
-	averageDisplay.textContent = `Average: ${matchesDurations.average.toFixed(
-		2
-	)} seconds`;
-	longestDisplay.textContent = `Longest: ${matchesDurations.longest.toFixed(
-		2
-	)} seconds`;
-	fastestDisplay.textContent = `Fastest: ${matchesDurations.fastest.toFixed(
-		2
-	)} seconds`;
+	lineChart(gameData);
 
 	mostPlayed(user, gameData);
 
-	const points = calculatePoints(user, gameData);
-	console.log("Points: ", points);
-
-	horizontalBarChart(points);
+	horizontalBarChart(user, gameData);
 };
