@@ -13,25 +13,21 @@
 					class="bg-body border rounded p-3 flex-grow-1 d-flex flex-column"
 				>
 					<h5 class="fw-bold mb-3">Wins & Points</h5>
-					<canvas
-						id="wins-chart"
-						width="800"
-						height="800"
-						class="flex-grow-1"
-					></canvas>
-					<p class="mt-3">
-						Total Points Scored: <span id="totalPoints">150</span>
+					<div
+						class="chart-container"
+						style="position: relative; height: 40vh; width: 80%"
+					>
+						<canvas id="wins-chart" class="flex-grow-1"></canvas>
+					</div>
+					<p class="mt-3 fs-5">
+						Current Win-rate: <span id="winrate"></span>
 					</p>
 				</div>
 				<div
 					class="bg-body border rounded p-3 flex-grow-1 d-flex flex-column"
 				>
 					<h5 class="fw-bold mb-3">Most Played Against</h5>
-					<div id="mostPlayedAgainst" class="flex-grow-1">
-						<p>User1 - 10 matches</p>
-						<p>User2 - 8 matches</p>
-						<p>User3 - 6 matches</p>
-					</div>
+					<div id="most-played-against" class="flex-grow-1"></div>
 				</div>
 			</div>
 			<div class="col-lg-8 d-flex flex-column gap-3">
@@ -39,21 +35,35 @@
 					class="bg-body border rounded p-3 flex-grow-1 d-flex flex-column"
 				>
 					<h5 class="fw-bold mb-3">Average Game Time</h5>
-					<div class="chart-container">
-						<canvas
-							id="time-chart"
-							class="flex-grow-1"
-							width="600"
-							height="400"
-						></canvas>
+					<div class="d-flex">
+						<div
+							class="chart-container me-3"
+							style="position: relative; height: 30vh; width: 45%"
+						>
+							<canvas
+								id="time-chart"
+								class="flex-grow-1"
+							></canvas>
+						</div>
+						<div
+							class="chart-container"
+							style="position: relative; height: 30vh; width: 45%"
+						>
+							<canvas
+								id="vertical-bar-chart"
+								class="flex-grow-1"
+							></canvas>
+						</div>
 					</div>
+					<p id="average"></p>
+					<p id="longest"></p>
+					<p id="fastest"></p>
 				</div>
-
 				<div
 					class="bg-body border rounded p-3 flex-grow-1 d-flex flex-column"
 				>
 					<h5 class="fw-bold mb-3">Longest & Fastest Game</h5>
-					<p>Longest Game: 1 minutes 30 seconds</p>
+					<p>Longest Game: 1 minute 30 seconds</p>
 					<p>Fastest Game: 0 minutes 25 seconds</p>
 					<p>etc...</p>
 				</div>

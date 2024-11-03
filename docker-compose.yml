@@ -14,19 +14,7 @@ services:
     volumes:
       - ./srcs/frontend/srcs:/usr/share/nginx/html
       - media:/media
-      # - ./certbot/conf:/etc/letsencrypt
-      # - ./certbot/www:/var/www/certbot
     restart: unless-stopped
-
-  # certbot:
-  #   image: certbot/certbot
-  #   container_name: certbot
-  #   volumes:
-  #     - ./certbot/conf:/etc/letsencrypt
-  #     - ./certbot/www:/var/www/certbot
-  #   networks:
-  #     - tsd-network
-  #   entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
   django:
     networks:
@@ -50,7 +38,7 @@ services:
       - tsd-network
     image: redis:7.4.1
     volumes:
-      - ./srcs/services/redis:/data
+      - db:/data
     restart: unless-stopped
     command: ["redis-server", "--save", "60", "1"]
 

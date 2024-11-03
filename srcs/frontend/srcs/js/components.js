@@ -609,3 +609,26 @@ export const tournamentMatchCard = (match) => {
 		span(match.player1_score + ":" + match.player2_score).cl("text-muted")
 	).cl("d-flex align-items-center border-end pe-3");
 };
+
+export const matchPlayedAgainst = (player) => {
+	return div(
+		div(
+			img(player.user.avatar ? player.user.avatar : DEFAULT_AVATAR)
+				.attr("alt", "avatar")
+				.cl("rounded-circle me-2")
+				.attr("style", "width: 30px; height: 30px"),
+			div(
+				span(player.user.display_name).cl("fw-bold fs-5"),
+				player.user.uuid
+					? t("small", player.user.uuid).cl("text-muted")
+					: ""
+			).cl("d-flex flex-column flex-grow-1"),
+			div(
+				span("Games Played: ").cl("fw-bold me-2"),
+				span(player.count.toString()).cl("text-primary fw-bold")
+			).cl("text-muted ms-auto d-flex align-items-center")
+		).cl("d-flex align-items-center w-100 justify-content-between")
+	).cl(
+		"d-flex flex-column align-items-start bg-body-tertiary mb-2 p-2 rounded"
+	);
+};
