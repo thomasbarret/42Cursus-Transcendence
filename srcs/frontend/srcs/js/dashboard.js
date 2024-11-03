@@ -80,6 +80,16 @@ const winData = (data) => {
 };
 
 const mostPlayed = (user, data) => {
+	/**
+	 * @type {HTMLCanvasElement}
+	 */
+	// @ts-ignore
+	const mostPlayedChart = document.getElementById("most-played-chart");
+
+	const mostPlayedAgainstDisplay = document.getElementById(
+		"most-played-against"
+	);
+
 	const players = data
 		.map((game) => {
 			return game.player1?.user.uuid === user.uuid
@@ -93,14 +103,43 @@ const mostPlayed = (user, data) => {
 		counts[player.user.uuid] = (counts[player.user.uuid] || 0) + 1;
 	});
 
-	const unique = Object.entries(counts)
-		.map(([uuid, count]) => {
-			return { count, ...players.find((p) => p.user.uuid === uuid) };
-		})
-		.sort((a, b) => b.count - a.count);
+	const unique = Object.entries(counts).map(([uuid, count]) => {
+		return { count, ...players.find((p) => p.user.uuid === uuid) };
+	});
 
-	// console.log(players, counts, unique);
-	return { against: unique };
+	const sorted = unique.toSorted((a, b) => b.count - a.count);
+
+	console.log(unique);
+
+	sorted.forEach((player) => {
+		mostPlayedAgainstDisplay.appendChild(matchPlayedAgainst(player));
+	});
+
+	new Chart(mostPlayedChart, {
+		type: "line",
+		data: {
+			labels: unique.map((player) => player.user.display_name),
+			datasets: [
+				{
+					label: "Dataset",
+					data: unique.map((player) => player.count),
+					borderColor: ["#BB8FCE"],
+					fill: false,
+					// @ts-ignore
+					stepped: true,
+				},
+			],
+		},
+		options: {
+			responsive: true,
+			maintainAspectRatio: false,
+			// @ts-ignore
+			interaction: {
+				intersect: false,
+				axis: "x",
+			},
+		},
+	});
 };
 
 const lineChart = (data) => {
@@ -231,9 +270,6 @@ export const dashboardHandler = async () => {
 	const averageDisplay = document.getElementById("average");
 	const longestDisplay = document.getElementById("longest");
 	const fastestDisplay = document.getElementById("fastest");
-	const mostPlayedAgainstDisplay = document.getElementById(
-		"most-played-against"
-	);
 
 	const getGameData = async () => {
 		const req = await fetch(BASE_URL + "/user/@me/match");
@@ -299,12 +335,7 @@ export const dashboardHandler = async () => {
 		2
 	)} seconds`;
 
-	const { against } = mostPlayed(user, gameData);
-	console.log(against);
-
-	against.forEach((player) => {
-		mostPlayedAgainstDisplay.appendChild(matchPlayedAgainst(player));
-	});
+	mostPlayed(user, gameData);
 
 	const points = calculatePoints(user, gameData);
 	console.log("Points: ", points);
