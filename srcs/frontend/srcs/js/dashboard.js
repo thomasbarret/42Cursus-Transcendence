@@ -157,6 +157,73 @@ const lineChart = (data) => {
 	});
 };
 
+const calculatePoints = (user, data) => {
+	const points = data
+		.filter((game) => game.player2 && game.status === 3)
+		.map((game) => {
+			return game.player1.user.uuid === user.uuid
+				? game.player1_score
+				: game.player2_score;
+		});
+
+	const total = points.reduce((acc, curr) => acc + curr, 0);
+
+	const average = total / points.length;
+
+	const least = Math.min(...points);
+	const most = Math.max(...points);
+
+	return { total, average, most, least };
+};
+
+const horizontalBarChart = (data) => {
+	const totalPoints = document.getElementById("total-points");
+	const averagePoints = document.getElementById("average-points");
+	const mostPoints = document.getElementById("most-points");
+	const leastPoints = document.getElementById("least-points");
+
+	totalPoints.textContent = `Total: ${data.total}`;
+	averagePoints.textContent = `Average: ${data.average.toFixed(2)} per match`;
+	mostPoints.textContent = `Most: ${data.most}`;
+	leastPoints.textContent = `Least: ${data.least}`;
+
+	/**
+	 * @type {HTMLCanvasElement}
+	 */
+	// @ts-ignore
+	const pointsChart = document.getElementById("points-chart");
+
+	new Chart(pointsChart, {
+		type: "bar",
+		data: {
+			labels: Object.keys(data),
+			datasets: [
+				{
+					label: "Point data",
+					data: [...Object.values(data)],
+					backgroundColor: [
+						"#FFA07A",
+						"#00FF7F",
+						"#87CEEB",
+						"#FFD700",
+					],
+				},
+			],
+		},
+		options: {
+			indexAxis: "y",
+			elements: {
+				// @ts-ignore
+				bar: {
+					borderWidth: 2,
+				},
+			},
+			responsive: true,
+			maintainAspectRatio: false,
+		},
+	});
+};
+
 export const dashboardHandler = async () => {
 	Chart.defaults.font.size = 25;
 
@@ -238,4 +305,9 @@ export const dashboardHandler = async () => {
 	against.forEach((player) => {
 		mostPlayedAgainstDisplay.appendChild(matchPlayedAgainst(player));
 	});
+
+	const points = calculatePoints(user, gameData);
+	console.log("Points: ", points);
+
+	horizontalBarChart(points);
 };

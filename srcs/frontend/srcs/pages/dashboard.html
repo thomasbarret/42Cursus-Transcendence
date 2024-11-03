@@ -14,7 +14,7 @@
 				style="flex: 0 1 auto"
 			>
 				<h5 class="fw-bold mb-3">Wins & Points</h5>
-				<div class="chart-container mb-3" style="height: 200px">
+				<div class="chart-container mb-3" style="height: 250px">
 					<canvas id="wins-chart" class="w-100 h-100"></canvas>
 				</div>
 				<p class="fs-5">Current Win-rate: <span id="winrate"></span></p>
@@ -25,7 +25,7 @@
 				<div
 					id="most-played-against"
 					class="overflow-auto"
-					style="max-height: 400px"
+					style="max-height: 300px"
 				></div>
 			</div>
 		</div>
@@ -55,22 +55,21 @@
 			</div>
 
 			<div class="bg-body border rounded p-3 d-flex flex-column">
-				<h5 class="fw-bold mb-3">Longest & Fastest Game</h5>
-				<div class="overflow-auto" style="max-height: 150px">
-					<p>Longest Game: 1 minute 30 seconds</p>
-					<p>Fastest Game: 0 minutes 25 seconds</p>
-					<p>Additional statistics...</p>
+				<h5 class="fw-bold mb-3">Points Scored</h5>
+				<div class="overflow-auto mb-2" style="max-height: 350px">
+					<div
+						class="chart-container flex-fill"
+						style="height: 200px"
+					>
+						<canvas id="points-chart" class="w-100 h-100"></canvas>
+					</div>
 				</div>
-			</div>
-
-			<div class="bg-body border rounded p-3 d-flex flex-column">
-				<h5 class="fw-bold mb-3">Most Points Scored</h5>
-				<div class="overflow-auto" style="max-height: 150px">
-					<p>Most Points in a Match: 15</p>
-					<p>
-						Most Points Scored in Least Time: 5 points in 1 minute
-						20 seconds
-					</p>
+				<div class="d-flex gap-5 fw-bold">
+					<h5>User's accumulated point data:</h5>
+					<p id="total-points"></p>
+					<p id="average-points"></p>
+					<p id="most-points"></p>
+					<p id="least-points"></p>
 				</div>
 			</div>
 		</div>
