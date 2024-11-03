@@ -2,12 +2,7 @@ import { loginHandler, signUpHandler } from "./auth.js";
 import { dashboardHandler } from "./dashboard.js";
 import { friendsHandler } from "./friends.js";
 import { gameHandler } from "./game/pong.js";
-import {
-	aboutHandler,
-	indexHandler,
-	profileHandler,
-	settingsHandler,
-} from "./handler.js";
+import { indexHandler, profileHandler, settingsHandler } from "./handler.js";
 import { messageHandler } from "./messages.js";
 import { lobbyMiddleware, tournamentMiddleware } from "./middleware.js";
 import { lobbyHandler, playHandler } from "./play.js";
@@ -55,12 +50,6 @@ export const routes = {
 		title: "Pong Game | " + urlPageTitle,
 		description: "Pong Game",
 		handler: gameHandler,
-	},
-	"/about": {
-		page: "/pages/about.html",
-		title: "About Us | " + urlPageTitle,
-		description: "This is the about page",
-		handler: aboutHandler,
 	},
 	"/login": {
 		page: "/pages/login.html",

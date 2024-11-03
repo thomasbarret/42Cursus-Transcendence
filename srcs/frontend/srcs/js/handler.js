@@ -69,9 +69,7 @@ export const indexHandler = (route) => {
 	);
 	if (entry) entry.appendChild(elements);
 };
-export const aboutHandler = (route) => {
-	console.log("current route: ", route.description);
-};
+
 // @ts-ignore
 export const profileHandler = (route, slug) => {
 	console.log("current path slug: ", slug);

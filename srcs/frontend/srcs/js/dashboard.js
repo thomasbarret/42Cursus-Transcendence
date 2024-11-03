@@ -1,8 +1,11 @@
-import { matchPlayedAgainst } from "./components.js";
-import { BASE_URL } from "./handler.js";
+import { matchPlayedAgainst, Toast } from "./components.js";
+import { BASE_URL, DEFAULT_AVATAR } from "./handler.js";
 import { getCurrentUser } from "./storage.js";
 
 import { Chart } from "chart.js";
+
+import { Offcanvas } from "bootstrap";
+import { div, h6, img, p } from "./framework.js";
 
 const gameResults = (user, gameData) => {
 	const gamesWon = (() =>
@@ -319,6 +322,54 @@ const horizontalBarChart = (user, gameData) => {
 	});
 };
 
+const tournamentCard = (tournament, callback) => {
+	// Create avatar image element
+	const avatarImg = img(tournament.creator.user.avatar || DEFAULT_AVATAR)
+		.attr("alt", "avatar")
+		.cl("rounded-circle me-3")
+		.attr("style", "width: 40px; height: 40px");
+
+	const statusMap = {
+		1: "Waiting",
+		2: "In Progress",
+		3: "Finished",
+		4: "Cancelled",
+	};
+	const tournamentInfo = div(
+		h6(`${tournament.creator.user.display_name}'s Tournament`).cl(
+			"fw-bold mb-1"
+		),
+		p(`Status: ${statusMap[tournament.status] || "Unknown"}`).cl(
+			`mb-0 ${
+				tournament.status === 3 ? "text-success fw-bold" : "text-muted"
+			}`
+		)
+	).cl("d-flex flex-column");
+
+	const cardContainer = div(avatarImg, tournamentInfo)
+		.cl("card p-3 d-flex flex-row align-items-center mb-2 shadow-sm")
+		.attr("role", "button")
+		.onclick$(() => callback(tournament));
+
+	return cardContainer;
+};
+
+const tournamentHistory = (tournaments) => {
+	const tournamentsDisplay = document.getElementById("tournament-history");
+	const offcanvas = new Offcanvas("#tournamentOffcanvas");
+
+	const callback = (tournament) => {
+		offcanvas.show();
+	};
+
+	const fragment = document.createDocumentFragment();
+	tournaments.forEach((tournament) => {
+		fragment.appendChild(tournamentCard(tournament, callback));
+	});
+
+	tournamentsDisplay.appendChild(fragment);
+};
+
 export const dashboardHandler = async () => {
 	Chart.defaults.font.size = 25;
 
@@ -339,11 +390,13 @@ export const dashboardHandler = async () => {
 		if (req.ok) {
 			const data = await req.json();
 			console.log("TOURNAMENT DATA: ", data);
-			return data;
+			return data.tournaments;
+		} else {
+			Toast("Couldn't get tournament data", "danger");
 		}
 	};
 
-	await getTournamentData();
+	const tournaments = (await getTournamentData()).reverse();
 
 	/**
 	 * @type {Array<Object>}
@@ -359,4 +412,6 @@ export const dashboardHandler = async () => {
 	mostPlayed(user, gameData);
 
 	horizontalBarChart(user, gameData);
+
+	tournamentHistory(tournaments);
 };

@@ -75,6 +75,34 @@
 					<p id="least-points"></p>
 				</div>
 			</div>
+			<div class="bg-body border rounded p-3 d-flex flex-column">
+				<h5 class="fw-bold mb-3">Tournament History</h5>
+				<div
+					id="tournament-history"
+					class="overflow-auto"
+					style="max-height: 350px"
+				></div>
+			</div>
 		</div>
 	</div>
+</div>
+
+<div
+	class="offcanvas offcanvas-end"
+	tabindex="-1"
+	id="tournamentOffcanvas"
+	aria-labelledby="tournamentOffcanvasLabel"
+>
+	<div class="offcanvas-header">
+		<h5 class="offcanvas-title" id="tournamentOffcanvasLabel">
+			Tournament Details
+		</h5>
+		<button
+			type="button"
+			class="btn-close"
+			data-bs-dismiss="offcanvas"
+			aria-label="Close"
+		></button>
+	</div>
+	<div class="offcanvas-body" id="tournament-offcanvas-body"></div>
 </div>

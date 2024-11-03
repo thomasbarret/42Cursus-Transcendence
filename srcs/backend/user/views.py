@@ -482,6 +482,12 @@ class ProfilTournamentView(APIView):
                             'avatar': get_avatar_url(tournament.created_by.user),
                         }
                     },
+                    'winner': {
+                        'uuid': tournament.winner.user.uuid,
+                        'username': tournament.winner.user.username,
+                        'display_name': tournament.winner.display_name,
+                        'avatar': get_avatar_url(tournament.winner.user),
+                    } if tournament.winner is not None else None,
                     'players': [
                         {
                             'uuid': str(player.uuid),
