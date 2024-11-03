@@ -5,7 +5,11 @@ import { activateDarkMode, getCurrentUser, toggleDarkMode } from "./storage.js";
 // @ts-ignore
 import * as bootstrap from "bootstrap";
 export const BASE_URL = "/api";
-export const DEFAULT_AVATAR = "https://picsum.photos/45";
+export const DEFAULT_AVATAR = "https://api.dicebear.com/9.x/glass/svg";
+
+export const SEED_AVATAR = (seed) =>
+	`https://api.dicebear.com/9.x/glass/svg?seed=${seed}`;
+
 export const navHandler = () => {
 	const navAuth = document.getElementById("nav-auth");
 	checkLoggedIn().then((loggedIn) => {

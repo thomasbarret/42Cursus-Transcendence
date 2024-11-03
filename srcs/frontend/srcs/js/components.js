@@ -626,7 +626,7 @@ export const matchPlayedAgainst = (player) => {
 			div(
 				span("Games Played: ").cl("fw-bold me-2"),
 				span(player.count.toString()).cl("text-primary fw-bold")
-			).cl("text-muted ms-auto d-flex align-items-center")
+			).cl("text-muted ms-auto d-flex align-items-center fs-5")
 		).cl("d-flex align-items-center w-100 justify-content-between")
 	).cl(
 		"d-flex flex-column align-items-start bg-body-tertiary mb-2 p-2 rounded"

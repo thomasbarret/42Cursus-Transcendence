@@ -92,9 +92,11 @@ const mostPlayed = (user, data) => {
 		counts[player.user.uuid] = (counts[player.user.uuid] || 0) + 1;
 	});
 
-	const unique = Object.entries(counts).map(([uuid, count]) => {
-		return { count, ...players.find((p) => p.user.uuid === uuid) };
-	});
+	const unique = Object.entries(counts)
+		.map(([uuid, count]) => {
+			return { count, ...players.find((p) => p.user.uuid === uuid) };
+		})
+		.sort((a, b) => b.count - a.count);
 
 	// console.log(players, counts, unique);
 	return { against: unique };
