@@ -53,22 +53,7 @@ export const mainHandler = () => {
 	activateDarkMode(toggle);
 };
 // @ts-ignore
-export const indexHandler = (route) => {
-	let entry = document.getElementById("entry");
-	let elements = t(
-		"div",
-		t("h1", "this is the content of the h1").attr("id", "wow"),
-		t("a", "this is the content of the ahref")
-			.attr("href", "/asdf")
-			.attr("data-router-navigation", "true"),
-		[...Array(10)].map((_, i) =>
-			h1("this is text number: ", i.toString()).onclick$(() =>
-				console.log(i)
-			)
-		)
-	);
-	if (entry) entry.appendChild(elements);
-};
+export const indexHandler = (route) => {};
 
 // @ts-ignore
 export const profileHandler = (route, slug) => {
