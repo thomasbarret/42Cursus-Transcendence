@@ -1,11 +1,16 @@
-import { matchPlayedAgainst, Toast } from "./components.js";
-import { BASE_URL, DEFAULT_AVATAR } from "./handler.js";
+import {
+	matchPlayedAgainst,
+	Toast,
+	tournamentCard,
+	tournamentMatchHistoryCard,
+	tournamentPlayerCard,
+} from "./components.js";
+import { BASE_URL } from "./handler.js";
 import { getCurrentUser } from "./storage.js";
 
 import { Chart } from "chart.js";
 
 import { Offcanvas } from "bootstrap";
-import { div, h6, img, p } from "./framework.js";
 
 const gameResults = (user, gameData) => {
 	const gamesWon = (() =>
@@ -322,12 +327,19 @@ const horizontalBarChart = (user, gameData) => {
 	});
 };
 
-const tournamentCard = (tournament, callback) => {
-	// Create avatar image element
-	const avatarImg = img(tournament.creator.user.avatar || DEFAULT_AVATAR)
-		.attr("alt", "avatar")
-		.cl("rounded-circle me-3")
-		.attr("style", "width: 40px; height: 40px");
+const tournamentHistory = (tournaments) => {
+	const tournamentsDisplay = document.getElementById("tournament-history");
+	const offcanvas = new Offcanvas("#tournamentOffcanvas");
+
+	const tournamentName = document.getElementById("tournament-name");
+	const tournamentCreator = document.getElementById("tournament-creator");
+	const tournamentStatus = document.getElementById("tournament-status");
+	const maxScore = document.getElementById("max-score");
+	const createdAt = document.getElementById("created-at");
+	const winnerName = document.getElementById("winner-name");
+
+	const playersList = document.getElementById("players-list");
+	const matchesList = document.getElementById("matches-list");
 
 	const statusMap = {
 		1: "Waiting",
@@ -336,40 +348,33 @@ const tournamentCard = (tournament, callback) => {
 		4: "Cancelled",
 	};
 
-	const createdAt = new Date(tournament.created_at).toLocaleString();
-
-	const playerCount = tournament.players.length;
-
-	const tournamentInfo = div(
-		h6(`${tournament.creator.user.display_name}'s Tournament`).cl(
-			"fw-bold mb-1"
-		),
-		p(`Status: ${statusMap[tournament.status] || "Unknown"}`).cl(
-			`mb-0 ${
-				tournament.status === 3 ? "text-success fw-bold" : "text-muted"
-			}`
-		)
-	).cl("d-flex flex-column");
-
-	const additionalInfo = div(
-		p(`Created At: ${createdAt}`).cl("text-muted small mb-0"),
-		p(`Players: ${playerCount}`).cl("text-muted small mb-0")
-	).cl("d-flex flex-column align-items-end ms-auto");
-
-	const cardContainer = div(avatarImg, tournamentInfo, additionalInfo)
-		.cl("card p-3 d-flex flex-row align-items-center mb-2 shadow-sm")
-		.attr("role", "button")
-		.onclick$(() => callback(tournament));
-
-	return cardContainer;
-};
-
-const tournamentHistory = (tournaments) => {
-	const tournamentsDisplay = document.getElementById("tournament-history");
-	const offcanvas = new Offcanvas("#tournamentOffcanvas");
-
 	const callback = (tournament) => {
 		offcanvas.show();
+
+		playersList.textContent = "";
+		matchesList.textContent = "";
+
+		tournamentName.textContent = `${tournament.creator?.user.display_name}'s Tournament`;
+		tournamentCreator.textContent = tournament.creator?.user.display_name;
+		tournamentStatus.textContent = statusMap[tournament.status];
+		maxScore.textContent = tournament.max_score;
+		createdAt.textContent = new Date(
+			tournament.created_at
+		).toLocaleString();
+		winnerName.textContent = tournament.winner?.display_name || "No Winner";
+
+		const playerFragment = document.createDocumentFragment();
+		tournament.players?.forEach((player) => {
+			playerFragment.appendChild(tournamentPlayerCard(player));
+		});
+
+		const matchFragment = document.createDocumentFragment();
+		tournament.matches?.forEach((match) => {
+			matchFragment.appendChild(tournamentMatchHistoryCard(match));
+		});
+
+		playersList.appendChild(playerFragment);
+		matchesList.appendChild(matchFragment);
 	};
 
 	const fragment = document.createDocumentFragment();

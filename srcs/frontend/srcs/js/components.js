@@ -10,6 +10,7 @@ import {
 	li,
 	p,
 	span,
+	strong,
 	t,
 	ul,
 } from "./framework.js";
@@ -631,4 +632,70 @@ export const matchPlayedAgainst = (player) => {
 	).cl(
 		"d-flex flex-column align-items-start bg-body-tertiary mb-2 p-2 rounded"
 	);
+};
+
+export const tournamentPlayerCard = (player) => {
+	return div(
+		img(player.user.avatar || DEFAULT_AVATAR)
+			.cl("rounded-circle me-3")
+			.attr("style", "width: 30px; height: 30px")
+			.attr("alt", "Player Avatar"),
+		span(player.user.display_name).cl("fw-bold")
+	).cl("list-group-item d-flex align-items-center");
+};
+
+export const tournamentMatchHistoryCard = (match) => {
+	return div(
+		p(
+			strong("Match: "),
+			`${match.player_1?.user.display_name} vs ${match.player_2?.user.display_name}`
+		).cl("mb-1"),
+		p(
+			strong("Score: "),
+			`${match.player1_score} - ${match.player2_score}`
+		).cl("mb-1"),
+		p(strong("Winner: "), match.winner?.user.display_name || "Draw")
+	).cl("list-group-item");
+};
+
+export const tournamentCard = (tournament, callback) => {
+	// Create avatar image element
+	const avatarImg = img(tournament.creator.user.avatar || DEFAULT_AVATAR)
+		.attr("alt", "avatar")
+		.cl("rounded-circle me-3")
+		.attr("style", "width: 40px; height: 40px");
+
+	const statusMap = {
+		1: "Waiting",
+		2: "In Progress",
+		3: "Finished",
+		4: "Cancelled",
+	};
+
+	const createdAt = new Date(tournament.created_at).toLocaleString();
+
+	const playerCount = tournament.players.length;
+
+	const tournamentInfo = div(
+		h6(`${tournament.creator.user.display_name}'s Tournament`).cl(
+			"fw-bold mb-1"
+		),
+		p(`Status: ${statusMap[tournament.status] || "Unknown"}`).cl(
+			`mb-0 ${
+				tournament.status === 3 ? "text-success fw-bold" : "text-muted"
+			}`
+		)
+	).cl("d-flex flex-column");
+
+	const additionalInfo = div(
+		p(`Created At: ${createdAt}`).cl("text-muted small mb-0"),
+		p(`Players: ${playerCount}`).cl("text-muted small mb-0")
+	).cl("d-flex flex-column align-items-end ms-auto");
+
+	const cardContainer = div(avatarImg, tournamentInfo, additionalInfo)
+		.cl("card p-3 d-flex flex-row align-items-center mb-2 shadow-sm")
+		.attr("role", "button")
+		.onclick$(() => callback(tournament));
+
+	return cardContainer;
 };
