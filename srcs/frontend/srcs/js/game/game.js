@@ -111,7 +111,7 @@ export class Game {
 		this.ball.updateColor(this.customization.ball);
 		if (this.remote && this.isPlaying) {
 			this.currentPlayer.updateColor(this.customization.paddle);
-		} else {
+		} else if (!this.remote) {
 			this.player_1.updateColor(this.customization.paddle);
 			this.player_2.updateColor(this.customization.paddle);
 		}
@@ -196,11 +196,11 @@ export class Game {
 	}
 
 	eventListeners() {
-		if (this.remote) {
+		if (this.remote && this.isPlaying) {
 			document.addEventListener(
 				"keydown",
 				(keyDownListener = (event) => {
-					if (!this.finished && this.isPlaying) {
+					if (!this.finished) {
 						if (
 							this.currentPlayer.keyHandler(event, true) !== false
 						) {
@@ -216,7 +216,7 @@ export class Game {
 			document.addEventListener(
 				"keyup",
 				(keyUpListener = (event) => {
-					if (!this.finished && this.isPlaying) {
+					if (!this.finished) {
 						if (
 							this.currentPlayer.keyHandler(event, false) !==
 							false
@@ -229,7 +229,7 @@ export class Game {
 					}
 				})
 			);
-		} else {
+		} else if (!this.remote) {
 			document.addEventListener(
 				"keydown",
 				(keyDownListener = (event) => {
@@ -251,9 +251,7 @@ export class Game {
 			this.setColor();
 		});
 
-		eventEmitter.on("customization", (colors) => {
-			// this.player_1.updateColor(colors.paddle)
-		});
+		// eventEmitter.on("customization", (colors) => {});
 
 		if (this.remote) {
 			eventEmitter.on("GAME_STATE_UPDATE", (data) => {
