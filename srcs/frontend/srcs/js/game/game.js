@@ -127,6 +127,7 @@ export class Game {
 	}
 
 	reset() {
+		this.clear(false);
 		this.player_1.reset();
 		this.player_2.reset();
 		this.setScore();

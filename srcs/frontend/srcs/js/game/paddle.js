@@ -69,7 +69,7 @@ export class Paddle {
 
 		// ADD BORDER FOR COLOR CUSTOMIZATION
 		this.ctx.strokeStyle = invertColor(this.color);
-		this.ctx.lineWidth = 5;
+		this.ctx.lineWidth = 1;
 		this.ctx.strokeRect(this.x, this.y, this.width, this.height);
 		return this;
 	}
