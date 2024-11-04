@@ -154,11 +154,13 @@ export const settingsHandler = async (route) => {
 			currentEmail.textContent = data.email;
 			twoFactorStatus.textContent = data["2fa_enabled"];
 			if (data["2fa_enabled"]) {
-				twoFactorStatus.classList.toggle("text-success");
+				twoFactorStatus.classList.remove("text-danger");
+				twoFactorStatus.classList.add("text-success");
 				enable2FAButton.classList.toggle("d-none", true);
 				disable2FAButton.classList.toggle("d-none", false);
 			} else {
-				twoFactorStatus.classList.toggle("text-danger");
+				twoFactorStatus.classList.remove("text-success");
+				twoFactorStatus.classList.add("text-danger");
 				disable2FAButton.classList.toggle("d-none", true);
 				enable2FAButton.classList.toggle("d-none", false);
 			}
