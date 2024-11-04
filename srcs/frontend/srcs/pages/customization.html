@@ -1,9 +1,129 @@
-<h1>customization</h1>
-<label>select your own paddle color</label>
-<input type="color" />
+<div class="container-fluid d-flex flex-column flex-grow-1 p-5 bg-body">
+	<div class="row flex-grow-1">
+		<div class="col d-flex justify-content-center align-items-center">
+			<div class="d-flex flex-column align-items-center w-100">
+				<h1 class="display-4 fw-bold mb-5 text-center">
+					Pong Customization
+				</h1>
+				<div class="d-flex flex-wrap gap-4 justify-content-center">
+					<div
+						class="card shadow p-3 d-flex align-items-center"
+						style="width: 20rem"
+					>
+						<div class="card-body">
+							<div class="d-flex align-items-center mb-3">
+								<label
+									for="paddle-color"
+									class="form-label fs-5 me-3"
+									>Paddle Color</label
+								>
+								<input
+									type="color"
+									id="paddle-color"
+									class="form-control form-control-color"
+									value="#ff0000"
+									title="Choose your paddle color"
+								/>
+							</div>
+							<div class="d-flex flex-column align-items-center">
+								<div
+									id="paddle-color-display"
+									class="border rounded mb-2"
+									style="
+										width: 50px;
+										height: 50px;
+										background-color: #ff0000;
+									"
+								></div>
+								<p
+									id="paddle-color-value"
+									class="fs-6 text-muted"
+								>
+									#ff0000
+								</p>
+							</div>
+						</div>
+					</div>
 
-<label>select ball color</label>
-<input type="color" />
+					<div
+						class="card shadow p-3 d-flex align-items-center"
+						style="width: 20rem"
+					>
+						<div class="card-body">
+							<div class="d-flex align-items-center mb-3">
+								<label
+									for="ball-color"
+									class="form-label fs-5 me-3"
+									>Ball Color</label
+								>
+								<input
+									type="color"
+									id="ball-color"
+									class="form-control form-control-color"
+									value="#0000ff"
+									title="Choose your ball color"
+								/>
+							</div>
+							<div class="d-flex flex-column align-items-center">
+								<div
+									id="ball-color-display"
+									class="border rounded mb-2"
+									style="
+										width: 50px;
+										height: 50px;
+										background-color: #0000ff;
+									"
+								></div>
+								<p
+									id="ball-color-value"
+									class="fs-6 text-muted"
+								>
+									#0000ff
+								</p>
+							</div>
+						</div>
+					</div>
 
-<label>select background color</label>
-<input type="color" />
+					<div
+						class="card shadow p-3 d-flex align-items-center"
+						style="width: 20rem"
+					>
+						<div class="card-body">
+							<div class="d-flex align-items-center mb-3">
+								<label
+									for="background-color"
+									class="form-label fs-5 me-3"
+									>Background Color</label
+								>
+								<input
+									type="color"
+									id="background-color"
+									class="form-control form-control-color"
+									value="#ffffff"
+									title="Choose your background color"
+								/>
+							</div>
+							<div class="d-flex flex-column align-items-center">
+								<div
+									id="background-color-display"
+									class="border rounded mb-2"
+									style="
+										width: 50px;
+										height: 50px;
+										background-color: #ffffff;
+									"
+								></div>
+								<p
+									id="background-color-value"
+									class="fs-6 text-muted"
+								>
+									#ffffff
+								</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
