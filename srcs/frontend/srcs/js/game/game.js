@@ -2,6 +2,7 @@ import { defaultCustomization, getCustomization } from "../customization.js";
 import { eventEmitter } from "../eventemitter.js";
 import { socket } from "../socket.js";
 import { getCurrentUser, isDarkMode } from "../storage.js";
+import { hexToRGBA } from "../utils.js";
 import { Ball } from "./ball.js";
 import { REFERENCE_HEIGHT, REFERENCE_WIDTH } from "./constants.js";
 import { Paddle } from "./paddle.js";
@@ -89,7 +90,13 @@ export class Game {
 		);
 	}
 
+	updateColor(color) {
+		this.color = color;
+		this.transparent = hexToRGBA(color, 10);
+	}
+
 	setColor() {
+		this.customization = getCustomization();
 		this.color = isDarkMode() ? "rgb(0 0 0)" : "rgb(255 255 255)";
 		this.transparent = isDarkMode()
 			? "rgb(0 0 0 / 10%)"
@@ -98,8 +105,9 @@ export class Game {
 		const elementColor = isDarkMode() ? "white" : "black";
 		this.player_1.color = elementColor;
 		this.player_2.color = elementColor;
+		this.ball.color = elementColor;
 
-		this.customization = getCustomization();
+		this.updateColor(this.customization.background);
 		this.ball.updateColor(this.customization.ball);
 		if (this.remote && this.isPlaying) {
 			this.currentPlayer.updateColor(this.customization.paddle);
@@ -107,8 +115,6 @@ export class Game {
 			this.player_1.updateColor(this.customization.paddle);
 			this.player_2.updateColor(this.customization.paddle);
 		}
-
-		this.ball.color = elementColor;
 	}
 
 	clear(transparent = true) {

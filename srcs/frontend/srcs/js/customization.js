@@ -41,6 +41,7 @@ export const customizationHandler = () => {
 	);
 
 	const updateValues = () => {
+		setCustomization(colors);
 		paddleColor.value = colors.paddle;
 		ballColor.value = colors.ball;
 		backgroundColor.value = colors.background;
@@ -52,23 +53,17 @@ export const customizationHandler = () => {
 
 	updateValues();
 	paddleColor.addEventListener("change", () => {
-		console.log(paddleColor.value);
 		colors.paddle = paddleColor.value;
-		setCustomization(colors);
 		updateValues();
 	});
 
 	ballColor.addEventListener("change", () => {
-		console.log(ballColor.value);
 		colors.ball = ballColor.value;
-		setCustomization(colors);
 		updateValues();
 	});
 
 	backgroundColor.addEventListener("change", () => {
-		console.log(backgroundColor.value);
 		colors.background = backgroundColor.value;
-		setCustomization(colors);
 		updateValues();
 	});
 };

@@ -13,6 +13,16 @@ export const formatChatDate = (value) => {
 export const invertColor = (hex) => {
 	return (Number(`0x1${hex}`) ^ 0xffffff)
 		.toString(16)
-		.substring(1)
+		.substr(1)
 		.toUpperCase();
+};
+
+export const hexToRGBA = (hex, opacity) => {
+	hex = hex.replace("#", "");
+
+	let r = parseInt(hex.substring(0, 2), 16);
+	let g = parseInt(hex.substring(2, 4), 16);
+	let b = parseInt(hex.substring(4, 6), 16);
+
+	return `rgb(${r} ${g} ${b} / ${opacity}%)`;
 };
