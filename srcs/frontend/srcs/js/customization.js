@@ -1,7 +1,7 @@
 export const defaultCustomization = {
-	ball: "#000000",
-	paddle: "#ff33ec",
-	background: "#ffffff",
+	ball: "#ffffff",
+	paddle: "#d05bff",
+	background: "#000000",
 };
 
 export const getCustomization = () => {

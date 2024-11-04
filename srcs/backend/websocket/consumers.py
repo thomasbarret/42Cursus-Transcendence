@@ -35,21 +35,22 @@ class GameState:
         self.paddle1_y = (self.canvas_height - self.paddle_height) / 2
         self.paddle2_y = (self.canvas_height - self.paddle_height) / 2
 
-        self.paddle_speed = 320
+        self.paddle_speed = 380
         self.player1_direction = 0 # -1: up, 0: IDLE, 1: down -> a changer ptetre
         self.player2_direction = 0
 
         self.ball_x = self.canvas_width / 2
         self.ball_y = self.canvas_height / 2
 
-        self.ball_velocity = 520
+        self.default_ball_velocity = 475
+        self.ball_velocity = self.default_ball_velocity
+        self.ball_velocity_increase = 20
 
-        self.ball_vx = 420
-        self.ball_vy = 310
+        self.ball_vx = 0
+        self.ball_vy = 0
 
         self.player1_score = 0
         self.player2_score = 0
-
         self.max_angle_deviation = 45 * math.pi / 180
         self.initial_angle_deviation = 22.5 * math.pi / 180
 
@@ -65,6 +66,8 @@ class GameManager:
             return
         game_state = GameState(match_uuid, player1_uuid, player2_uuid, max_score, tournament_uuid)
         self.games[match_uuid] = game_state
+
+        self.reset_ball(game_state, direction=random.choice([-1, 1]))
 
         from game.models import Match
 
@@ -226,9 +229,10 @@ class GameManager:
             normalized_relative_angle = (relative_intersect_y / (paddle1['height'] / 2))
             bounce_angle = normalized_relative_angle * game_state.max_angle_deviation
 
-            speed = math.sqrt(game_state.ball_vx ** 2 + game_state.ball_vy ** 2)
+            speed = game_state.ball_velocity
             game_state.ball_vx = speed * math.cos(bounce_angle)
             game_state.ball_vy = speed * -math.sin(bounce_angle)
+            game_state.ball_velocity += game_state.ball_velocity_increase
 
         elif (
             next_ball_x + ball_radius >= paddle2['x'] and
@@ -242,9 +246,10 @@ class GameManager:
             normalized_relative_angle = (relative_intersect_y / (paddle2['height'] / 2))
             bounce_angle = normalized_relative_angle * game_state.max_angle_deviation
 
-            speed = math.sqrt(game_state.ball_vx ** 2 + game_state.ball_vy ** 2)
+            speed = game_state.ball_velocity
             game_state.ball_vx = -speed * math.cos(bounce_angle)
             game_state.ball_vy = speed * -math.sin(bounce_angle)
+            game_state.ball_velocity += game_state.ball_velocity_increase
 
     def check_scoring(self, game_state: GameState):
         if game_state.ball_x < 0:
@@ -259,6 +264,7 @@ class GameManager:
         game_state.ball_x = game_state.canvas_width / 2
         game_state.ball_y = game_state.canvas_height / 2
 
+        game_state.ball_velocity = game_state.default_ball_velocity
         speed = game_state.ball_velocity
         angle = random.uniform(-game_state.initial_angle_deviation, game_state.initial_angle_deviation)
 
