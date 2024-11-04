@@ -63,7 +63,7 @@ OAUTH2_PROVIDER = {
     "SCOPES": {"read": "Read scope", "write": "Write scope"},
 }
 
-FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:8080")
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "https://localhost:80")
 
 OAUTH2_42_CLIENT_ID = (
     os.environ.get("OAUTH2_42_CLIENT_ID", "default")
