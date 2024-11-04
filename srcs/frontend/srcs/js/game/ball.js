@@ -59,6 +59,10 @@ export class Ball {
 		return this;
 	}
 
+	updateColor(color) {
+		this.color = color;
+	}
+
 	/**
 	 * @returns {Ball}
 	 */

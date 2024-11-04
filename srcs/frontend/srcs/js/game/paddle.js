@@ -1,4 +1,5 @@
 import { isDarkMode } from "../storage.js";
+import { invertColor } from "../utils.js";
 import { DIRECTION, PADDLE_SIZE, PADDLE_VELOCITY } from "./constants.js";
 
 export class Paddle {
@@ -55,12 +56,21 @@ export class Paddle {
 		return this;
 	}
 
+	updateColor(color) {
+		this.color = color;
+	}
+
 	/**
 	 * @returns {Paddle}
 	 */
 	draw() {
 		this.ctx.fillStyle = this.color;
 		this.ctx.fillRect(this.x, this.y, this.width, this.height);
+
+		// ADD BORDER FOR COLOR CUSTOMIZATION
+		this.ctx.strokeStyle = invertColor(this.color);
+		this.ctx.lineWidth = 5;
+		this.ctx.strokeRect(this.x, this.y, this.width, this.height);
 		return this;
 	}
 

@@ -60,6 +60,7 @@ export const playHandler = (route) => {
 		});
 
 		if (res.ok) {
+			createJoinModal.hide();
 			navigate("/lobby/" + uuid);
 		} else Toast("Couldn't join lobby please try again later.", "danger");
 	});
@@ -79,6 +80,7 @@ export const playHandler = (route) => {
 		});
 
 		if (res.ok) {
+			tournamentModal.hide();
 			navigate("/tournament/" + uuid);
 		} else
 			Toast("Couldn't join tournament please try again later.", "danger");
