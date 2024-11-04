@@ -1,24 +1,14 @@
+import { defaultCustomization, getCustomization } from "../customization.js";
 import { eventEmitter } from "../eventemitter.js";
 import { socket } from "../socket.js";
 import { getCurrentUser, isDarkMode } from "../storage.js";
+import { hexToRGBA } from "../utils.js";
 import { Ball } from "./ball.js";
 import { REFERENCE_HEIGHT, REFERENCE_WIDTH } from "./constants.js";
 import { Paddle } from "./paddle.js";
 
 export let keyDownListener = null;
 export let keyUpListener = null;
-
-export const defaultCustomization = {
-	ball: {
-		light_color: "black",
-		dark_color: "white",
-	},
-	paddle: {
-		light_color: "#ff33ec",
-		dark_color: "#ff33ec",
-		// color: "rgb(255, 51, 236)",
-	},
-};
 
 export class Game {
 	constructor(remote, customization = defaultCustomization) {
@@ -100,7 +90,13 @@ export class Game {
 		);
 	}
 
+	updateColor(color) {
+		this.color = color;
+		this.transparent = hexToRGBA(color, 10);
+	}
+
 	setColor() {
+		this.customization = getCustomization();
 		this.color = isDarkMode() ? "rgb(0 0 0)" : "rgb(255 255 255)";
 		this.transparent = isDarkMode()
 			? "rgb(0 0 0 / 10%)"
@@ -109,12 +105,16 @@ export class Game {
 		const elementColor = isDarkMode() ? "white" : "black";
 		this.player_1.color = elementColor;
 		this.player_2.color = elementColor;
-		if (this.remote && this.isPlaying) {
-			this.currentPlayer.color = isDarkMode()
-				? this.customization.paddle.dark_color
-				: this.customization.paddle.light_color;
-		}
 		this.ball.color = elementColor;
+
+		this.updateColor(this.customization.background);
+		this.ball.updateColor(this.customization.ball);
+		if (this.remote && this.isPlaying) {
+			this.currentPlayer.updateColor(this.customization.paddle);
+		} else {
+			this.player_1.updateColor(this.customization.paddle);
+			this.player_2.updateColor(this.customization.paddle);
+		}
 	}
 
 	clear(transparent = true) {
@@ -248,6 +248,10 @@ export class Game {
 
 		eventEmitter.on("theme", () => {
 			this.setColor();
+		});
+
+		eventEmitter.on("customization", (colors) => {
+			// this.player_1.updateColor(colors.paddle)
 		});
 
 		if (this.remote) {
