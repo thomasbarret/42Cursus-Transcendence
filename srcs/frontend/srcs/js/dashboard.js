@@ -386,7 +386,7 @@ const tournamentHistory = (tournaments) => {
 };
 
 export const dashboardHandler = async () => {
-	Chart.defaults.font.size = 25;
+	Chart.defaults.font.size = 15;
 
 	const user = getCurrentUser();
 
