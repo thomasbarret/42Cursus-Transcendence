@@ -231,7 +231,7 @@ const lineChart = (data) => {
 	new Chart(verticalBarChart, {
 		type: "bar",
 		data: {
-			labels: ["Longest", "Average", "Fastest"],
+			labels: ["Average", "Longest", "Fastest"],
 			datasets: [
 				{
 					label: "Duration Data (seconds)",
@@ -335,6 +335,11 @@ const tournamentCard = (tournament, callback) => {
 		3: "Finished",
 		4: "Cancelled",
 	};
+
+	const createdAt = new Date(tournament.created_at).toLocaleString();
+
+	const playerCount = tournament.players.length;
+
 	const tournamentInfo = div(
 		h6(`${tournament.creator.user.display_name}'s Tournament`).cl(
 			"fw-bold mb-1"
@@ -346,7 +351,12 @@ const tournamentCard = (tournament, callback) => {
 		)
 	).cl("d-flex flex-column");
 
-	const cardContainer = div(avatarImg, tournamentInfo)
+	const additionalInfo = div(
+		p(`Created At: ${createdAt}`).cl("text-muted small mb-0"),
+		p(`Players: ${playerCount}`).cl("text-muted small mb-0")
+	).cl("d-flex flex-column align-items-end ms-auto");
+
+	const cardContainer = div(avatarImg, tournamentInfo, additionalInfo)
 		.cl("card p-3 d-flex flex-row align-items-center mb-2 shadow-sm")
 		.attr("role", "button")
 		.onclick$(() => callback(tournament));

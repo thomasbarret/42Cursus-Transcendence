@@ -88,7 +88,7 @@
 </div>
 
 <div
-	class="offcanvas offcanvas-end"
+	class="offcanvas offcanvas-end w-50"
 	tabindex="-1"
 	id="tournamentOffcanvas"
 	aria-labelledby="tournamentOffcanvasLabel"
@@ -104,5 +104,61 @@
 			aria-label="Close"
 		></button>
 	</div>
-	<div class="offcanvas-body" id="tournament-offcanvas-body"></div>
+	<div class="offcanvas-body" id="tournament-offcanvas-body">
+		<div class="container-fluid">
+			<div class="mb-3">
+				<h6 class="fw-bold" id="tournament-name">
+					tournament-name placeholder
+				</h6>
+				<p>
+					<strong>Creator:</strong> <span id="creator-name">abc</span>
+				</p>
+				<p><strong>Max Score:</strong> <span id="max-score">3</span></p>
+				<p>
+					<strong>Status:</strong>
+					<span id="tournament-status" class="text-success fw-bold"
+						>Finished</span
+					>
+				</p>
+				<p>
+					<strong>Created At:</strong>
+					<span id="created-at">2024-11-01 19:49</span>
+				</p>
+			</div>
+
+			<div class="mb-3">
+				<h6 class="fw-bold">Tournament Winner</h6>
+				<p>
+					<strong>Winner:</strong>
+					<span id="winner-name">claude</span>
+				</p>
+			</div>
+
+			<div class="mb-3">
+				<h6 class="fw-bold">Players</h6>
+				<div class="list-group overflow-auto" style="max-height: 200px">
+					<div class="list-group-item d-flex align-items-center">
+						<img
+							src="https://api.dicebear.com/9.x/glass/svg"
+							alt="Player Avatar"
+							class="rounded-circle me-3"
+							style="width: 30px; height: 30px"
+						/>
+						<span class="fw-bold">Player Name</span>
+					</div>
+				</div>
+			</div>
+
+			<div class="mb-3">
+				<h6 class="fw-bold">Matches</h6>
+				<div class="list-group overflow-auto" style="max-height: 200px">
+					<div class="list-group-item">
+						<p class="mb-1"><strong>Match:</strong> yaSin vs 112</p>
+						<p class="mb-1"><strong>Score:</strong> 2 - 3</p>
+						<p class="mb-0"><strong>Winner:</strong> 112</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 </div>
