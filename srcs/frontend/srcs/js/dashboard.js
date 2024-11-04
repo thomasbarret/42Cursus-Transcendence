@@ -25,7 +25,8 @@ const gameResults = (user, gameData) => {
 
 	const gamesDraw = (() => gameData.filter((game) => !game.winner))();
 
-	const winrate = gamesWon.length / (gamesWon.length + gamesLost.length);
+	const gamesPlayed = gamesWon.length + gamesLost.length;
+	const winrate = gamesPlayed != 0 ? gamesWon.length / gamesPlayed : 0;
 
 	return { gamesWon, gamesLost, gamesDraw, winrate };
 };
@@ -49,12 +50,18 @@ const getLongestMatch = (gameData) => {
 		(game) => game.status === 3 && game.end_date && game.start_date
 	);
 
-	return {
+	return matchesDuration.length != 0 ? {
 		longest: Math.max(...matchesDuration),
 		average:
 			matchesDuration.reduce((prev, curr) => prev + curr, 0) /
 			matchesDuration.length,
 		fastest: Math.min(...matchesDuration),
+		durations: matchesDuration,
+		finished,
+	} : {
+		longest: 0,
+		average: 0,
+		fastest: 0,
 		durations: matchesDuration,
 		finished,
 	};
@@ -267,10 +274,10 @@ const calculatePoints = (user, data) => {
 
 	const total = points.reduce((acc, curr) => acc + curr, 0);
 
-	const average = total / points.length;
+	const average = points.length != 0 ? total / points.length : 0;
 
-	const least = Math.min(...points);
-	const most = Math.max(...points);
+	const least = points.length != 0 ? Math.min(...points) : 0;
+	const most = points.length != 0 ? Math.max(...points) : 0;
 
 	return { total, average, most, least };
 };
