@@ -22,12 +22,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # TODO: ADD TO ENVIRONMENT
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-148c#t3qboq!#!9a#-$u)ez8cm9y@!_13qoea@1j#ckbg)vi!+"
+SECRET_KEY = os.environ.get("SECRET_KEY", "default_secret_key")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = ["*"] if DEBUG else []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -59,23 +59,20 @@ INSTALLED_APPS = [
 
 AUTH_USER_MODEL = "authentication.User"
 
-# OAuth2 Config
 OAUTH2_PROVIDER = {
     "SCOPES": {"read": "Read scope", "write": "Write scope"},
 }
 
-FRONTEND_URL = "http://localhost:8080"
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:8080")
 
-# TODO: ADD TO ENVIRONMENT
-# 42 OAuth2 settings
 OAUTH2_42_CLIENT_ID = (
-    "u-s4t2ud-9d546fc4119947a4413baa6ec8a211bdcbf116c6689d875fa66a6218e2d75374"
+    os.environ.get("OAUTH2_42_CLIENT_ID", "default")
 )
-# TODO: ADD TO ENVIRONMENT
+
 OAUTH2_42_CLIENT_SECRET = (
-    "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"
+    os.environ.get("OAUTH2_42_CLIENT_SECRET", "default")
 )
-OAUTH2_42_REDIRECT_URI = "http://localhost:8080/api/oauth/42/callback"
+OAUTH2_42_REDIRECT_URI = os.environ.get("OAUTH2_42_REDIRECT_URI", "http://localhost:8000/auth/42/callback")
 
 APPEND_SLASH=True
 
@@ -118,7 +115,6 @@ CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": "redis://redis:6379",
-        # "LOCATION": "redis://127.0.0.1:6379/1",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         },
