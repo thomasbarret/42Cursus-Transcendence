@@ -20,6 +20,9 @@ export const playHandler = (route) => {
 	const createGame = document.getElementById("create-game");
 	const joinGame = document.getElementById("join-game");
 
+	const gameUUIDField = document.getElementById("game-uuid");
+	const tournamentUUIDField = document.getElementById("tournament-uuid");
+
 	oneMode.addEventListener("click", () => {
 		createJoinModal.show();
 	});
@@ -40,6 +43,45 @@ export const playHandler = (route) => {
 		}
 
 		console.log(data);
+	});
+
+	joinGame.addEventListener("click", async () => {
+		// @ts-ignore
+		const uuid = gameUUIDField.value;
+		const url = BASE_URL + "/game/match/join";
+		const res = await fetch(url, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({
+				uuid,
+			}),
+		});
+
+		if (res.ok) {
+			navigate("/lobby/" + uuid);
+		} else Toast("Couldn't join lobby please try again later.", "danger");
+	});
+
+	joinTournament.addEventListener("click", async () => {
+		// @ts-ignore
+		const uuid = tournamentUUIDField.value;
+		const url = BASE_URL + "/game/tournament/join";
+		const res = await fetch(url, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({
+				uuid,
+			}),
+		});
+
+		if (res.ok) {
+			navigate("/tournament/" + uuid);
+		} else
+			Toast("Couldn't join tournament please try again later.", "danger");
 	});
 
 	tournamentMode.addEventListener("click", () => {
@@ -80,8 +122,9 @@ export const lobbyHandler = (route, slug) => {
 	gameUUID.textContent = slug;
 
 	gameUUID.addEventListener("click", () => {
-		navigator.clipboard.writeText(slug);
-		Toast("Copied game ID to clipboard!", "success");
+		navigator.clipboard.writeText(slug).then(() => {
+			Toast("Copied game ID to clipboard!", "success");
+		});
 	});
 
 	eventEmitter.on("GAME_START_MATCH", () => {

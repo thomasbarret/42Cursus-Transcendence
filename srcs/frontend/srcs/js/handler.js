@@ -5,7 +5,11 @@ import { activateDarkMode, getCurrentUser, toggleDarkMode } from "./storage.js";
 // @ts-ignore
 import * as bootstrap from "bootstrap";
 export const BASE_URL = "/api";
-export const DEFAULT_AVATAR = "https://picsum.photos/45";
+export const DEFAULT_AVATAR = "https://api.dicebear.com/9.x/glass/svg";
+
+export const SEED_AVATAR = (seed) =>
+	`https://api.dicebear.com/9.x/glass/svg?seed=${seed}`;
+
 export const navHandler = () => {
 	const navAuth = document.getElementById("nav-auth");
 	checkLoggedIn().then((loggedIn) => {
@@ -49,25 +53,8 @@ export const mainHandler = () => {
 	activateDarkMode(toggle);
 };
 // @ts-ignore
-export const indexHandler = (route) => {
-	let entry = document.getElementById("entry");
-	let elements = t(
-		"div",
-		t("h1", "this is the content of the h1").attr("id", "wow"),
-		t("a", "this is the content of the ahref")
-			.attr("href", "/asdf")
-			.attr("data-router-navigation", "true"),
-		[...Array(10)].map((_, i) =>
-			h1("this is text number: ", i.toString()).onclick$(() =>
-				console.log(i)
-			)
-		)
-	);
-	if (entry) entry.appendChild(elements);
-};
-export const aboutHandler = (route) => {
-	console.log("current route: ", route.description);
-};
+export const indexHandler = (route) => {};
+
 // @ts-ignore
 export const profileHandler = (route, slug) => {
 	console.log("current path slug: ", slug);

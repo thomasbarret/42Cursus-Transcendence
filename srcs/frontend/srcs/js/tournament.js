@@ -76,7 +76,8 @@ export const tournamentHandler = (_, slug) => {
 	});
 
 	eventEmitter.on("GAME_TOURNAMENT_NEXT_MATCH", (data) => {
-		game.reset();
+		//TODO: check if game is properly cleared
+		game.clear(false);
 		setTournamentMatches(data.matches);
 		if (data.status === 3) {
 			setFinished(data);
@@ -145,7 +146,6 @@ export const tournamentHandler = (_, slug) => {
 		});
 	};
 
-	//TODO: list past matches of the tournament too
 	const getTournamentData = async () => {
 		const res = await fetch(BASE_URL + "/game/tournament/" + slug);
 

@@ -66,9 +66,13 @@ class GameManager:
         game_state = GameState(match_uuid, player1_uuid, player2_uuid, max_score, tournament_uuid)
         self.games[match_uuid] = game_state
 
-        channel_layer = get_channel_layer()
+        from game.models import Match
 
-        channel_layer.group_send((
+        match: Match = await database_sync_to_async(Match.objects.filter(uuid=match_uuid).first)()
+        match.start_date = timezone.now()
+        await database_sync_to_async(match.save)()
+
+        await channel_layer.group_send(
             f"match_{game_state.match_uuid}",
             {
                 "type": "send_event",
@@ -79,7 +83,8 @@ class GameManager:
                     'p2_score': game_state.player2_score
                 }
             }
-        ))
+        )
+
         asyncio.create_task(self.game_loop(match_uuid, channel_layer))
 
     async def activate_ball(self, game_state: GameState):

@@ -1,12 +1,8 @@
 import { loginHandler, signUpHandler } from "./auth.js";
+import { dashboardHandler } from "./dashboard.js";
 import { friendsHandler } from "./friends.js";
 import { gameHandler } from "./game/pong.js";
-import {
-	aboutHandler,
-	indexHandler,
-	profileHandler,
-	settingsHandler,
-} from "./handler.js";
+import { indexHandler, profileHandler, settingsHandler } from "./handler.js";
 import { messageHandler } from "./messages.js";
 import { lobbyMiddleware, tournamentMiddleware } from "./middleware.js";
 import { lobbyHandler, playHandler } from "./play.js";
@@ -55,12 +51,6 @@ export const routes = {
 		description: "Pong Game",
 		handler: gameHandler,
 	},
-	"/about": {
-		page: "/pages/about.html",
-		title: "About Us | " + urlPageTitle,
-		description: "This is the about page",
-		handler: aboutHandler,
-	},
 	"/login": {
 		page: "/pages/login.html",
 		title: "Login | " + urlPageTitle,
@@ -100,6 +90,13 @@ export const routes = {
 		description: "This is the profile page",
 		handler: profileHandler,
 		slug: true,
+		auth: true,
+	},
+	"/dashboard": {
+		page: "/pages/dashboard.html",
+		title: "Dashboard | " + urlPageTitle,
+		description: "This is the dashboard page",
+		handler: dashboardHandler,
 		auth: true,
 	},
 };

@@ -122,7 +122,13 @@ class GetMatchView(APIView):
             return Response({
                 "error": "Match not found",
             }, status=status.HTTP_404_NOT_FOUND)
-        match = get_object_or_404(Match, uuid=match_uuid)
+        match = None
+        try:
+            match = get_object_or_404(Match, uuid=match_uuid)
+        except:
+            return Response({
+                "error": "Match not found",
+            }, status=status.HTTP_404_NOT_FOUND)
 
         return Response({
             "uuid": match.uuid,
@@ -171,7 +177,14 @@ class GetMatchView(APIView):
         winner_uuid = request.data.get('winner_uuid')
         score = request.data.get('score')
 
-        match = Match.objects.get(uuid=match_uuid)
+        match = None
+
+        try:
+            match = Match.objects.get(uuid=match_uuid)
+        except:
+            return Response({
+                "error": "Match not found",
+            }, status=status.HTTP_404_NOT_FOUND)
 
         if match.status != 2:
             return Response({
@@ -308,7 +321,13 @@ class JoinMatchView(APIView):
         if display_name is None:
             display_name = request.user.publicuser.display_name
 
-        match = get_object_or_404(Match, uuid=match_uuid)
+        match = None
+        try:
+            match = get_object_or_404(Match, uuid=match_uuid)
+        except:
+            return Response({
+                "error": "Match not found",
+            }, status=status.HTTP_404_NOT_FOUND)
 
         if not match:
             return Response({

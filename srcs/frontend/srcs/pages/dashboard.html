@@ -1,0 +1,150 @@
+<div class="container-fluid d-flex flex-column flex-grow-1 p-2 overflow-hidden">
+	<div class="row mb-2">
+		<div class="col-lg-12 d-flex flex-column gap-2 overflow-hidden">
+			<div class="bg-body border rounded p-2 d-flex align-items-center">
+				<div class="fw-bold fs-6">Pong Game Statistics Dashboard</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="row flex-grow-1 overflow-hidden">
+		<div class="col-lg-4 d-flex flex-column gap-2 overflow-hidden">
+			<div
+				class="bg-body border rounded p-2 d-flex flex-column"
+				style="flex: 0 1 auto"
+			>
+				<h6 class="fw-bold mb-2">Wins & Points</h6>
+				<div class="chart-container mb-2" style="height: 200px">
+					<canvas id="wins-chart" class="w-100 h-100"></canvas>
+				</div>
+				<p class="fs-6">Current Win-rate: <span id="winrate"></span></p>
+			</div>
+
+			<div class="bg-body border rounded p-2 d-flex flex-column">
+				<h6 class="fw-bold mb-2">Most Played Against</h6>
+				<div
+					id="most-played-against"
+					class="overflow-auto"
+					style="max-height: 300px"
+				></div>
+				<div class="chart-container flex-fill" style="height: 150px">
+					<canvas id="most-played-chart" class="w-100 h-100"></canvas>
+				</div>
+			</div>
+		</div>
+
+		<div class="col-lg-8 d-flex flex-column gap-2 overflow-hidden">
+			<div
+				class="bg-body border rounded p-2 d-flex flex-column"
+				style="flex: 0 1 auto"
+			>
+				<h6 class="fw-bold mb-2">Average Game Time</h6>
+				<div class="d-flex mb-2" style="height: 150px">
+					<div class="chart-container me-2 flex-fill">
+						<canvas id="time-chart" class="w-100 h-100"></canvas>
+					</div>
+					<div class="chart-container flex-fill">
+						<canvas
+							id="vertical-bar-chart"
+							class="w-100 h-100"
+						></canvas>
+					</div>
+				</div>
+				<div class="d-flex gap-4 fw-bold">
+					<p id="average" class="fs-6"></p>
+					<p id="longest" class="fs-6"></p>
+					<p id="fastest" class="fs-6"></p>
+				</div>
+			</div>
+
+			<div class="bg-body border rounded p-2 d-flex flex-column">
+				<h6 class="fw-bold mb-2">Points Scored</h6>
+				<div class="overflow-auto mb-2" style="max-height: 250px">
+					<div
+						class="chart-container flex-fill"
+						style="height: 150px"
+					>
+						<canvas id="points-chart" class="w-100 h-100"></canvas>
+					</div>
+				</div>
+				<div class="d-flex gap-4 fw-bold">
+					<h6 class="fs-6">User's accumulated point data:</h6>
+					<p id="total-points" class="fs-6"></p>
+					<p id="average-points" class="fs-6"></p>
+					<p id="most-points" class="fs-6"></p>
+					<p id="least-points" class="fs-6"></p>
+				</div>
+			</div>
+			<div class="bg-body border rounded p-2 d-flex flex-column">
+				<h6 class="fw-bold mb-2">Tournament History</h6>
+				<div
+					id="tournament-history"
+					class="overflow-auto"
+					style="max-height: 250px"
+				></div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div
+	class="offcanvas offcanvas-end w-50"
+	tabindex="-1"
+	id="tournamentOffcanvas"
+	aria-labelledby="tournamentOffcanvasLabel"
+>
+	<div class="offcanvas-header">
+		<h5 class="offcanvas-title fw-bold" id="tournament-name">
+			tournament-name placeholder
+		</h5>
+		<button
+			type="button"
+			class="btn-close"
+			data-bs-dismiss="offcanvas"
+			aria-label="Close"
+		></button>
+	</div>
+	<div class="offcanvas-body" id="tournament-offcanvas-body">
+		<div class="container-fluid">
+			<div class="mb-2">
+				<p>
+					<strong>Creator:</strong>
+					<span id="tournament-creator"></span>
+				</p>
+				<p><strong>Max Score:</strong> <span id="max-score">0</span></p>
+				<p>
+					<strong>Status:</strong>
+					<span
+						id="tournament-status"
+						class="text-success fw-bold"
+					></span>
+				</p>
+				<p>
+					<strong>Created At:</strong> <span id="created-at"></span>
+				</p>
+			</div>
+
+			<div class="mb-2">
+				<p><strong>Winner:</strong> <span id="winner-name"></span></p>
+			</div>
+
+			<div class="mb-2">
+				<h6 class="fw-bold">Players</h6>
+				<div
+					class="list-group overflow-auto"
+					style="max-height: 200px"
+					id="players-list"
+				></div>
+			</div>
+
+			<div class="mb-2">
+				<h6 class="fw-bold">Matches</h6>
+				<div
+					class="list-group overflow-auto"
+					style="max-height: 300px"
+					id="matches-list"
+				></div>
+			</div>
+		</div>
+	</div>
+</div>

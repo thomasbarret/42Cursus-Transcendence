@@ -431,6 +431,7 @@ class ProfilMatchView(APIView):
                 } if match.winner is not None else None,
                 'status': match.status,
                 'start_date': match.start_date,
+                'end_date': match.end_date,
             } for match in matches]
         })
 
@@ -481,6 +482,12 @@ class ProfilTournamentView(APIView):
                             'avatar': get_avatar_url(tournament.created_by.user),
                         }
                     },
+                    'winner': {
+                        'uuid': tournament.winner.user.uuid,
+                        'username': tournament.winner.user.username,
+                        'display_name': tournament.winner.display_name,
+                        'avatar': get_avatar_url(tournament.winner.user),
+                    } if tournament.winner is not None else None,
                     'players': [
                         {
                             'uuid': str(player.uuid),
@@ -529,6 +536,44 @@ class ProfilTournamentView(APIView):
                         "created_at": tournament.created_at.isoformat(),
                         "updated_at": tournament.updated_at.isoformat() if tournament.updated_at else None,
                     } if tournament.current_match else None,
+                    'matches': [{
+                        "uuid": match.uuid,
+                        "status": match.status,
+                        "player_1": {
+                            "uuid": match.player1.uuid,
+                            "display_name": match.player1.display_name,
+                            "user": {
+                                "uuid": match.player1.user.uuid,
+                                "display_name": match.player1.user.publicuser.display_name,
+                                "avatar": get_avatar_url(match.player1.user)
+                            },
+                        },
+                        "player_2": {
+                            "uuid": match.player2.uuid,
+                            "display_name": match.player2.display_name,
+                            "user": {
+                                "uuid": match.player2.user.uuid,
+                                "display_name": match.player2.user.publicuser.display_name,
+                                "avatar": get_avatar_url(match.player2.user)
+                            } if match.player2 and match.player2.user else None
+                        } if match.player2 else None,
+                        "player1_score": match.player1_score,
+                        "player2_score": match.player2_score,
+                        "winner": {
+                            "uuid": match.winner.uuid,
+                            "display_name": match.winner.display_name,
+                            "user": {
+                                "uuid": match.winner.user.uuid,
+                                "display_name": match.winner.user.publicuser.display_name,
+                                "avatar": match.winner.user.publicuser.avatar.url if match.winner.user.publicuser.avatar else None,
+                            },
+                        } if match.winner else None,
+                        "max_score": match.max_score,
+                        "start_date": match.start_date,
+                        "end_date": match.end_date,
+                        "created_at": match.created_at,
+                        "updated_at": match.updated_at,
+                    } for match in tournament.matches.all()],
                     'created_at': tournament.created_at.isoformat(),
                 } for tournament in tournaments],
         })

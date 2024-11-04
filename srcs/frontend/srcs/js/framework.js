@@ -37,3 +37,5 @@ export const span = (...children) => t("span", ...children);
 export const button = (...children) => t("button", ...children);
 export const li = (...children) => t("li", ...children);
 export const ul = (...children) => t("ul", ...children);
+export const strong = (...children) => t("strong", ...children);
+export const small = (...children) => t("small", ...children);
