@@ -86,152 +86,168 @@ class RegisterView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        email = request.data.get('email')
-        username = request.data.get('username')
-        password = request.data.get('password')
+        try:
+            email = request.data.get('email')
+            username = request.data.get('username')
+            password = request.data.get('password')
 
-        if User.objects.filter(email=email).exists():
-            return Response({'error': 'Email already exists'}, status=status.HTTP_400_BAD_REQUEST)
-        if User.objects.filter(username=username).exists():
-            return Response({'error': 'Username already exists'}, status=status.HTTP_400_BAD_REQUEST)
+            if User.objects.filter(email=email).exists():
+                return Response({'error': 'Email already exists'}, status=status.HTTP_400_BAD_REQUEST)
+            if User.objects.filter(username=username).exists():
+                return Response({'error': 'Username already exists'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if not email or not username or not password:
-            return Response({'error': 'All fields are required'}, status=status.HTTP_400_BAD_REQUEST)
+            if not email or not username or not password:
+                return Response({'error': 'All fields are required'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if not '@' in email or not '.' in email:
-            return Response({'error': 'Invalid email'}, status=status.HTTP_400_BAD_REQUEST)
+            if not '@' in email or not '.' in email:
+                return Response({'error': 'Invalid email'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if len(username) < 1:
-            return Response({'error': 'Username must be at least 20 characters long'}, status=status.HTTP_400_BAD_REQUEST)
+            if len(username) < 1:
+                return Response({'error': 'Username must be at least 20 characters long'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if len(username) > 14:
-            return Response({'error': 'Username must be at most 15 characters long'}, status=status.HTTP_400_BAD_REQUEST)
+            if len(username) > 14:
+                return Response({'error': 'Username must be at most 15 characters long'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if len(password) < 8:
-            return Response({'error': 'Password must be at least 8 characters long'}, status=status.HTTP_400_BAD_REQUEST)
+            if len(password) < 8:
+                return Response({'error': 'Password must be at least 8 characters long'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if len(password) > 14:
-            return Response({'error': 'Password must be at most 15 characters long'}, status=status.HTTP_400_BAD_REQUEST)
+            if len(password) > 14:
+                return Response({'error': 'Password must be at most 15 characters long'}, status=status.HTTP_400_BAD_REQUEST)
 
-        user = User.objects.create_user(email=email, username=username, password=password)
+            user = User.objects.create_user(email=email, username=username, password=password)
 
-        # TODO commented this since there seems to be issued with it as it's not getting saved in the DB
-        user.publicuser.display_name = username
-        user.publicuser.save()
+            # TODO commented this since there seems to be issued with it as it's not getting saved in the DB
+            user.publicuser.display_name = username
+            user.publicuser.save()
 
-        return Response({'message': 'User created successfully'}, status=status.HTTP_201_CREATED)
+            return Response({'message': 'User created successfully'}, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({'error': "Bad request"}, status=status.HTTP_400_BAD_REQUEST)
 
 class Enable2FAView(APIView):
     authentication_classes = [TokenFromCookieAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        user = request.user
-        devices = TOTPDevice.objects.filter(user=user)
-        if devices.exists() and devices[0].confirmed:
-            return Response({'error': '2FA is already enabled'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user = request.user
+            devices = TOTPDevice.objects.filter(user=user)
+            if devices.exists() and devices[0].confirmed:
+                return Response({'error': '2FA is already enabled'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if devices.exists():
-            devices.delete()
-        device = TOTPDevice.objects.create(user=user, name="Default")
-        device.confirmed = False
-        device.save()
+            if devices.exists():
+                devices.delete()
+            device = TOTPDevice.objects.create(user=user, name="Default")
+            device.confirmed = False
+            device.save()
 
-        return Response({
-            'message': '2FA enabled successfully',
-            'secret': device.config_url
-        })
+            return Response({
+                'message': '2FA enabled successfully',
+                'secret': device.config_url
+            })
+        except Exception as e:
+            return Response({'error': 'Bad request'}, status=status.HTTP_400_BAD_REQUEST)
 
 class Confirm2FAView(APIView):
     authentication_classes = [TokenFromCookieAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        user = request.user
-        token = request.data.get('token')
+        try:
+            user = request.user
+            token = request.data.get('token')
 
-        device = TOTPDevice.objects.filter(user=user).first()
-        if not device:
-            return Response({'error': '2FA is not enabled'}, status=status.HTTP_400_BAD_REQUEST)
+            device = TOTPDevice.objects.filter(user=user).first()
+            if not device:
+                return Response({'error': '2FA is not enabled'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if device.verify_token(token):
-            device.confirmed = True
-            device.save()
-            return Response({'message': '2FA confirmed successfully'})
-        else:
-            return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+            if device.verify_token(token):
+                device.confirmed = True
+                device.save()
+                return Response({'message': '2FA confirmed successfully'})
+            else:
+                return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': 'Bad request'}, status=status.HTTP_400_BAD_REQUEST)
 
 class Disable2FAView(APIView):
     authentication_classes = [TokenFromCookieAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        user = request.user
-        devices = TOTPDevice.objects.filter(user=user)
-        token = request.data.get('token')
+        try:
+            user = request.user
+            devices = TOTPDevice.objects.filter(user=user)
+            token = request.data.get('token')
 
-        if not devices.exists() or not devices[0].confirmed:
-            return Response({'error': '2FA is not enabled'}, status=status.HTTP_400_BAD_REQUEST)
+            if not devices.exists() or not devices[0].confirmed:
+                return Response({'error': '2FA is not enabled'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if not devices[0].verify_token(token):
-            return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+            if not devices[0].verify_token(token):
+                return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
 
-        devices.delete()
-        return Response({'message': '2FA disabled successfully'})
+            devices.delete()
+            return Response({'message': '2FA disabled successfully'})
+        except Exception as e:
+            return Response({'error': 'Bad request'}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class LoginView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        email = request.data.get('email')
-        password = request.data.get('password')
-        token = request.data.get('token')
+        try:
+            email = request.data.get('email')
+            password = request.data.get('password')
+            token = request.data.get('token')
 
-        if not email or not password:
-            return Response({'error': 'Email and password are required'}, status=status.HTTP_400_BAD)
+            if not email or not password:
+                return Response({'error': 'Email and password are required'}, status=status.HTTP_400_BAD)
 
-        if len(password) < 1 or len(password) > 14:
-            return Response({'error': 'Invalid Password'}, status=status.HTTP_400_BAD_REQUEST)
+            if len(password) < 1 or len(password) > 14:
+                return Response({'error': 'Invalid Password'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 
-        user = authenticate(email=email, password=password)
-        if user:
-            if TOTPDevice.objects.filter(user=user, confirmed=True).exists():
-                if not token:
-                    return Response({
-                        'error': '2FA required',
-                        'require_2fa': True,
-                    }, status=status.HTTP_401_UNAUTHORIZED)
+            user = authenticate(email=email, password=password)
+            if user:
+                if TOTPDevice.objects.filter(user=user, confirmed=True).exists():
+                    if not token:
+                        return Response({
+                            'error': '2FA required',
+                            'require_2fa': True,
+                        }, status=status.HTTP_401_UNAUTHORIZED)
 
-                device = TOTPDevice.objects.filter(user=user, confirmed=True).first()
-                if not device or not device.verify_token(token):
-                    return Response({'error': 'Invalid 2FA token'}, status=status.HTTP_401_UNAUTHORIZED)
+                    device = TOTPDevice.objects.filter(user=user, confirmed=True).first()
+                    if not device or not device.verify_token(token):
+                        return Response({'error': 'Invalid 2FA token'}, status=status.HTTP_401_UNAUTHORIZED)
 
-            refresh = RefreshToken.for_user(user)
-            response = Response({'message': 'Login successful'})
+                refresh = RefreshToken.for_user(user)
+                response = Response({'message': 'Login successful'})
 
-            access_token_lifetime = getattr(settings, 'SIMPLE_JWT', {}).get('ACCESS_TOKEN_LIFETIME', timedelta(minutes=6000))
-            refresh_token_lifetime = getattr(settings, 'SIMPLE_JWT', {}).get('REFRESH_TOKEN_LIFETIME', timedelta(days=1))
+                access_token_lifetime = getattr(settings, 'SIMPLE_JWT', {}).get('ACCESS_TOKEN_LIFETIME', timedelta(minutes=6000))
+                refresh_token_lifetime = getattr(settings, 'SIMPLE_JWT', {}).get('REFRESH_TOKEN_LIFETIME', timedelta(days=1))
 
-            response.set_cookie(
-                'access_token',
-                str(refresh.access_token),
-                max_age=int(access_token_lifetime.total_seconds()),
-                httponly=True,
-                samesite='Lax',
-                secure=settings.DEBUG is False
-            )
-            response.set_cookie(
-                'refresh_token',
-                str(refresh),
-                max_age=int(refresh_token_lifetime.total_seconds()),
-                httponly=True,
-                samesite='Lax',
-                secure=settings.DEBUG is False
-            )
-            return response
-        return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+                response.set_cookie(
+                    'access_token',
+                    str(refresh.access_token),
+                    max_age=int(access_token_lifetime.total_seconds()),
+                    httponly=True,
+                    samesite='Lax',
+                    secure=settings.DEBUG is False
+                )
+                response.set_cookie(
+                    'refresh_token',
+                    str(refresh),
+                    max_age=int(refresh_token_lifetime.total_seconds()),
+                    httponly=True,
+                    samesite='Lax',
+                    secure=settings.DEBUG is False
+                )
+                return response
+            return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+        except Exception as e:
+            return Response({'error': 'Bad request'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class RefreshTokenView(APIView):
@@ -280,97 +296,106 @@ class OAuth42CallbackView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        code = request.GET.get('code')
-        if not code:
-            return Response({'error': 'No code provided'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            code = request.GET.get('code')
+            if not code:
+                return Response({'error': 'No code provided'}, status=status.HTTP_400_BAD_REQUEST)
 
-        token_url = "https://api.intra.42.fr/oauth/token"
-        data = {
-            'grant_type': 'authorization_code',
-            'client_id': settings.OAUTH2_42_CLIENT_ID,
-            'client_secret': settings.OAUTH2_42_CLIENT_SECRET,
-            'code': code,
-            'redirect_uri': settings.OAUTH2_42_REDIRECT_URI
-        }
-        response = requests.post(token_url, data=data)
-        if response.status_code != 200:
-            return Response({'error': 'Failed to obtain token'}, status=status.HTTP_400_BAD_REQUEST)
+            token_url = "https://api.intra.42.fr/oauth/token"
+            data = {
+                'grant_type': 'authorization_code',
+                'client_id': settings.OAUTH2_42_CLIENT_ID,
+                'client_secret': settings.OAUTH2_42_CLIENT_SECRET,
+                'code': code,
+                'redirect_uri': settings.OAUTH2_42_REDIRECT_URI
+            }
+            response = requests.post(token_url, data=data)
+            if response.status_code != 200:
+                return Response({'error': 'Failed to obtain token'}, status=status.HTTP_400_BAD_REQUEST)
 
-        access_token = response.json().get('access_token')
+            access_token = response.json().get('access_token')
 
-        user_url = "https://api.intra.42.fr/v2/me"
-        headers = {'Authorization': f'Bearer {access_token}'}
-        response = requests.get(user_url, headers=headers)
-        if response.status_code != 200:
-            return Response({'error': 'Failed to get user info'}, status=status.HTTP_400_BAD_REQUEST)
+            user_url = "https://api.intra.42.fr/v2/me"
+            headers = {'Authorization': f'Bearer {access_token}'}
+            response = requests.get(user_url, headers=headers)
+            if response.status_code != 200:
+                return Response({'error': 'Failed to get user info'}, status=status.HTTP_400_BAD_REQUEST)
 
-        user_info = response.json()
-        email = user_info.get('email')
-        username = user_info.get('login')
+            user_info = response.json()
+            email = user_info.get('email')
+            username = user_info.get('login')
 
-        user, created = User.objects.get_or_create(email=email, defaults={'username': username})
-        if created:
-            user.set_unusable_password()
-            user.publicuser.display_name = username
-            user.save()
+            user, created = User.objects.get_or_create(email=email, defaults={'username': username})
+            if created:
+                user.set_unusable_password()
+                user.publicuser.display_name = username
+                user.save()
 
-        refresh = RefreshToken.for_user(user)
-        access_token = str(refresh.access_token)
-        refresh_token = str(refresh)
+            refresh = RefreshToken.for_user(user)
+            access_token = str(refresh.access_token)
+            refresh_token = str(refresh)
 
-        response = HttpResponseRedirect(settings.FRONTEND_URL)
+            response = HttpResponseRedirect(settings.FRONTEND_URL)
 
-        access_token_lifetime = getattr(settings, 'SIMPLE_JWT', {}).get('ACCESS_TOKEN_LIFETIME', timedelta(minutes=5))
-        refresh_token_lifetime = getattr(settings, 'SIMPLE_JWT', {}).get('REFRESH_TOKEN_LIFETIME', timedelta(days=1))
+            access_token_lifetime = getattr(settings, 'SIMPLE_JWT', {}).get('ACCESS_TOKEN_LIFETIME', timedelta(minutes=5))
+            refresh_token_lifetime = getattr(settings, 'SIMPLE_JWT', {}).get('REFRESH_TOKEN_LIFETIME', timedelta(days=1))
 
-        response.set_cookie(
-            'access_token',
-            access_token,
-            max_age=access_token_lifetime.total_seconds(),
-            httponly=True,
-            samesite='Lax',
-            secure=settings.DEBUG is False
-        )
-        response.set_cookie(
-            'refresh_token',
-            refresh_token,
-            max_age=refresh_token_lifetime.total_seconds(),
-            httponly=True,
-            samesite='Lax',
-            secure=settings.DEBUG is False
-        )
+            response.set_cookie(
+                'access_token',
+                access_token,
+                max_age=access_token_lifetime.total_seconds(),
+                httponly=True,
+                samesite='Lax',
+                secure=settings.DEBUG is False
+            )
+            response.set_cookie(
+                'refresh_token',
+                refresh_token,
+                max_age=refresh_token_lifetime.total_seconds(),
+                httponly=True,
+                samesite='Lax',
+                secure=settings.DEBUG is False
+            )
 
-        return response
+            return response
+        except Exception as e:
+            return Response({'error': 'Bad request'}, status=status.HTTP_400_BAD_REQUEST)
 
 class SettingsView(APIView):
     authentication_classes = [TokenFromCookieAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        user = request.user
-        devices = TOTPDevice.objects.filter(user=user)
-        return Response({
-            'username': user.username,
-            'email': user.email,
-            '2fa_enabled': devices.exists() and devices[0].confirmed
-        })
+        try:
+            user = request.user
+            devices = TOTPDevice.objects.filter(user=user)
+            return Response({
+                'username': user.username,
+                'email': user.email,
+                '2fa_enabled': devices.exists() and devices[0].confirmed
+            })
+        except Exception as e:
+            return Response({'error': 'Bad request'}, status=status.HTTP_400_BAD)
 
     def post(self, request):
-        user = request.user
-        username = request.data.get('username')
-        email = request.data.get('email')
-        password = request.data.get('password')
-        new_password = request.data.get('new_password')
+        try:
+            user = request.user
+            username = request.data.get('username')
+            email = request.data.get('email')
+            password = request.data.get('password')
+            new_password = request.data.get('new_password')
 
-        if not user.check_password(password):
-            return Response({'error': 'Invalid password'}, status=status.HTTP_400_BAD_REQUEST)
+            if not user.check_password(password):
+                return Response({'error': 'Invalid password'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if username:
-            user.username = username
-        if email:
-            user.email = email
-        if new_password:
-            user.set_password(new_password)
-        user.save()
+            if username:
+                user.username = username
+            if email:
+                user.email = email
+            if new_password:
+                user.set_password(new_password)
+            user.save()
 
-        return Response({'message': 'Settings updated successfully'})
+            return Response({'message': 'Settings updated successfully'})
+        except Exception as e:
+            return Response({'error': 'Bad request'}, status=status.HTTP_400_BAD_REQUEST)
