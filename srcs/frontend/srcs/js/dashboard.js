@@ -50,21 +50,23 @@ const getLongestMatch = (gameData) => {
 		(game) => game.status === 3 && game.end_date && game.start_date
 	);
 
-	return matchesDuration.length !== 0 ? {
-		longest: Math.max(...matchesDuration),
-		average:
-			matchesDuration.reduce((prev, curr) => prev + curr, 0) /
-			matchesDuration.length,
-		fastest: Math.min(...matchesDuration),
-		durations: matchesDuration,
-		finished,
-	} : {
-		longest: 0,
-		average: 0,
-		fastest: 0,
-		durations: matchesDuration,
-		finished,
-	};
+	return matchesDuration.length !== 0
+		? {
+				longest: Math.max(...matchesDuration),
+				average:
+					matchesDuration.reduce((prev, curr) => prev + curr, 0) /
+					matchesDuration.length,
+				fastest: Math.min(...matchesDuration),
+				durations: matchesDuration,
+				finished,
+		  }
+		: {
+				longest: 0,
+				average: 0,
+				fastest: 0,
+				durations: matchesDuration,
+				finished,
+		  };
 };
 const winData = (user, gameData) => {
 	/**
@@ -169,7 +171,7 @@ const mostPlayed = (user, data) => {
 			labels: unique.map((player) => player.user.display_name),
 			datasets: [
 				{
-					label: "Dataset",
+					label: "Games Count",
 					data: unique.map((player) => player.count),
 					borderColor: ["#BB8FCE"],
 					fill: false,

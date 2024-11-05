@@ -68,6 +68,13 @@ export const userListBox = (user, lastMessage) => {
 	const username = span(user.display_name + " (@" + user.username + ")").cl(
 		"small fw-semibold mb-0 text-truncate"
 	);
+	if (
+		lastMessage &&
+		(lastMessage["content"].startsWith('{"game"') ||
+			lastMessage["content"].startsWith('{"tournament"'))
+	) {
+		lastMessage["content"] = "Invite";
+	}
 	if (lastMessage && lastMessage["user"]["uuid"] === getCurrentUser().uuid) {
 		lastMessage["content"] = "You: " + lastMessage["content"];
 	}
@@ -368,7 +375,9 @@ export const profileCard = (user, callback, update) => {
 			.cl("rounded-circle mb-3"),
 		h3(user.display_name + " (@" + user.username + ")").cl("card-title"),
 		h6(user.uuid).cl("card-title"),
-		h6(user.status).cl("card-title fw-bold").cl(user.status == "online" ? "text-success" : "text-danger")
+		h6(user.status)
+			.cl("card-title fw-bold")
+			.cl(user.status == "online" ? "text-success" : "text-danger")
 	).cl("card-body text-center");
 
 	const tabContainer = div(
