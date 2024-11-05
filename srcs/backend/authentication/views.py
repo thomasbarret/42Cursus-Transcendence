@@ -179,10 +179,18 @@ class Disable2FAView(APIView):
             user = request.user
             devices = TOTPDevice.objects.filter(user=user)
             token = request.data.get('token')
+        try:
+            user = request.user
+            devices = TOTPDevice.objects.filter(user=user)
+            token = request.data.get('token')
 
             if not devices.exists() or not devices[0].confirmed:
                 return Response({'error': '2FA is not enabled'}, status=status.HTTP_400_BAD_REQUEST)
+            if not devices.exists() or not devices[0].confirmed:
+                return Response({'error': '2FA is not enabled'}, status=status.HTTP_400_BAD_REQUEST)
 
+            if not devices[0].verify_token(token):
+                return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
             if not devices[0].verify_token(token):
                 return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -217,7 +225,18 @@ class LoginView(APIView):
                             'error': '2FA required',
                             'require_2fa': True,
                         }, status=status.HTTP_401_UNAUTHORIZED)
+            user = authenticate(email=email, password=password)
+            if user:
+                if TOTPDevice.objects.filter(user=user, confirmed=True).exists():
+                    if not token:
+                        return Response({
+                            'error': '2FA required',
+                            'require_2fa': True,
+                        }, status=status.HTTP_401_UNAUTHORIZED)
 
+                    device = TOTPDevice.objects.filter(user=user, confirmed=True).first()
+                    if not device or not device.verify_token(token):
+                        return Response({'error': 'Invalid 2FA token'}, status=status.HTTP_401_UNAUTHORIZED)
                     device = TOTPDevice.objects.filter(user=user, confirmed=True).first()
                     if not device or not device.verify_token(token):
                         return Response({'error': 'Invalid 2FA token'}, status=status.HTTP_401_UNAUTHORIZED)
@@ -254,8 +273,8 @@ class RefreshTokenView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        refresh_token = request.data.get('refresh_token')
         try:
+            refresh_token = request.data.get('refresh_token')
             refresh = RefreshToken(refresh_token)
             new_access_token = str(refresh.access_token)
 
@@ -285,8 +304,11 @@ class OAuth42LoginView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        auth_url = f"https://api.intra.42.fr/oauth/authorize?client_id={settings.OAUTH2_42_CLIENT_ID}&redirect_uri={settings.OAUTH2_42_REDIRECT_URI}&response_type=code"
-        return redirect(auth_url)
+        try:
+            auth_url = f"https://api.intra.42.fr/oauth/authorize?client_id={settings.OAUTH2_42_CLIENT_ID}&redirect_uri={settings.OAUTH2_42_REDIRECT_URI}&response_type=code"
+            return redirect(auth_url)
+        except:
+            return Response({'error': 'Failed to login with 42'}, status=status.HTTP_400_BAD_REQUEST)
 
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -296,6 +318,10 @@ class OAuth42CallbackView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
+        try:
+            code = request.GET.get('code')
+            if not code:
+                return Response({'error': 'No code provided'}, status=status.HTTP_400_BAD_REQUEST)
         try:
             code = request.GET.get('code')
             if not code:
@@ -312,9 +338,26 @@ class OAuth42CallbackView(APIView):
             response = requests.post(token_url, data=data)
             if response.status_code != 200:
                 return Response({'error': 'Failed to obtain token'}, status=status.HTTP_400_BAD_REQUEST)
+            token_url = "https://api.intra.42.fr/oauth/token"
+            data = {
+                'grant_type': 'authorization_code',
+                'client_id': settings.OAUTH2_42_CLIENT_ID,
+                'client_secret': settings.OAUTH2_42_CLIENT_SECRET,
+                'code': code,
+                'redirect_uri': settings.OAUTH2_42_REDIRECT_URI
+            }
+            response = requests.post(token_url, data=data)
+            if response.status_code != 200:
+                return Response({'error': 'Failed to obtain token'}, status=status.HTTP_400_BAD_REQUEST)
 
             access_token = response.json().get('access_token')
+            access_token = response.json().get('access_token')
 
+            user_url = "https://api.intra.42.fr/v2/me"
+            headers = {'Authorization': f'Bearer {access_token}'}
+            response = requests.get(user_url, headers=headers)
+            if response.status_code != 200:
+                return Response({'error': 'Failed to get user info'}, status=status.HTTP_400_BAD_REQUEST)
             user_url = "https://api.intra.42.fr/v2/me"
             headers = {'Authorization': f'Bearer {access_token}'}
             response = requests.get(user_url, headers=headers)
@@ -324,7 +367,15 @@ class OAuth42CallbackView(APIView):
             user_info = response.json()
             email = user_info.get('email')
             username = user_info.get('login')
+            user_info = response.json()
+            email = user_info.get('email')
+            username = user_info.get('login')
 
+            user, created = User.objects.get_or_create(email=email, defaults={'username': username})
+            if created:
+                user.set_unusable_password()
+                user.publicuser.display_name = username
+                user.save()
             user, created = User.objects.get_or_create(email=email, defaults={'username': username})
             if created:
                 user.set_unusable_password()
@@ -334,9 +385,15 @@ class OAuth42CallbackView(APIView):
             refresh = RefreshToken.for_user(user)
             access_token = str(refresh.access_token)
             refresh_token = str(refresh)
+            refresh = RefreshToken.for_user(user)
+            access_token = str(refresh.access_token)
+            refresh_token = str(refresh)
 
             response = HttpResponseRedirect(settings.FRONTEND_URL)
+            response = HttpResponseRedirect(settings.FRONTEND_URL)
 
+            access_token_lifetime = getattr(settings, 'SIMPLE_JWT', {}).get('ACCESS_TOKEN_LIFETIME', timedelta(minutes=5))
+            refresh_token_lifetime = getattr(settings, 'SIMPLE_JWT', {}).get('REFRESH_TOKEN_LIFETIME', timedelta(days=1))
             access_token_lifetime = getattr(settings, 'SIMPLE_JWT', {}).get('ACCESS_TOKEN_LIFETIME', timedelta(minutes=5))
             refresh_token_lifetime = getattr(settings, 'SIMPLE_JWT', {}).get('REFRESH_TOKEN_LIFETIME', timedelta(days=1))
 
@@ -356,10 +413,26 @@ class OAuth42CallbackView(APIView):
                 samesite='Lax',
                 secure=settings.DEBUG is False
             )
+            response.set_cookie(
+                'access_token',
+                access_token,
+                max_age=access_token_lifetime.total_seconds(),
+                httponly=True,
+                samesite='Lax',
+                secure=settings.DEBUG is False
+            )
+            response.set_cookie(
+                'refresh_token',
+                refresh_token,
+                max_age=refresh_token_lifetime.total_seconds(),
+                httponly=True,
+                samesite='Lax',
+                secure=settings.DEBUG is False
+            )
 
             return response
-        except Exception as e:
-            return Response({'error': 'Bad request'}, status=status.HTTP_400_BAD_REQUEST)
+        except:
+            return Response({'error': 'Failed to login with 42'}, status=status.HTTP_400_BAD_REQUEST)
 
 class SettingsView(APIView):
     authentication_classes = [TokenFromCookieAuthentication]

@@ -208,7 +208,12 @@ class JoinTournamentView(APIView):
                 'error': 'Tournament UUID is required'
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        tournament = get_object_or_404(Tournament, uuid=tournament_uuid)
+        try:
+            tournament = get_object_or_404(Tournament, uuid=tournament_uuid)
+        except:
+            return Response({
+                'error': 'Invalid tournament UUID'
+            }, status=status.HTTP_400_BAD_REQUEST)
 
         if not tournament:
             return Response({

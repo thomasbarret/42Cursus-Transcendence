@@ -663,7 +663,14 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
                     }))
 
                 from game.models import Match
-                match = await database_sync_to_async(Match.objects.filter(uuid=match_uuid).select_related('player1__user', 'player2__user').first)()
+                match = None
+                try:
+                    match = await database_sync_to_async(Match.objects.filter(uuid=match_uuid).select_related('player1__user', 'player2__user').first)()
+                except:
+                    return await self.send(text_data=json.dumps({
+                        'event': 'ERROR',
+                        'data': {'message': 'Invalid UUID.'}
+                    }))
                 if not match.player2:
                     return await self.send(text_data=json.dumps({
                         'event': 'ERROR',
@@ -718,7 +725,14 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
 
 
                 from game.models import Match
-                match = await database_sync_to_async(Match.objects.filter(uuid=match_uuid).select_related("player1__user__publicuser", "player2__user__publicuser").first)()
+                match = None
+                try:
+                    match = await database_sync_to_async(Match.objects.filter(uuid=match_uuid).select_related("player1__user__publicuser", "player2__user__publicuser").first)()
+                except:
+                    return await self.send(text_data=json.dumps({
+                        'event': 'ERROR',
+                        'data': {'message': 'Invalid UUID.'}
+                    }))
 
                 if self.user != match.player1.user and self.user != match.player2.user:
                     return await self.send(text_data=json.dumps({
