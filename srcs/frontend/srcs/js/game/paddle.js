@@ -23,14 +23,19 @@ export class Paddle {
 		this.points = 0;
 		this.target = 0;
 
+		this.keysPressed = {
+			up: false,
+			down: false,
+		};
+
 		this.remote = remote;
 
 		this.y = (canvas.height - this.height) / 2;
 		if (side === "left") {
 			this.x = 0;
 			this.keys = {
-				up: "w",
-				down: "s",
+				up: "KeyW",
+				down: "KeyS",
 				altUp: "ArrowUp",
 				altDown: "ArrowDown",
 			};
@@ -39,8 +44,8 @@ export class Paddle {
 			this.keys = {
 				up: "ArrowUp",
 				down: "ArrowDown",
-				altUp: "w",
-				altDown: "s",
+				altUp: "KeyW",
+				altDown: "KeyS",
 			};
 		}
 
@@ -53,6 +58,9 @@ export class Paddle {
 	reset() {
 		this.y = (this.canvas.height - this.height) / 2;
 		this.target = this.y;
+		this.keysPressed.up = false;
+		this.keysPressed.down = false;
+		this.direction = DIRECTION.IDLE;
 		return this;
 	}
 
@@ -98,30 +106,29 @@ export class Paddle {
 	 * @returns {number | false}
 	 */
 	keyHandler(event, isKeyDown) {
-		const key = event.key;
-
-		if (!isKeyDown) {
-			if (this.direction !== DIRECTION.IDLE) {
-				return (this.direction = DIRECTION.IDLE);
-			}
-			return false;
-		}
+		const key = event.code;
 
 		if (key === this.keys.up || (this.remote && key === this.keys.altUp)) {
 			event.preventDefault();
-			if (this.direction !== DIRECTION.UP) {
-				return (this.direction = DIRECTION.UP);
-			}
-		}
-		if (
+			this.keysPressed.up = isKeyDown;
+		} else if (
 			key === this.keys.down ||
 			(this.remote && key === this.keys.altDown)
 		) {
 			event.preventDefault();
-			if (this.direction !== DIRECTION.DOWN) {
-				return (this.direction = DIRECTION.DOWN);
-			}
+			this.keysPressed.down = isKeyDown;
+		} else {
+			return false;
 		}
-		return false;
+
+		if (this.keysPressed.up && !this.keysPressed.down) {
+			this.direction = DIRECTION.UP;
+		} else if (this.keysPressed.down && !this.keysPressed.up) {
+			this.direction = DIRECTION.DOWN;
+		} else {
+			this.direction = DIRECTION.IDLE;
+		}
+
+		return this.remote ? this.direction : false;
 	}
 }

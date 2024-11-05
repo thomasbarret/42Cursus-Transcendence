@@ -19,6 +19,7 @@ import * as bootstrap from "bootstrap";
 import { getCurrentUser } from "./storage.js";
 import { navigate } from "./main.js";
 import { BASE_URL, DEFAULT_AVATAR } from "./handler.js";
+import { customizations } from "./customization.js";
 export const goToProfile = (uuid) => navigate("/profile/" + uuid);
 export const ToastComponent = (value, level) => {
 	return div(
@@ -699,4 +700,49 @@ export const tournamentCard = (tournament, callback) => {
 		.onclick$(() => callback(tournament));
 
 	return cardContainer;
+};
+
+export const themeCard = (
+	name = "default",
+	customization = customizations.default,
+	currentCustomization,
+	callback
+) => {
+	return div(
+		h5(name).cl("card-title"),
+		div(
+			div()
+				.cl("preview-box border rounded")
+				.attr(
+					"style",
+					`background-color: ${customization.ball}; width: 50px; height: 50px;`
+				),
+			div()
+				.cl("preview-box border rounded")
+				.attr(
+					"style",
+					`background-color: ${customization.paddle}; width: 50px; height: 50px;`
+				),
+			div()
+				.cl("preview-box border rounded")
+				.attr(
+					"style",
+					`background-color: ${customization.current_paddle}; width: 50px; height: 50px;`
+				),
+			div()
+				.cl("preview-box border rounded")
+				.attr(
+					"style",
+					`background-color: ${customization.background}; width: 50px; height: 50px;`
+				)
+		).cl("theme-preview d-flex gap-2"),
+		button("Select Theme")
+			.cl("btn btn-primary mt-3 select-theme-button")
+			.attr(currentCustomization === name ? "disabled" : "", "")
+			.onclick$(() => {
+				callback(name, customization);
+			})
+	)
+		.cl("card theme-card shadow p-3 d-flex align-items-center")
+		.attr("style", "width: 20rem");
 };

@@ -1,4 +1,4 @@
-import { defaultCustomization, getCustomization } from "../customization.js";
+import { getCustomization } from "../customization.js";
 import { eventEmitter } from "../eventemitter.js";
 import { socket } from "../socket.js";
 import { getCurrentUser, isDarkMode } from "../storage.js";
@@ -11,7 +11,7 @@ export let keyDownListener = null;
 export let keyUpListener = null;
 
 export class Game {
-	constructor(remote, customization = defaultCustomization) {
+	constructor(remote, customization = getCustomization()) {
 		document.removeEventListener("keydown", keyDownListener);
 		document.removeEventListener("keyup", keyUpListener);
 
@@ -109,11 +109,10 @@ export class Game {
 
 		this.updateColor(this.customization.background);
 		this.ball.updateColor(this.customization.ball);
+		this.player_1.updateColor(this.customization.paddle);
+		this.player_2.updateColor(this.customization.paddle);
 		if (this.remote && this.isPlaying) {
-			this.currentPlayer.updateColor(this.customization.paddle);
-		} else {
-			this.player_1.updateColor(this.customization.paddle);
-			this.player_2.updateColor(this.customization.paddle);
+			this.currentPlayer.updateColor(this.customization.current_paddle);
 		}
 	}
 
@@ -123,7 +122,9 @@ export class Game {
 	}
 
 	setScore() {
-		this.scoreText.textContent = `${this.player_1.points} : ${this.player_2.points}`;
+		this.scoreText.textContent = `${this.player_1.points || "0"} : ${
+			this.player_2.points || "0"
+		}`;
 	}
 
 	reset() {
@@ -196,11 +197,11 @@ export class Game {
 	}
 
 	eventListeners() {
-		if (this.remote) {
+		if (this.remote && this.isPlaying) {
 			document.addEventListener(
 				"keydown",
 				(keyDownListener = (event) => {
-					if (!this.finished && this.isPlaying) {
+					if (!this.finished) {
 						if (
 							this.currentPlayer.keyHandler(event, true) !== false
 						) {
@@ -216,7 +217,7 @@ export class Game {
 			document.addEventListener(
 				"keyup",
 				(keyUpListener = (event) => {
-					if (!this.finished && this.isPlaying) {
+					if (!this.finished) {
 						if (
 							this.currentPlayer.keyHandler(event, false) !==
 							false
@@ -229,7 +230,7 @@ export class Game {
 					}
 				})
 			);
-		} else {
+		} else if (!this.remote) {
 			document.addEventListener(
 				"keydown",
 				(keyDownListener = (event) => {
@@ -251,9 +252,7 @@ export class Game {
 			this.setColor();
 		});
 
-		eventEmitter.on("customization", (colors) => {
-			// this.player_1.updateColor(colors.paddle)
-		});
+		// eventEmitter.on("customization", (colors) => {});
 
 		if (this.remote) {
 			eventEmitter.on("GAME_STATE_UPDATE", (data) => {
