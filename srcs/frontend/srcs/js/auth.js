@@ -53,7 +53,7 @@ export const loginHandler = (route) => {
 			submitButton.innerHTML = cpyButton;
 			if (req.ok) {
 				Toast("Successfully logged in!", "success");
-				navigate("/profile", 500);
+				navigate("/", 500);
 			} else {
 				if (data["require_2fa"] === true) {
 					otpModal.show();
@@ -67,7 +67,7 @@ export const loginHandler = (route) => {
 								"Successfully validated 2FA token.",
 								"success"
 							);
-							navigate("/profile", 500);
+							navigate("/", 500);
 						} else
 							Toast(
 								"2FA Error: Bad Token, please try again.",

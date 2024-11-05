@@ -68,6 +68,13 @@ export const userListBox = (user, lastMessage) => {
 	const username = span(user.display_name + " (@" + user.username + ")").cl(
 		"small fw-semibold mb-0 text-truncate"
 	);
+	if (
+		lastMessage &&
+		(lastMessage["content"].startsWith('{"game"') ||
+			lastMessage["content"].startsWith('{"tournament"'))
+	) {
+		lastMessage["content"] = "Invite";
+	}
 	if (lastMessage && lastMessage["user"]["uuid"] === getCurrentUser().uuid) {
 		lastMessage["content"] = "You: " + lastMessage["content"];
 	}
@@ -368,7 +375,9 @@ export const profileCard = (user, callback, update) => {
 			.cl("rounded-circle mb-3"),
 		h3(user.display_name + " (@" + user.username + ")").cl("card-title"),
 		h6(user.uuid).cl("card-title"),
-		h6(user.status).cl("card-title fw-bold").cl(user.status == "online" ? "text-success" : "text-danger")
+		h6(user.status)
+			.cl("card-title fw-bold")
+			.cl(user.status == "online" ? "text-success" : "text-danger")
 	).cl("card-body text-center");
 
 	const tabContainer = div(
@@ -502,7 +511,8 @@ export const matchCard = (match) => {
 			),
 			scoreInfo,
 			matchStatus,
-			winnerInfo
+			winnerInfo,
+			p(new Date(match.start_date).toLocaleString()).cl("mt-2 text-muted")
 		).cl("d-flex flex-column align-items-center w-100 p-3")
 	).cl("card-body");
 
@@ -510,7 +520,7 @@ export const matchCard = (match) => {
 };
 
 export const matchHistory = (matches) => {
-	const matchCards = matches.map((match) => matchCard(match));
+	const matchCards = matches?.reverse().map((match) => matchCard(match));
 	return div(...matchCards)
 		.cl("overflow-auto p-3")
 		.attr(

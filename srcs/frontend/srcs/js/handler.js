@@ -1,4 +1,4 @@
-import { matchCard, matchHistory, profileCard, Toast } from "./components.js";
+import { matchHistory, profileCard, Toast } from "./components.js";
 import { a, button, div, h1, t } from "./framework.js";
 import { checkLoggedIn, navigate } from "./main.js";
 import { activateDarkMode, getCurrentUser, toggleDarkMode } from "./storage.js";
@@ -145,6 +145,15 @@ export const settingsHandler = async (route) => {
 	const twoFactorStatus = document.getElementById("two-factor-status");
 	const settignsForm = document.getElementById("settings-form");
 	const disable2FAButton = document.getElementById("disable-two-factor");
+
+	/**
+	 * @type {HTMLInputElement}
+	 */
+	// @ts-ignore
+	const twoFactorToken = document.getElementById("twofactor");
+
+	const twoFactorInput = document.getElementById("two-factor-input");
+
 	const updateSettings = async () => {
 		const res = await fetch(BASE_URL + "/auth/settings");
 		const data = await res.json();
@@ -157,11 +166,15 @@ export const settingsHandler = async (route) => {
 				twoFactorStatus.classList.add("text-success");
 				enable2FAButton.classList.toggle("d-none", true);
 				disable2FAButton.classList.toggle("d-none", false);
+				twoFactorInput.classList.remove("d-none");
+				twoFactorToken.required = true;
 			} else {
 				twoFactorStatus.classList.remove("text-success");
 				twoFactorStatus.classList.add("text-danger");
 				disable2FAButton.classList.toggle("d-none", true);
 				enable2FAButton.classList.toggle("d-none", false);
+				twoFactorInput.classList.add("d-none");
+				twoFactorToken.required = false;
 			}
 		}
 	};
@@ -274,3 +287,5 @@ export const settingsHandler = async (route) => {
 		}
 	});
 };
+
+export const failHandler = () => {};

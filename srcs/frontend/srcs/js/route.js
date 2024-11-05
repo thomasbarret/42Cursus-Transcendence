@@ -3,7 +3,12 @@ import { customizationHandler } from "./customization.js";
 import { dashboardHandler } from "./dashboard.js";
 import { friendsHandler } from "./friends.js";
 import { gameHandler } from "./game/pong.js";
-import { indexHandler, profileHandler, settingsHandler } from "./handler.js";
+import {
+	failHandler,
+	indexHandler,
+	profileHandler,
+	settingsHandler,
+} from "./handler.js";
 import { messageHandler } from "./messages.js";
 import { lobbyMiddleware, tournamentMiddleware } from "./middleware.js";
 import { lobbyHandler, playHandler } from "./play.js";
@@ -105,5 +110,11 @@ export const routes = {
 		title: "Customize | " + urlPageTitle,
 		description: "This is the customization page",
 		handler: customizationHandler,
+	},
+	"/fail": {
+		page: "/pages/fail.html",
+		title: "Failed | " + urlPageTitle,
+		description: "Couldn't authenticate",
+		handler: failHandler,
 	},
 };
