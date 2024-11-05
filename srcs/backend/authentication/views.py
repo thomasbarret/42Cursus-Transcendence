@@ -388,9 +388,16 @@ class SettingsView(APIView):
             email = request.data.get('email')
             password = request.data.get('password')
             new_password = request.data.get('new_password')
+            token = request.data.get('token')
 
             if not user.check_password(password):
                 return Response({'error': 'Invalid password'}, status=status.HTTP_400_BAD_REQUEST)
+
+            devices = TOTPDevice.objects.filter(user=user)
+
+            if devices.exists() and not devices[0].verify_token(token):
+                if email or username or new_password:
+                    return Response({'error': '2FA token required'}, status=status.HTTP_400_BAD_REQUEST)
 
             if username:
                 user.username = username
