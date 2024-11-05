@@ -69,7 +69,6 @@ export const profileHandler = (route, slug) => {
 			});
 			if (req.ok) {
 				const data = await req.json();
-				console.log(data);
 				const postRelation = async (type) => {
 					const res = await fetch(BASE_URL + "/user/relation/@me", {
 						method: "POST",
