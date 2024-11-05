@@ -366,7 +366,8 @@ export const profileCard = (user, callback, update) => {
 			.attr("id", "avatar-field")
 			.cl("rounded-circle mb-3"),
 		h3(user.display_name + " (@" + user.username + ")").cl("card-title"),
-		h6(user.uuid).cl("card-title")
+		h6(user.uuid).cl("card-title"),
+		h6(user.status).cl("card-title fw-bold").cl(user.status == "online" ? "text-success" : "text-danger")
 	).cl("card-body text-center");
 
 	const tabContainer = div(
