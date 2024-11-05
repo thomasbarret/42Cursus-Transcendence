@@ -166,6 +166,10 @@ export const tournamentHandler = (_, slug) => {
 				once: true,
 			});
 
+			if (socket.readyState === WebSocket.OPEN) {
+				watchTournamentGame();
+			}
+
 			updateCurrentUsers(data.players);
 
 			if (user.uuid === data.creator.user.uuid) {
