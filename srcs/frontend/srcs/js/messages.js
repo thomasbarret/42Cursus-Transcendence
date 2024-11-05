@@ -69,6 +69,7 @@ export const messageHandler = (route) => {
 		});
 		// @ts-ignore
 		searchFriend.addEventListener("click", (event) => {
+			currentChat = "";
 			chatBody.innerHTML = "";
 			inputBar.classList.toggle("d-none", true);
 			chatTitle.textContent = "";
