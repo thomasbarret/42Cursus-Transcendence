@@ -511,7 +511,8 @@ export const matchCard = (match) => {
 			),
 			scoreInfo,
 			matchStatus,
-			winnerInfo
+			winnerInfo,
+			p(new Date(match.start_date).toLocaleString()).cl("mt-2 text-muted")
 		).cl("d-flex flex-column align-items-center w-100 p-3")
 	).cl("card-body");
 
@@ -519,7 +520,7 @@ export const matchCard = (match) => {
 };
 
 export const matchHistory = (matches) => {
-	const matchCards = matches.map((match) => matchCard(match));
+	const matchCards = matches?.reverse().map((match) => matchCard(match));
 	return div(...matchCards)
 		.cl("overflow-auto p-3")
 		.attr(

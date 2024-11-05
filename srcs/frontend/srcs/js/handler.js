@@ -1,4 +1,4 @@
-import { matchCard, matchHistory, profileCard, Toast } from "./components.js";
+import { matchHistory, profileCard, Toast } from "./components.js";
 import { a, button, div, h1, t } from "./framework.js";
 import { checkLoggedIn, navigate } from "./main.js";
 import { activateDarkMode, getCurrentUser, toggleDarkMode } from "./storage.js";
