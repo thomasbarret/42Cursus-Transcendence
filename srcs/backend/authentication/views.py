@@ -360,10 +360,10 @@ class OAuth42CallbackView(APIView):
                 samesite='Lax',
                 secure=settings.DEBUG is False
             )
-
             return response
         except:
-            return Response({'error': 'Failed to login with 42'}, status=status.HTTP_400_BAD_REQUEST)
+            response = HttpResponseRedirect(settings.FRONTEND_URL + "fail")
+            return response
 
 class SettingsView(APIView):
     authentication_classes = [TokenFromCookieAuthentication]

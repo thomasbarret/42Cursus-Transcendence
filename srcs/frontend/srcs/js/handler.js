@@ -274,3 +274,5 @@ export const settingsHandler = async (route) => {
 		}
 	});
 };
+
+export const failHandler = () => {};
