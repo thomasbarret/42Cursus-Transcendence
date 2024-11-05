@@ -122,7 +122,9 @@ export class Game {
 	}
 
 	setScore() {
-		this.scoreText.textContent = `${this.player_1.points} : ${this.player_2.points}`;
+		this.scoreText.textContent = `${this.player_1.points || "0"} : ${
+			this.player_2.points || "0"
+		}`;
 	}
 
 	reset() {
