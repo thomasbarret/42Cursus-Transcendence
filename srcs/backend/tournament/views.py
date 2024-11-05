@@ -26,32 +26,37 @@ class CreateTournamentView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(seft, request):
-        creator_player, created = MatchPlayer.objects.get_or_create(
-            user=request.user,
-            defaults={'display_name': request.user.publicuser.display_name}
-        )
+        try:
+            creator_player, created = MatchPlayer.objects.get_or_create(
+                user=request.user,
+                defaults={'display_name': request.user.publicuser.display_name}
+            )
 
-        tournament = Tournament.objects.create(
-            status=1,
-            channel=Channel.objects.create(
-                type=2
-            ),
-            created_by=creator_player
-        )
+            tournament = Tournament.objects.create(
+                status=1,
+                channel=Channel.objects.create(
+                    type=2
+                ),
+                created_by=creator_player
+            )
 
-        tournament.players.add(creator_player)
-        tournament.channel.users.add(request.user)
-        tournament.save()
+            tournament.players.add(creator_player)
+            tournament.channel.users.add(request.user)
+            tournament.save()
 
-        return Response({
-            'uuid': tournament.uuid,
-            'channel': {
-                'uuid': tournament.channel.uuid,
-                'type': tournament.channel.type,
-                'created_at': tournament.channel.created_at,
-            },
-            'created_at': tournament.created_at,
-        })
+            return Response({
+                'uuid': tournament.uuid,
+                'channel': {
+                    'uuid': tournament.channel.uuid,
+                    'type': tournament.channel.type,
+                    'created_at': tournament.channel.created_at,
+                },
+                'created_at': tournament.created_at,
+            })
+        except:
+            return Response({
+                'error': 'Failed to create tournament'
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 
 class GetTournamentView(APIView):
@@ -194,183 +199,107 @@ class GetTournamentView(APIView):
             return Response({
                 'error': 'Tournament not found'
             }, status=status.HTTP_404_NOT_FOUND)
+        except:
+            return Response({
+                'error': 'Failed to get tournament'
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 class JoinTournamentView(APIView):
     authentication_classes = [TokenFromCookieAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-
-        tournament_uuid = request.data.get('uuid')
-
-        if not tournament_uuid:
-            return Response({
-                'error': 'Tournament UUID is required'
-            }, status=status.HTTP_400_BAD_REQUEST)
-
         try:
-            tournament = get_object_or_404(Tournament, uuid=tournament_uuid)
-        except:
-            return Response({
-                'error': 'Invalid tournament UUID'
-            }, status=status.HTTP_400_BAD_REQUEST)
+            tournament_uuid = request.data.get('uuid')
 
-        if not tournament:
-            return Response({
-                'error': 'Tournament not found'
-            }, status=status.HTTP_404_NOT_FOUND)
+            if not tournament_uuid:
+                return Response({
+                    'error': 'Tournament UUID is required'
+                }, status=status.HTTP_400_BAD_REQUEST)
 
-        creator = tournament.created_by
+            try:
+                tournament = get_object_or_404(Tournament, uuid=tournament_uuid)
+            except:
+                return Response({
+                    'error': 'Invalid tournament UUID'
+                }, status=status.HTTP_400_BAD_REQUEST)
 
-        if tournament.status != 1:
-            return Response({
-                'error': 'This tournament is not open for registration'
-            }, status=status.HTTP_400_BAD_REQUEST)
+            if not tournament:
+                return Response({
+                    'error': 'Tournament not found'
+                }, status=status.HTTP_404_NOT_FOUND)
 
-        player, created = MatchPlayer.objects.get_or_create(
-            user=request.user,
-            defaults={'display_name': request.user.publicuser.display_name}
-        )
+            creator = tournament.created_by
 
-        players = tournament.players.all()
+            if tournament.status != 1:
+                return Response({
+                    'error': 'This tournament is not open for registration'
+                }, status=status.HTTP_400_BAD_REQUEST)
 
-        if created or player not in players:
-            tournament.players.add(player)
-
-        tournament.channel.users.add(request.user)
-        tournament.save()
-
-
-        def get_response():
-            players = tournament.players.all()
-
-            players_data = []
-            for player in players:
-                player_data = {
-                    'uuid': str(player.uuid),
-                    'user': {
-                        'uuid': str(player.user.uuid),
-                        'display_name': player.user.publicuser.display_name,
-                        'avatar': get_avatar_url(player.user)
-                    }
-                }
-                players_data.append(player_data)
-
-            return {
-                'uuid': str(tournament.uuid),
-                'status': tournament.status,
-                'max_score': tournament.max_score,
-                'channel': {
-                    'uuid': str(tournament.channel.uuid),
-                    'type': tournament.channel.type,
-                    'created_at': tournament.channel.created_at.isoformat(),
-                },
-                'creator': {
-                    'uuid': str(creator.uuid),
-                    'user': {
-                        'uuid': str(creator.user.uuid),
-                        'display_name': creator.user.publicuser.display_name,
-                        'avatar': get_avatar_url(creator.user)
-                    }
-                },
-                'players': players_data,
-                'current_match': None,
-                'created_at': tournament.created_at.isoformat(),
-            }
-
-        channel_layer = get_channel_layer()
-        for player in players:
-            async_to_sync(channel_layer.group_send)(
-                f"user_{str(player.user.uuid)}",
-                {
-                    "type": "send_event",
-                    "event_name": "TOURNAMENT_PLAYER_JOIN",
-                    "data": get_response()
-                }
+            player, created = MatchPlayer.objects.get_or_create(
+                user=request.user,
+                defaults={'display_name': request.user.publicuser.display_name}
             )
 
-        return Response(get_response())
+            players = tournament.players.all()
 
-# class StartTournamentView(APIView):
-#     authentication_classes = [TokenFromCookieAuthentication]
-#     permission_classes = [IsAuthenticated]
-#
-#     def post(self, request, tournament_uuid):
-#         tournament = Tournament.objects.get(uuid=tournament_uuid)
-#
-#         creator = tournament.created_by.user
-#
-#         creator_player = MatchPlayer.objects.get(user=creator)
-#
-#         if tournament.status != 1:
-#             return Response({
-#                 'error': 'This tournament is not open for registration'
-#             }, status=status.HTTP_400_BAD_REQUEST)
-#
-#         if tournament.players.count() < 2:
-#             return Response({
-#                 'error': 'This tournament needs at least 2 players to start'
-#             }, status=status.HTTP_400_BAD_REQUEST)
-#
-#         tournament.create_all_matches()
-#
-#         tournament.status = 2
-#         tournament.save()
-#
-#         players = tournament.players.all()
-#
-#         players_data = []
-#
-#         channel_layer = get_channel_layer()
-#
-#         for player in players:
-#             player_data = {
-#                 'uuid': player.user.publicuser.uuid,
-#                 'user': {
-#                     'uuid': player.user.publicuser.uuid,
-#                     'display_name': player.display_name,
-#                     'avatar': get_avatar_url(player.user)
-#                 }
-#             }
-#             players_data.append(player_data)
-#
-#         response = {
-#             'uuid': tournament.uuid,
-#             'max_score': tournament.max_score,
-#             'created_at': tournament.created_at,
-#             'creator': {
-#                 'uuid': creator_player.uuid,
-#                 'user': {
-#                     'uuid': creator.publicuser.uuid,
-#                     'display_name': creator.publicuser.display_name,
-#                     'avatar': get_avatar_url(creator)
-#                 }
-#             },
-#             'players': players_data,
-#             'current_match': {
-#                 'uuid': tournament.current_current_match.uuid,
-#                 'player1': {
-#                     'uuid': tournament.current_current_match.player1.user.publicuser.uuid,
-#                     'display_name': tournament.current_current_match.player1.display_name,
-#                     'avatar': get_avatar_url(tournament.current_current_match.player1.user)
-#                 },
-#                 'player2': {
-#                     'uuid': tournament.current_current_match.player2.user.publicuser.uuid,
-#                     'display_name': tournament.current_current_match.player2.display_name,
-#                     'avatar': get_avatar_url(tournament.current_current_match.player2.user)
-#                 },
-#             } if tournament.current_match else None,
-#         }
-#
-#         for player in players:
-#             async_to_sync(channel_layer.group_send)(
-#                 f"user_{str(player.user.uuid)}",
-#                 {
-#                     "type": "send_event",
-#                     "event_name": "TOURNAMENT_START",
-#                     "data": response
-#                 }
-#             )
-#
-#         return JsonResponse(response)
+            if created or player not in players:
+                tournament.players.add(player)
 
+            tournament.channel.users.add(request.user)
+            tournament.save()
+
+
+            def get_response():
+                players = tournament.players.all()
+
+                players_data = []
+                for player in players:
+                    player_data = {
+                        'uuid': str(player.uuid),
+                        'user': {
+                            'uuid': str(player.user.uuid),
+                            'display_name': player.user.publicuser.display_name,
+                            'avatar': get_avatar_url(player.user)
+                        }
+                    }
+                    players_data.append(player_data)
+
+                return {
+                    'uuid': str(tournament.uuid),
+                    'status': tournament.status,
+                    'max_score': tournament.max_score,
+                    'channel': {
+                        'uuid': str(tournament.channel.uuid),
+                        'type': tournament.channel.type,
+                        'created_at': tournament.channel.created_at.isoformat(),
+                    },
+                    'creator': {
+                        'uuid': str(creator.uuid),
+                        'user': {
+                            'uuid': str(creator.user.uuid),
+                            'display_name': creator.user.publicuser.display_name,
+                            'avatar': get_avatar_url(creator.user)
+                        }
+                    },
+                    'players': players_data,
+                    'current_match': None,
+                    'created_at': tournament.created_at.isoformat(),
+                }
+
+            channel_layer = get_channel_layer()
+            for player in players:
+                async_to_sync(channel_layer.group_send)(
+                    f"user_{str(player.user.uuid)}",
+                    {
+                        "type": "send_event",
+                        "event_name": "TOURNAMENT_PLAYER_JOIN",
+                        "data": get_response()
+                    }
+                )
+
+            return Response(get_response())
+        except:
+            return Response({
+                'error': 'Failed to join tournament'
+            }, status=status.HTTP_400_BAD_REQUEST)

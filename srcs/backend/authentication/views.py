@@ -179,10 +179,6 @@ class Disable2FAView(APIView):
             user = request.user
             devices = TOTPDevice.objects.filter(user=user)
             token = request.data.get('token')
-        try:
-            user = request.user
-            devices = TOTPDevice.objects.filter(user=user)
-            token = request.data.get('token')
 
             if not devices.exists() or not devices[0].confirmed:
                 return Response({'error': '2FA is not enabled'}, status=status.HTTP_400_BAD_REQUEST)
@@ -318,10 +314,6 @@ class OAuth42CallbackView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        try:
-            code = request.GET.get('code')
-            if not code:
-                return Response({'error': 'No code provided'}, status=status.HTTP_400_BAD_REQUEST)
         try:
             code = request.GET.get('code')
             if not code:

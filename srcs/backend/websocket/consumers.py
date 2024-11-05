@@ -566,81 +566,12 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
             await self.close()
 
     async def disconnect(self, close_code):
-        if self.group_name:
-            from game.models import Match, MatchPlayer
-            from django.db.models import Q
-
-            await self.channel_layer.group_discard(self.group_name, self.channel_name)
-            await self.update_user_status('offline')
-
-            # # Utilisation correcte de database_sync_to_async pour les opérations sur la base de données
-            # matchs = await database_sync_to_async(lambda: list(Match.objects.filter(
-            #     Q(status__in=[1, 2]) & (Q(player1__user=self.user) | Q(player2__user=self.user))
-            # ).select_related("player1__user__publicuser", "player2__user__publicuser")))()
-
-            # for match in matchs:
-            #     match_uuid = str(match.uuid)
-            #     await self.channel_layer.group_discard(f"match_{match_uuid}", self.channel_name)
-            #     await sync_to_async(game_manager.stop_game)(match_uuid)
-
-            # for match in matchs:
-            #     if match.status == 1:
-            #         match.status = 4
-            #         await database_sync_to_async(match.save)()
-            #     elif match.status == 2:
-            #         match.status = 3
-
-            #         player1 = await sync_to_async(lambda: match.player1)()
-            #         player2 = await sync_to_async(lambda: match.player2)()
-            #         winner = player1 if player1.user == self.user else player2
-            #         match.winner = winner
-            #         await self.channel_layer.group_send(
-            #             f"user_{str(match.winner.user.uuid)}",
-            #             {
-            #                 "type": "send_event",
-            #                 "event_name": "GAME_MATCH_OPPONENT_DISCONNECTED",
-            #                 "data": {
-            #                     "uuid": str(match.uuid),
-            #                     "status": match.status,
-            #                     "player_1": {
-            #                         "uuid": str(match.player1.uuid),
-            #                         "display_name": match.player1.display_name,
-            #                         "user": {
-            #                             "uuid": str(match.player1.user.uuid),
-            #                             "username": match.player1.user.username,
-            #                             "display_name": match.player1.user.publicuser.display_name,
-            #                             "avatar": match.player1.user.publicuser.avatar.url if match.player1.user.publicuser.avatar else None,
-            #                         },
-            #                     },
-            #                     "player_2": {
-            #                         "uuid": str(match.player2.uuid),
-            #                         "display_name": match.player2.display_name,
-            #                         "user": {
-            #                             "uuid": str(match.player2.user.uuid),
-            #                             "username": match.player1.user.username,
-            #                             "display_name": match.player2.user.publicuser.display_name,
-            #                             "avatar": match.player2.user.publicuser.avatar.url if match.player2.user.publicuser.avatar else None,
-            #                         },
-            #                     },
-            #                     "player1_score": match.player1_score,
-            #                     "player2_score": match.player2_score,
-            #                     "winner": {
-            #                         "uuid": str(match.winner.uuid),
-            #                         "display_name": match.winner.display_name,
-            #                         "user": {
-            #                             "uuid": str(match.winner.user.uuid),
-            #                             "display_name": match.winner.user.publicuser.display_name,
-            #                             "avatar": match.winner.user.publicuser.avatar.url if match.winner.user.publicuser.avatar else None,
-            #                         },
-            #                     } if match.winner else None,
-            #                     "max_score": match.max_score,
-            #                     "start_date": match.start_date.isoformat() if match.start_date else None,
-            #                     "end_date": match.end_date.isoformat() if match.end_date else None,
-            #                     "created_at": match.created_at.isoformat(),
-            #                     "updated_at": match.updated_at.isoformat() if match.updated_at else None,
-            #                 }
-            #             }
-            #         )
+        try:
+            if self.group_name:
+                await self.channel_layer.group_discard(self.group_name, self.channel_name)
+                await self.update_user_status('offline')
+        except:
+            pass
 
     async def receive(self, text_data):
         try:
@@ -892,22 +823,15 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
                     }))
 
                 await self.channel_layer.group_add(f"tournament_{tournament_uuid}", self.channel_name)
-
-
-
-                # current_match = tournament.current_match
-
-                # if not current_match:
-                #     return await self.send(text_data=json.dumps({
-                #         'event': 'ERROR',
-                #         'data': {'message': 'No match is currently being played.'}
-                #     }))
-                # await self.channel_layer.group_add(f"match_{current_match.uuid}", self.channel_name)
-
         except json.JSONDecodeError:
             await self.send(text_data=json.dumps({
                 'event': 'ERROR',
                 'data': {'message': 'Invalid JSON data.'}
+            }))
+        except:
+            await self.send(text_data=json.dumps({
+                'event': 'ERROR',
+                'data': {'message': 'Bad Request'}
             }))
 
     async def send_event(self, event):
@@ -920,22 +844,25 @@ class EventGatewayConsumer(AsyncWebsocketConsumer):
         }))
 
     async def get_user_from_cookie(self, scope):
-        from rest_framework_simplejwt.authentication import JWTAuthentication
-        from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
-        from django.contrib.auth import get_user_model
-
-        User = get_user_model()
-
-        access_token = scope.get("cookies", {}).get('access_token')
-        if not access_token:
-            return None
-
-        jwt_auth = JWTAuthentication()
         try:
-            validated_token = await database_sync_to_async(jwt_auth.get_validated_token)(access_token)
-            user = await database_sync_to_async(jwt_auth.get_user)(validated_token)
-            return user
-        except (InvalidToken, TokenError):
+            from rest_framework_simplejwt.authentication import JWTAuthentication
+            from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
+            from django.contrib.auth import get_user_model
+
+            User = get_user_model()
+
+            access_token = scope.get("cookies", {}).get('access_token')
+            if not access_token:
+                return None
+
+            jwt_auth = JWTAuthentication()
+            try:
+                validated_token = await database_sync_to_async(jwt_auth.get_validated_token)(access_token)
+                user = await database_sync_to_async(jwt_auth.get_user)(validated_token)
+                return user
+            except (InvalidToken, TokenError):
+                return None
+        except:
             return None
     @database_sync_to_async
     def update_user_status(self, status):
