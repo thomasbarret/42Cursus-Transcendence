@@ -68,6 +68,9 @@ class ChannelView(APIView):
         if len(content) > 1000:
             return Response({"error": "Content is too long"}, status=status.HTTP_400_BAD_REQUEST)
 
+        if len(content) == 0:
+            return Response({"error": "Content is too short"}, status=status.HTTP_400_BAD_REQUEST)
+
         if channel.type == 1:
             receiver = channel.users.exclude(uuid=request.user.uuid).first()
             relation = UserRelation.objects.filter(
