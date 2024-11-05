@@ -1,4 +1,4 @@
-import { defaultCustomization, getCustomization } from "../customization.js";
+import { getCustomization } from "../customization.js";
 import { eventEmitter } from "../eventemitter.js";
 import { socket } from "../socket.js";
 import { getCurrentUser, isDarkMode } from "../storage.js";
@@ -11,7 +11,7 @@ export let keyDownListener = null;
 export let keyUpListener = null;
 
 export class Game {
-	constructor(remote, customization = defaultCustomization) {
+	constructor(remote, customization = getCustomization()) {
 		document.removeEventListener("keydown", keyDownListener);
 		document.removeEventListener("keyup", keyUpListener);
 
@@ -109,11 +109,10 @@ export class Game {
 
 		this.updateColor(this.customization.background);
 		this.ball.updateColor(this.customization.ball);
+		this.player_1.updateColor(this.customization.paddle);
+		this.player_2.updateColor(this.customization.paddle);
 		if (this.remote && this.isPlaying) {
-			this.currentPlayer.updateColor(this.customization.paddle);
-		} else if (!this.remote) {
-			this.player_1.updateColor(this.customization.paddle);
-			this.player_2.updateColor(this.customization.paddle);
+			this.currentPlayer.updateColor(this.customization.current_paddle);
 		}
 	}
 

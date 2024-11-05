@@ -7,6 +7,7 @@ export const t = (name, ...child) => {
 	};
 	child.flat().forEach(appendChildTag);
 	result.attr = (name, value) => {
+		if (name.length === 0) return result;
 		result.setAttribute(name, value);
 		return result;
 	};
