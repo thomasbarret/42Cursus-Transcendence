@@ -45,7 +45,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 class PublicUser(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
-    display_name = models.CharField(max_length=150)
+    display_name = models.CharField(max_length=150, unique=True)
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
 
     def __str__(self):

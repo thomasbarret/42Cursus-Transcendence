@@ -117,7 +117,7 @@ export const tournamentHandler = (_, slug) => {
 		waitingOverlay.classList.add("d-none");
 		finishedOverlay.classList.remove("d-none");
 		if (data.winner) {
-			tournamentWinner.textContent = data.winner.display_name;
+			tournamentWinner.textContent = data.winner.user.display_name;
 			Toast(
 				"Tournament finished! Winner: " + data.winner.display_name,
 				"success"

@@ -122,7 +122,7 @@ class RegisterView(APIView):
 
             return Response({'message': 'User created successfully'}, status=status.HTTP_201_CREATED)
         except Exception as e:
-            return Response({'error': "Bad request"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': "Couldn't register"}, status=status.HTTP_400_BAD_REQUEST)
 
 class Enable2FAView(APIView):
     authentication_classes = [TokenFromCookieAuthentication]
@@ -146,7 +146,7 @@ class Enable2FAView(APIView):
                 'secret': device.config_url
             })
         except Exception as e:
-            return Response({'error': 'Bad request'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': "Couldn't enable 2FA"}, status=status.HTTP_400_BAD_REQUEST)
 
 class Confirm2FAView(APIView):
     authentication_classes = [TokenFromCookieAuthentication]
@@ -168,7 +168,7 @@ class Confirm2FAView(APIView):
             else:
                 return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            return Response({'error': 'Bad request'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': "Couldn't confirm 2FA"}, status=status.HTTP_400_BAD_REQUEST)
 
 class Disable2FAView(APIView):
     authentication_classes = [TokenFromCookieAuthentication]
@@ -193,7 +193,7 @@ class Disable2FAView(APIView):
             devices.delete()
             return Response({'message': '2FA disabled successfully'})
         except Exception as e:
-            return Response({'error': 'Bad request'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': "Couldn't disable 2FA"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LoginView(APIView):
@@ -262,7 +262,7 @@ class LoginView(APIView):
                 return response
             return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
         except Exception as e:
-            return Response({'error': 'Bad request'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': "Couldn't login"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class RefreshTokenView(APIView):
@@ -440,7 +440,7 @@ class SettingsView(APIView):
                 '2fa_enabled': devices.exists() and devices[0].confirmed
             })
         except Exception as e:
-            return Response({'error': 'Bad request'}, status=status.HTTP_400_BAD)
+            return Response({'error': "Couldn't get settings"}, status=status.HTTP_400_BAD)
 
     def post(self, request):
         try:
@@ -463,4 +463,4 @@ class SettingsView(APIView):
 
             return Response({'message': 'Settings updated successfully'})
         except Exception as e:
-            return Response({'error': 'Bad request'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': "Couldn't update settings"}, status=status.HTTP_400_BAD_REQUEST)
