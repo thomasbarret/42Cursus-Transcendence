@@ -119,7 +119,7 @@ export const tournamentHandler = (_, slug) => {
 		if (data.winner) {
 			tournamentWinner.textContent = data.winner.user.display_name;
 			Toast(
-				"Tournament finished! Winner: " + data.winner.display_name,
+				"Tournament finished! Winner: " + data.winner.user.display_name,
 				"success"
 			);
 		}
