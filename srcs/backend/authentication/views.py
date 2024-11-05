@@ -101,8 +101,17 @@ class RegisterView(APIView):
         if not '@' in email or not '.' in email:
             return Response({'error': 'Invalid email'}, status=status.HTTP_400_BAD_REQUEST)
 
+        if len(username) < 1:
+            return Response({'error': 'Username must be at least 20 characters long'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if len(username) > 14:
+            return Response({'error': 'Username must be at most 15 characters long'}, status=status.HTTP_400_BAD_REQUEST)
+
         if len(password) < 8:
             return Response({'error': 'Password must be at least 8 characters long'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if len(password) > 14:
+            return Response({'error': 'Password must be at most 15 characters long'}, status=status.HTTP_400_BAD_REQUEST)
 
         user = User.objects.create_user(email=email, username=username, password=password)
 
@@ -177,6 +186,14 @@ class LoginView(APIView):
         email = request.data.get('email')
         password = request.data.get('password')
         token = request.data.get('token')
+
+        if not email or not password:
+            return Response({'error': 'Email and password are required'}, status=status.HTTP_400_BAD)
+
+        if len(password) < 1 or len(password) > 14:
+            return Response({'error': 'Invalid Password'}, status=status.HTTP_400_BAD_REQUEST)
+
+
 
         user = authenticate(email=email, password=password)
         if user:

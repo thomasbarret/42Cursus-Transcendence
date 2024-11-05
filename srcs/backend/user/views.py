@@ -108,6 +108,8 @@ class ProfilView(APIView):
             return Response({"error": "You can only update your own profile"}, status=status.HTTP_403_FORBIDDEN)
 
         if 'display_name' in request.data:
+            if len(request.data['display_name']) > 150:
+                return Response({"error": "Display name is too long"}, status=status.HTTP_400_BAD_REQUEST)
             public_user.display_name = request.data['display_name']
 
         # TODO this is not developed yet
